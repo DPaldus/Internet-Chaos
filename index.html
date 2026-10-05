@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Internet Chaos</title>
+<meta name="description" content="An idle game about turning one useless website into an absurd internet empire.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23ff3d7f'/%3E%3Ctext x='32' y='44' font-size='32' font-family='Impact,Arial Black,sans-serif' text-anchor='middle' fill='%23fff'%3EIC%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=VT323&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/themes.css">
+<link rel="stylesheet" href="css/chat.css">
+<link rel="stylesheet" href="css/aero.css">
+<link rel="stylesheet" href="css/cosmetics.css">
+</head>
+<body data-era="1" data-level="0">
+<noscript><p class="noscript">Internet Chaos needs JavaScript to run.</p></noscript>
+
+<div class="app" id="app">
+  <header class="topbar" id="topbar">
+    <div class="brand">
+      <div class="logo">Internet Chaos<span id="logo-site">My Website</span></div>
+      <button type="button" class="era-chip" id="era-chip" title="Internet Eras">Forum Era</button>
+    </div>
+
+    <div class="hud" id="hud">
+      <div class="stat stat-att" id="hud-att">
+        <div class="stat-label"><span aria-hidden="true">👁</span> Attention</div>
+        <div class="stat-value" id="v-att">0</div>
+        <div class="stat-sub" id="r-att">+0/s</div>
+      </div>
+      <div class="stat stat-money" id="hud-money">
+        <div class="stat-label"><span aria-hidden="true">💵</span> Money</div>
+        <div class="stat-value" id="v-money">$0</div>
+        <div class="stat-sub" id="r-money">+$0/s</div>
+      </div>
+      <div class="stat stat-meter stat-chaos" id="hud-chaos" hidden>
+        <div class="stat-label"><span><span aria-hidden="true">🌀</span> Chaos</span><b id="v-chaos">0%</b></div>
+        <div class="bar" id="bar-chaos" role="meter" aria-label="Chaos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="bar-fill" id="f-chaos"></div>
+          <div class="bar-target" id="t-chaos" title="Where Chaos is heading"></div>
+          <div class="bar-tol" id="m-tol" title="Tolerance: above this, Stability drains"><span>TOL</span></div>
+        </div>
+        <div class="stat-sub" id="r-chaos">Target 0% · Tolerance 0%</div>
+      </div>
+      <div class="stat stat-meter stat-stab" id="hud-stab" hidden>
+        <div class="stat-label"><span><span aria-hidden="true">🛠️</span> Stability</span><b id="v-stab">100%</b></div>
+        <div class="bar" id="bar-stab" role="meter" aria-label="Stability" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+          <div class="bar-fill" id="f-stab"></div>
+          <div class="bar-knee" title="Below this line, production slows down"></div>
+        </div>
+        <div class="stat-sub" id="r-stab">Stable</div>
+      </div>
+      <div class="stat stat-clout" id="hud-clout" hidden>
+        <div class="stat-label"><span aria-hidden="true">✦</span> Clout</div>
+        <div class="stat-value" id="v-clout">0</div>
+        <div class="stat-sub" id="r-clout">×1 Attention</div>
+      </div>
+    </div>
+
+    <nav class="topnav" aria-label="Game menu">
+      <button type="button" class="nav-btn nav-eras" id="btn-eras" hidden><span aria-hidden="true">🌐</span><span class="nav-label">Eras</span><span class="nav-dot" id="eras-dot" hidden></span></button>
+      <button type="button" class="nav-btn" id="btn-style" title="Style Shop: themes for your website"><span aria-hidden="true">🎨</span><span class="nav-label">Style</span><span class="nav-dot" id="style-dot" hidden></span></button>
+      <div class="menu-wrap">
+        <button type="button" class="nav-btn" id="btn-menu" aria-haspopup="true" aria-expanded="false" aria-controls="menu-pop"><span aria-hidden="true">☰</span><span class="nav-label">Menu</span></button>
+        <div class="menu-pop" id="menu-pop" hidden>
+          <button type="button" class="menu-item" id="btn-ach"><span aria-hidden="true">🏆</span> Achievements <span class="menu-count" id="ach-count">0</span></button>
+          <button type="button" class="menu-item" id="btn-stats"><span aria-hidden="true">📊</span> Statistics</button>
+          <button type="button" class="menu-item" id="btn-settings"><span aria-hidden="true">⚙️</span> Settings &amp; saves</button>
+          <button type="button" class="menu-item" id="btn-sound" aria-pressed="true" title="Sound on"><span aria-hidden="true" id="sound-icon">🔊</span> Sound</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="layout" id="layout">
+    <!-- 1 · Your website: the site, its editorial policy and actions in one window -->
+    <section class="col col-site" aria-label="Your website">
+      <div class="browser" id="browser">
+        <div class="browser-bar">
+          <span class="browser-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="browser-title" id="site-title">My Website Forum</span>
+          <span class="browser-level" id="site-level">Homepage</span>
+        </div>
+        <div class="browser-addr">
+          <span class="addr-btns" aria-hidden="true">◀ ▶ ⟳</span>
+          <span class="addr" id="site-url">http://freehost.web/~mysite/index.htm</span>
+        </div>
+        <div class="site" id="site">
+          <div class="site-marquee" id="site-marquee" hidden><div class="marquee-track" id="marquee-track"></div></div>
+          <div class="site-construction" id="site-construction">🚧 UNDER CONSTRUCTION 🚧</div>
+          <h1 class="site-name" id="site-name">My Website Forum</h1>
+          <p class="site-tagline" id="site-tagline">Best viewed in 800×600.</p>
+          <div class="ad-slot" id="ad-top" hidden></div>
+          <div class="click-zone" id="click-zone">
+            <button type="button" class="create-btn" id="create-btn">
+              <span class="create-label" id="create-label">CREATE CONTENT</span>
+              <span class="create-sub" id="create-sub">+1 Attention</span>
+            </button>
+            <div class="floaters" id="floaters" aria-hidden="true"></div>
+          </div>
+          <div class="site-counter">Visitors: <span class="counter" id="hit-counter">0000000</span></div>
+          <div class="ad-slot" id="ad-bottom" hidden></div>
+          <div class="meltdown-screen" id="meltdown-screen" hidden>
+            <div class="melt-code">503</div>
+            <div class="melt-title">SERVICE UNAVAILABLE</div>
+            <div class="melt-text">Stability hit 0%. The site melted down.<br>Back online in <b id="melt-time">30</b>s. Click the button to reboot faster.</div>
+          </div>
+        </div>
+        <div class="site-tip" id="site-tip" role="status"></div>
+
+        <div class="win-section" id="panel-policy" hidden>
+          <div class="section-head"><h2>Editorial Policy</h2><span class="panel-note" id="policy-note">Chaos ×1</span></div>
+          <div class="policy-track" id="policy-track" role="radiogroup" aria-label="Editorial policy"></div>
+          <p class="panel-desc" id="policy-desc"></p>
+        </div>
+
+        <div class="win-section" id="panel-actions" hidden>
+          <div class="section-head"><h2>Actions</h2></div>
+          <div class="actions" id="actions"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · Shop: upgrades on top, buildings below, one window -->
+    <section class="col col-shop" aria-label="Shop">
+      <div class="effects-strip" id="effects" aria-live="polite"></div>
+      <div class="panel panel-shop">
+        <div class="panel-head"><h2><span aria-hidden="true">🛒</span> Shop</h2></div>
+
+        <div class="win-section win-section-top" id="panel-upgrades" hidden>
+          <div class="section-head">
+            <h2>Upgrades <span class="count-pill" id="upg-count">0</span></h2>
+            <button type="button" class="link-btn" id="upg-toggle">Show all</button>
+          </div>
+          <div class="upgrade-grid" id="upgrade-grid"></div>
+        </div>
+
+        <div class="shop-head">
+          <div class="tabs" id="shop-tabs" role="tablist" aria-label="Building categories"></div>
+          <div class="buy-qty" id="buy-qty" role="group" aria-label="Buy amount">
+            <button type="button" data-qty="1">×1</button>
+            <button type="button" data-qty="10">×10</button>
+            <button type="button" data-qty="25">×25</button>
+            <button type="button" data-qty="max">Max</button>
+          </div>
+        </div>
+        <p class="shop-summary" id="shop-summary"></p>
+        <div class="building-list" id="building-list" role="tabpanel"></div>
+      </div>
+    </section>
+
+    <!-- 3 · Community: goals, then the live feed with analytics and automation as tabs -->
+    <section class="col col-side" aria-label="Goals and community">
+      <div class="panel panel-community">
+        <div class="panel-head"><h2><span aria-hidden="true">💬</span> Community</h2><span class="live-dot" aria-hidden="true">● LIVE</span></div>
+
+        <div class="win-section win-section-top" id="panel-goals">
+          <div class="section-head"><h2>Next Goals</h2></div>
+          <div class="goals" id="goals"></div>
+        </div>
+
+        <div class="seg-tabs" id="side-tabs" role="tablist" aria-label="Community views">
+          <button type="button" role="tab" class="seg-tab" data-pane="pane-feed">📰 Live Feed</button>
+          <button type="button" role="tab" class="seg-tab" data-pane="panel-analytics">📈 Analytics</button>
+          <button type="button" role="tab" class="seg-tab" data-pane="panel-auto">🤖 Automation</button>
+        </div>
+
+        <div class="tab-pane" id="pane-feed">
+          <div class="feed-pages" id="feed-pages"></div>
+          <ol class="feed" id="feed" aria-live="polite"></ol>
+        </div>
+
+        <div class="tab-pane" id="panel-analytics" hidden>
+          <div class="section-head"><h2>Last two minutes</h2><span class="panel-note" id="analytics-note">last 2 min</span></div>
+          <canvas class="spark" id="spark" width="600" height="140" aria-label="Attention per second and Chaos over the last two minutes"></canvas>
+          <div class="spark-legend"><span class="lg lg-att">Attention/s</span><span class="lg lg-chaos">Chaos</span><span class="lg lg-tol">Tolerance</span></div>
+        </div>
+
+        <div class="tab-pane" id="panel-auto" hidden>
+          <div class="auto-list" id="auto-list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="choice-root" id="choice-root"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="modal-root" id="modal-root"></div>
+
+<script src="js/core.js"></script>
+<script src="js/format.js"></script>
+<script src="js/config.js"></script>
+<script src="js/content/buildings.js"></script>
+<script src="js/content/upgrades.js"></script>
+<script src="js/content/events.js"></script>
+<script src="js/content/perks.js"></script>
+<script src="js/content/achievements.js"></script>
+<script src="js/content/chatter.js"></script>
+<script src="js/content/cosmetics.js"></script>
+<script src="js/state.js"></script>
+<script src="js/systems/modifiers.js"></script>
+<script src="js/systems/economy.js"></script>
+<script src="js/systems/effects.js"></script>
+<script src="js/systems/events.js"></script>
+<script src="js/systems/actions.js"></script>
+<script src="js/systems/progression.js"></script>
+<script src="js/systems/game.js"></script>
+<script src="js/save.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/ui/dom.js"></script>
+<script src="js/ui/hud.js"></script>
+<script src="js/ui/site.js"></script>
+<script src="js/ui/shop.js"></script>
+<script src="js/ui/panels.js"></script>
+<script src="js/ui/modals.js"></script>
+<script src="js/ui/chat.js"></script>
+<script src="js/ui/layout.js"></script>
+<script src="js/ui/style-shop.js"></script>
+<script src="js/desktop.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

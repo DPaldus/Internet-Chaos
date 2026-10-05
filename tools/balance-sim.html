@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Internet Chaos Balance Simulator</title>
+<style>
+  :root { --bg: #111418; --fg: #d9e1e8; --muted: #8a97a3; --accent: #ffcf4a; }
+  body { background: var(--bg); color: var(--fg); font: 13px/1.45 Consolas, "Courier New", monospace; margin: 0; padding: 16px; }
+  h1 { font-size: 16px; color: var(--accent); margin: 0 0 8px; }
+  p { color: var(--muted); max-width: 70ch; }
+  label { margin-right: 12px; }
+  input { width: 6em; }
+  button { font: inherit; padding: 4px 12px; cursor: pointer; }
+  pre { white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>Internet Chaos — balance simulator</h1>
+<p>Runs the real game rules (js/systems) with a scripted player at accelerated speed and prints a progression timeline.
+Edit values in js/config.js and js/content/, reload, and run again.</p>
+<div>
+  <label>Hours <input id="hours" type="number" value="6" min="0.1" step="0.5"></label>
+  <label>Seed <input id="seed" type="number" value="12345"></label>
+  <label>Max eras <input id="eras" type="number" value="6" min="1"></label>
+  <button id="run" type="button">Run simulation</button>
+</div>
+<pre id="out">Press "Run simulation".</pre>
+
+<script src="../js/core.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/content/buildings.js"></script>
+<script src="../js/content/upgrades.js"></script>
+<script src="../js/content/events.js"></script>
+<script src="../js/content/perks.js"></script>
+<script src="../js/content/achievements.js"></script>
+<script src="../js/state.js"></script>
+<script src="../js/systems/modifiers.js"></script>
+<script src="../js/systems/economy.js"></script>
+<script src="../js/systems/effects.js"></script>
+<script src="../js/systems/events.js"></script>
+<script src="../js/systems/actions.js"></script>
+<script src="../js/systems/progression.js"></script>
+<script src="../js/systems/game.js"></script>
+<script src="../js/save.js"></script>
+<script src="sim.js"></script>
+</body>
+</html>

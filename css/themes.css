@@ -1,0 +1,351 @@
+/* Era themes. The Forum Era look is the default in style.css; each later era
+   redefines the same tokens so the whole interface changes character as the
+   empire grows: cheap → clean → loud → cold → glossy → corporate → void. */
+
+/* ---------- 2 · Social Media Era: early social network blue ---------- */
+body[data-era="2"] {
+  --bg: #e4e7ee;
+  --bg-image: none;
+  --top-bg: #3d5a96;
+  --top-ink: #ffffff;
+  --panel: #ffffff;
+  --panel-2: #f5f6f8;
+  --card-bg: #ffffff;
+  --card-border: 1px solid #d6d9e0;
+  --fill: rgba(61, 90, 150, .09);
+  --panel-border: 1px solid #d0d4dc;
+  --panel-shadow: 0 1px 2px rgba(20, 30, 60, .12);
+  --radius: 8px;
+  --radius-sm: 6px;
+  --head-bg: #f5f6f8;
+  --head-ink: #3d5a96;
+  --head-border: 1px solid #e1e4ea;
+  --ink: #1c1e21;
+  --muted: #5d6573;
+  --line: #d6d9e0;
+  --bar-bg: #eef0f4;
+  --accent: #3d5a96;
+  --accent-ink: #ffffff;
+  --btn-bg: #eef0f4;
+  --btn-ink: #2a3550;
+  --btn-shadow: inset 0 0 0 1px #cfd4de;
+  --btn-shadow-in: inset 0 0 0 1px #3d5a96;
+  --att: #3d5a96;
+  --money: #2e7d32;
+  --chaos: #d8336b;
+  --stab: #2e9b57;
+  --clout: #b7791f;
+  --good: #2e7d32;
+  --bad: #d32f2f;
+  --warn: #e08a00;
+  --focus: #6a8fe0;
+  --font-ui: "Lucida Grande", "Segoe UI", Tahoma, sans-serif;
+  --font-head: "Lucida Grande", "Segoe UI", Tahoma, sans-serif;
+  --font-num: "Segoe UI", "Lucida Grande", sans-serif;
+  --site-bg: #ffffff;
+  --site-image: none;
+  --site-ink: #1c1e21;
+  --site-accent: #3d5a96;
+  --site-font: "Lucida Grande", "Segoe UI", Tahoma, sans-serif;
+  --site-title-font: "Lucida Grande", "Segoe UI", Tahoma, sans-serif;
+  --create-bg: linear-gradient(#6d8bd1, #3d5a96);
+  --create-ink: #ffffff;
+  --create-border: #2b4277;
+  --create-shadow: #22355f;
+  --create-radius: 10px;
+  --chip-bg: #ffffff;
+  color-scheme: light;
+}
+
+/* ---------- 3 · Viral Era: neon meme maximalism ---------- */
+body[data-era="3"] {
+  --bg: #150822;
+  --bg-image: radial-gradient(circle at 15% 0%, rgba(255, 62, 165, .28), transparent 42%), radial-gradient(circle at 90% 100%, rgba(32, 227, 255, .2), transparent 45%);
+  --bg-size: auto;
+  --top-bg: #0f0519;
+  --top-ink: #fff2fb;
+  --panel: #231036;
+  --panel-2: #1a0b29;
+  --card-bg: #2b1442;
+  --card-border: 1px solid #55307a;
+  --fill: rgba(255, 225, 77, .1);
+  --panel-border: 2px solid #ff3ea5;
+  --panel-shadow: 0 0 0 1px rgba(0, 0, 0, .4), 0 0 22px rgba(255, 62, 165, .25);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --head-bg: linear-gradient(90deg, #ff3ea5, #ffb800);
+  --head-ink: #1a0b29;
+  --ink: #fbeaff;
+  --muted: #c9a9da;
+  --line: #55307a;
+  --bar-bg: #12071d;
+  --accent: #ffe14d;
+  --accent-ink: #1a0b29;
+  --btn-bg: #34195a;
+  --btn-ink: #fbeaff;
+  --btn-shadow: inset 0 0 0 1px #6b3d99;
+  --btn-shadow-in: inset 0 0 0 2px #ffe14d;
+  --att: #20e3ff;
+  --money: #7dff6b;
+  --chaos: #ff3ea5;
+  --stab: #7dff6b;
+  --clout: #ffb800;
+  --good: #7dff6b;
+  --bad: #ff5c6c;
+  --warn: #ffb800;
+  --focus: #20e3ff;
+  --font-ui: Verdana, "Segoe UI", sans-serif;
+  --font-head: Impact, "Arial Black", sans-serif;
+  --font-num: Impact, "Arial Black", sans-serif;
+  --site-bg: #10051b;
+  --site-image: radial-gradient(circle at 50% 120%, rgba(255, 62, 165, .35), transparent 60%);
+  --site-ink: #ffffff;
+  --site-accent: #ff3ea5;
+  --site-font: Verdana, sans-serif;
+  --site-title-font: Impact, "Arial Black", sans-serif;
+  --create-bg: #ffe14d;
+  --create-ink: #1a0b29;
+  --create-border: #1a0b29;
+  --create-shadow: #a98800;
+  --create-radius: 999px;
+  --chip-bg: #1a0b29;
+  --overlay: rgba(10, 2, 18, .7);
+  color-scheme: dark;
+}
+body[data-era="3"] .panel-head h2, body[data-era="3"] .modal-title { letter-spacing: .04em; font-size: 15px; }
+body[data-era="3"] .site-name { text-shadow: 3px 3px 0 #20e3ff; letter-spacing: .02em; }
+
+/* ---------- 4 · Algorithm Era: cold terminal dashboard ---------- */
+body[data-era="4"] {
+  --bg: #060a08;
+  --bg-image: linear-gradient(rgba(61, 255, 138, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(61, 255, 138, .05) 1px, transparent 1px);
+  --bg-size: 28px 28px;
+  --top-bg: #08100c;
+  --top-ink: #c9f7da;
+  --panel: #0b1510;
+  --panel-2: #07100b;
+  --card-bg: #0e1a14;
+  --card-border: 1px solid #1f3b2b;
+  --fill: rgba(61, 255, 138, .08);
+  --panel-border: 1px solid #2a5a3e;
+  --panel-shadow: 0 0 0 1px rgba(0, 0, 0, .6);
+  --radius: 2px;
+  --radius-sm: 2px;
+  --head-bg: #0f2318;
+  --head-ink: #3dff8a;
+  --head-border: 1px solid #2a5a3e;
+  --ink: #c9f7da;
+  --muted: #74a98a;
+  --line: #1f3b2b;
+  --bar-bg: #050b08;
+  --accent: #3dff8a;
+  --accent-ink: #04120a;
+  --btn-bg: #102018;
+  --btn-ink: #c9f7da;
+  --btn-shadow: inset 0 0 0 1px #2a5a3e;
+  --btn-shadow-in: inset 0 0 0 1px #3dff8a;
+  --att: #3dff8a;
+  --money: #e8ff5a;
+  --chaos: #ff8a3d;
+  --stab: #3dd6ff;
+  --clout: #e8ff5a;
+  --good: #3dff8a;
+  --bad: #ff4d5e;
+  --warn: #ffcc33;
+  --focus: #e8ff5a;
+  --font-ui: Consolas, "Cascadia Mono", "Courier New", monospace;
+  --font-head: Consolas, "Cascadia Mono", "Courier New", monospace;
+  --font-num: Consolas, "Cascadia Mono", "Courier New", monospace;
+  --site-bg: #030604;
+  --site-image: repeating-linear-gradient(0deg, rgba(61, 255, 138, .04) 0 1px, transparent 1px 3px);
+  --site-ink: #c9f7da;
+  --site-accent: #3dff8a;
+  --site-font: Consolas, "Courier New", monospace;
+  --site-title-font: Consolas, "Courier New", monospace;
+  --create-bg: #07100b;
+  --create-ink: #3dff8a;
+  --create-border: #3dff8a;
+  --create-shadow: #1c6b40;
+  --create-radius: 2px;
+  --chip-bg: #07100b;
+  --overlay: rgba(0, 0, 0, .75);
+  color-scheme: dark;
+}
+body[data-era="4"] .site-name::before { content: "> "; opacity: .6; }
+
+/* ---------- 5 · AI Era: glassy, glowing, slightly unsettling ---------- */
+body[data-era="5"] {
+  --bg: #0d0a1d;
+  --bg-image: radial-gradient(ellipse at 10% 0%, rgba(167, 139, 250, .38), transparent 50%), radial-gradient(ellipse at 100% 100%, rgba(94, 234, 212, .24), transparent 50%);
+  --bg-size: auto;
+  --top-bg: rgba(14, 10, 30, .82);
+  --top-ink: #ece9ff;
+  --panel: rgba(255, 255, 255, .07);
+  --panel-2: rgba(10, 8, 24, .55);
+  --card-bg: rgba(255, 255, 255, .06);
+  --card-border: 1px solid rgba(255, 255, 255, .14);
+  --fill: rgba(167, 139, 250, .14);
+  --panel-border: 1px solid rgba(255, 255, 255, .16);
+  --panel-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  --panel-blur: blur(14px);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --head-bg: transparent;
+  --head-ink: #c4b5fd;
+  --head-border: 1px solid rgba(255, 255, 255, .1);
+  --ink: #ece9ff;
+  --muted: #a9a3cf;
+  --line: rgba(255, 255, 255, .14);
+  --bar-bg: rgba(0, 0, 0, .35);
+  --accent: #a78bfa;
+  --accent-ink: #140e2e;
+  --btn-bg: rgba(255, 255, 255, .08);
+  --btn-ink: #ece9ff;
+  --btn-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
+  --btn-shadow-in: inset 0 0 0 1px #a78bfa;
+  --att: #5eead4;
+  --money: #fde68a;
+  --chaos: #f472b6;
+  --stab: #86efac;
+  --clout: #fde68a;
+  --good: #86efac;
+  --bad: #fb7185;
+  --warn: #fbbf24;
+  --focus: #5eead4;
+  --font-ui: "Segoe UI", system-ui, sans-serif;
+  --font-head: "Segoe UI", system-ui, sans-serif;
+  --font-num: "Segoe UI", system-ui, sans-serif;
+  --site-bg: rgba(8, 6, 20, .6);
+  --site-image: radial-gradient(circle at 50% 0%, rgba(167, 139, 250, .25), transparent 60%);
+  --site-ink: #ece9ff;
+  --site-accent: #c4b5fd;
+  --site-font: "Segoe UI", system-ui, sans-serif;
+  --site-title-font: "Segoe UI", system-ui, sans-serif;
+  --create-bg: linear-gradient(135deg, #a78bfa, #5eead4);
+  --create-ink: #120c2b;
+  --create-border: rgba(255, 255, 255, .5);
+  --create-shadow: #3d2f7a;
+  --create-radius: 20px;
+  --chip-bg: rgba(10, 8, 24, .7);
+  --overlay: rgba(5, 3, 15, .7);
+  color-scheme: dark;
+}
+body[data-era="5"] .site-name { font-weight: 300; letter-spacing: .08em; }
+
+/* ---------- 6 · Corporate Internet Era: sterile shareholder dashboard ---------- */
+body[data-era="6"] {
+  --bg: #f1f2f4;
+  --bg-image: none;
+  --top-bg: #111827;
+  --top-ink: #ffffff;
+  --panel: #ffffff;
+  --panel-2: #f8f9fb;
+  --card-bg: #ffffff;
+  --card-border: 1px solid #e3e6ea;
+  --fill: rgba(29, 78, 216, .06);
+  --panel-border: 1px solid #e3e6ea;
+  --panel-shadow: 0 1px 0 rgba(17, 24, 39, .04);
+  --radius: 4px;
+  --radius-sm: 4px;
+  --head-bg: #ffffff;
+  --head-ink: #111827;
+  --head-border: 1px solid #e3e6ea;
+  --ink: #111827;
+  --muted: #646b78;
+  --line: #e3e6ea;
+  --bar-bg: #eef0f3;
+  --accent: #1d4ed8;
+  --accent-ink: #ffffff;
+  --btn-bg: #ffffff;
+  --btn-ink: #111827;
+  --btn-shadow: inset 0 0 0 1px #d4d8de;
+  --btn-shadow-in: inset 0 0 0 1px #1d4ed8;
+  --att: #1d4ed8;
+  --money: #047857;
+  --chaos: #be185d;
+  --stab: #059669;
+  --clout: #a16207;
+  --good: #047857;
+  --bad: #c81e1e;
+  --warn: #b45309;
+  --focus: #1d4ed8;
+  --font-ui: "Helvetica Neue", Arial, sans-serif;
+  --font-head: "Helvetica Neue", Arial, sans-serif;
+  --font-num: "Helvetica Neue", Arial, sans-serif;
+  --site-bg: #ffffff;
+  --site-image: none;
+  --site-ink: #111827;
+  --site-accent: #111827;
+  --site-font: "Helvetica Neue", Arial, sans-serif;
+  --site-title-font: "Helvetica Neue", Arial, sans-serif;
+  --create-bg: #111827;
+  --create-ink: #ffffff;
+  --create-border: #111827;
+  --create-shadow: #000000;
+  --create-radius: 4px;
+  --chip-bg: #ffffff;
+  color-scheme: light;
+}
+body[data-era="6"] .site-name { letter-spacing: -.01em; }
+
+/* ---------- 7+ · Post-Internet Era: a glitching void ---------- */
+body[data-era="7"] {
+  --bg: #050505;
+  --bg-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, .025) 0 1px, transparent 1px 3px);
+  --bg-size: auto;
+  --top-bg: #0a0a0a;
+  --top-ink: #f3e9e9;
+  --panel: #0d0d0d;
+  --panel-2: #070707;
+  --card-bg: #121212;
+  --card-border: 1px solid #3a1414;
+  --fill: rgba(255, 42, 42, .09);
+  --panel-border: 1px solid #5c1a1a;
+  --panel-shadow: 3px 3px 0 #2a0000;
+  --radius: 0px;
+  --radius-sm: 0px;
+  --head-bg: #170404;
+  --head-ink: #ff4545;
+  --head-border: 1px solid #5c1a1a;
+  --ink: #f3e9e9;
+  --muted: #a88a8a;
+  --line: #3a1414;
+  --bar-bg: #000000;
+  --accent: #ff2a2a;
+  --accent-ink: #000000;
+  --btn-bg: #141414;
+  --btn-ink: #f3e9e9;
+  --btn-shadow: inset 0 0 0 1px #5c1a1a;
+  --btn-shadow-in: inset 0 0 0 1px #ff2a2a;
+  --att: #6be3ff;
+  --money: #c8ff6b;
+  --chaos: #ff2a2a;
+  --stab: #9cffc8;
+  --clout: #ffd36b;
+  --good: #9cffc8;
+  --bad: #ff4545;
+  --warn: #ffd36b;
+  --focus: #6be3ff;
+  --font-ui: "Courier New", Consolas, monospace;
+  --font-head: "Courier New", Consolas, monospace;
+  --font-num: "Courier New", Consolas, monospace;
+  --site-bg: #000000;
+  --site-image: repeating-linear-gradient(90deg, rgba(255, 42, 42, .05) 0 2px, transparent 2px 7px);
+  --site-ink: #f3e9e9;
+  --site-accent: #ff2a2a;
+  --site-font: "Courier New", monospace;
+  --site-title-font: "Courier New", monospace;
+  --create-bg: #000000;
+  --create-ink: #ff2a2a;
+  --create-border: #ff2a2a;
+  --create-shadow: #5a0000;
+  --create-radius: 0px;
+  --chip-bg: #000000;
+  --overlay: rgba(0, 0, 0, .8);
+  color-scheme: dark;
+}
+body[data-era="7"] .logo, body[data-era="7"] .site-name { text-shadow: 2px 0 #ff2a2a, -2px 0 #6be3ff; }
+
+/* Bigger empires get a little more "product" polish inside every era. */
+body[data-level="4"] .site, body[data-level="5"] .site { box-shadow: 0 0 0 2px var(--accent) inset; }
+body[data-level="5"] .create-btn:not(:active) { box-shadow: 0 7px 0 var(--create-shadow), 0 0 26px var(--accent); }
