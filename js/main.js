@@ -37,6 +37,7 @@
     ui.shop.reset();
     ui.panels.reset();
     ui.site.refreshLook();
+    ui.sponsors.reset();
     ui.feed.renderAll(g);
     ui.requestRender(true);
   };
@@ -70,8 +71,9 @@
     ui.modal.close();
     ui.resetAll();
     Z.save.write(g.s);
-    if (!g.s.siteName) ui.modals.openSiteName({ first: true });
     ui.styleShop.apply();
+    if (!g.s.siteName) ui.modals.openSiteName({ first: true, onDone: ui.help.maybeTour });
+    else ui.help.maybeTour();
   };
 
   /* ---------- Loop ---------- */
@@ -107,6 +109,8 @@
     eras: ['🌐', 'Internet Eras', 'Reach the era goal to start a new Internet Era with permanent Clout. Open Eras to see it.'],
     auto: ['🤖', 'Automation online', 'Parts of your empire now run themselves. Configure them in the Automation panel.'],
     analytics: ['📈', 'Analytics dashboard', 'Your site is big enough to need charts nobody reads.'],
+    bulk: ['✖️', 'Bulk buying', 'Buy ×10, ×25 or Max at once with the buttons above the shop list.'],
+    style: ['🎨', 'Style Shop unlocked', 'You can now unlock themes for your website. Open 🎨 Style in the top bar.'],
   };
 
   function wire() {
@@ -200,6 +204,8 @@
     ui.chat.init(g);
     ui.layout.init();
     ui.styleShop.init(g);
+    ui.sponsors.init(g);
+    ui.help.init(g);
     wire();
     wireNav();
     applySettings();
@@ -210,9 +216,9 @@
     }
     if (loaded.error) ui.toast({ icon: '⚠️', title: 'Save problem', text: loaded.error, kind: 'bad', duration: 9000 });
     const offline = summary && summary.away >= 60 ? () => ui.modals.showOffline(summary) : null;
-    if (!g.s.siteName) ui.modals.openSiteName({ first: true, onDone: offline });
+    if (!g.s.siteName) ui.modals.openSiteName({ first: true, onDone: offline || ui.help.maybeTour });
     else if (offline) offline();
-    if (Z.desktop) Z.desktop.init(g, !loaded.state);
+    else ui.help.maybeTour();
 
     lastTick = Date.now();
     lastFrame = performance.now();

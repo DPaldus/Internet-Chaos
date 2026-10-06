@@ -27,6 +27,7 @@
       cpsPeak: 0,
       exported: false,
       muted: false,
+      tutorial: false,     // the first-launch tour was finished or skipped
     };
   }
 

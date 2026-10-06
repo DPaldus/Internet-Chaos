@@ -161,14 +161,19 @@
     adTimer -= dt;
     if (adTimer > 0 && el.adTop._t) return;
     adTimer = 12;
-    adIndex = (adIndex + 1) % ADS.length;
-    setText(el.adTop, Z.siteText(game.s, ADS[adIndex]));
-    setText(el.adBottom, Z.siteText(game.s, ADS[(adIndex + 5) % ADS.length]));
+    adIndex++;
+    // Sponsors take every other rotation of the ad slots.
+    const sp = ui.sponsors.ads(), half = adIndex >> 1;
+    const top = sp.length && adIndex % 2 ? sp[half % sp.length] : ADS[adIndex % ADS.length];
+    const bottom = sp.length > 1 && !(adIndex % 2) ? sp[(half + 1) % sp.length] : ADS[(adIndex + 5) % ADS.length];
+    setText(el.adTop, Z.siteText(game.s, top));
+    setText(el.adBottom, Z.siteText(game.s, bottom));
   }
 
   function render(g, dt) {
     const s = g.s, c = g.c, f = Z.fmt;
     renderLook(g);
+    ui.sponsors.render(g);
     renderAds(dt);
     renderTip(g, dt);
 

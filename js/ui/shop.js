@@ -114,10 +114,12 @@
     const mult = (m.bMult[b.id] || 1) * (c.buff.b[b.id] || 1);
     if (b.cat === 'traffic') {
       const unit = b.aps * mult * Z.econ.synergyMult(g, b.id);
+      // Chaos and server load mean nothing to a new player, so they appear once Chaos does.
+      if (!g.s.flags.reveal.chaos) return f.rate(unit) + ' Attention/s each';
       const chaos = b.cp ? ' · Chaos +' + f.num(b.cp, { dec: 1 }) : ' · no Chaos';
       return f.rate(unit) + ' base Attention/s each' + chaos + ' · Load +' + b.load;
     }
-    if (b.cat === 'money') return '+' + f.num(b.pct * mult * 100, { dec: 1 }) + '% Money per Attention each' + (b.cp ? ' · Chaos +' + f.num(b.cp, { dec: 1 }) : '');
+    if (b.cat === 'money') return '+' + f.num(b.pct * mult * 100, { dec: 1 }) + '% Money per Attention each' + (b.cp && g.s.flags.reveal.chaos ? ' · Chaos +' + f.num(b.cp, { dec: 1 }) : '');
     if (b.cat === 'infra') return '+' + f.num(b.cap * mult * m.capacityMult) + ' capacity · repairs ' + f.num(b.regen * m.regenMult, { dec: 2 }) + '%/s each';
     return '+' + f.num(b.control * mult * m.controlMult) + ' Control each';
   }
@@ -193,14 +195,24 @@
       if (text) setText(t.text, text);
     }
 
+    let tabCount = 0;
     for (const cat of Z.CATS) {
-      setHidden(tabEls[cat.id], !anyVisible[cat.id] && cat.id !== 'traffic');
+      const shown = !!anyVisible[cat.id] || cat.id === 'traffic';
+      if (shown) tabCount++;
+      setHidden(tabEls[cat.id], !shown);
       tabEls[cat.id].classList.toggle('has-affordable', !!anyAffordable[cat.id] && cat.id !== tab);
     }
     if (!anyVisible[tab] && tab !== 'traffic') selectTab('traffic');
 
+    // Progressive disclosure: tabs once there is a second category, bulk buying once
+    // it saves clicks, and the numbers summary once Chaos makes it relevant.
+    const bulk = !!s.flags.reveal.bulk;
+    setHidden($('shop-tabs'), tabCount < 2);
+    setHidden($('buy-qty'), !bulk);
+    setHidden(document.querySelector('.shop-head'), tabCount < 2 && !bulk);
+    setHidden($('shop-summary'), !s.flags.reveal.chaos);
     for (const btn of $('buy-qty').children) btn.classList.toggle('active', btn.dataset.qty === qtyMode);
-    setText($('shop-summary'), summaryText(g));
+    if (s.flags.reveal.chaos) setText($('shop-summary'), summaryText(g));
   }
 
   function renderUpgrades(g) {

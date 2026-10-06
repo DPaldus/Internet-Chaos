@@ -126,6 +126,7 @@
     d.flags.cpsPeak = n(fl.cpsPeak, 0, 0, 1000);
     d.flags.exported = b(fl.exported, false);
     d.flags.muted = b(fl.muted, false);
+    d.flags.tutorial = b(fl.tutorial, false);
 
     const se = o(raw.settings);
     d.settings.sound = b(se.sound, true);
@@ -168,14 +169,13 @@
   function write(s) {
     s.lastSaved = Date.now();
     const json = serialize(s);
-    if (Z.desktop) Z.desktop.mirror(json);
     const st = storage();
-    if (!st) return !!(Z.desktop && Z.desktop.active);
+    if (!st) return false;
     try {
       st.setItem(Z.SAVE_KEY, json);
       return true;
     } catch (err) {
-      return !!(Z.desktop && Z.desktop.active);
+      return false;
     }
   }
 

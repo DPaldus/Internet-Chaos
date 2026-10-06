@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="css/chat.css">
 <link rel="stylesheet" href="css/aero.css">
 <link rel="stylesheet" href="css/cosmetics.css">
+<link rel="stylesheet" href="css/guide.css">
 </head>
 <body data-era="1" data-level="0">
 <noscript><p class="noscript">Internet Chaos needs JavaScript to run.</p></noscript>
@@ -62,7 +63,8 @@
 
     <nav class="topnav" aria-label="Game menu">
       <button type="button" class="nav-btn nav-eras" id="btn-eras" hidden><span aria-hidden="true">🌐</span><span class="nav-label">Eras</span><span class="nav-dot" id="eras-dot" hidden></span></button>
-      <button type="button" class="nav-btn" id="btn-style" title="Style Shop: themes for your website"><span aria-hidden="true">🎨</span><span class="nav-label">Style</span><span class="nav-dot" id="style-dot" hidden></span></button>
+      <button type="button" class="nav-btn" id="btn-style" title="Style Shop: themes for your website" hidden><span aria-hidden="true">🎨</span><span class="nav-label">Style</span><span class="nav-dot" id="style-dot" hidden></span></button>
+      <button type="button" class="nav-btn nav-help" id="btn-help" title="Help: how to play and what everything means" aria-label="Help"><span class="help-q" aria-hidden="true">?</span><span class="nav-label">Help</span></button>
       <div class="menu-wrap">
         <button type="button" class="nav-btn" id="btn-menu" aria-haspopup="true" aria-expanded="false" aria-controls="menu-pop"><span aria-hidden="true">☰</span><span class="nav-label">Menu</span></button>
         <div class="menu-pop" id="menu-pop" hidden>
@@ -100,8 +102,10 @@
               <span class="create-sub" id="create-sub">+1 Attention</span>
             </button>
             <div class="floaters" id="floaters" aria-hidden="true"></div>
+            <div class="sponsor-can" id="sponsor-can" aria-hidden="true" hidden><span class="can-brand">BLU VOLT</span></div>
           </div>
           <div class="site-counter">Visitors: <span class="counter" id="hit-counter">0000000</span></div>
+          <div class="sponsor-bar" id="sponsor-bar" hidden><span class="sponsor-label">Sponsored by</span><span class="sponsor-list" id="sponsor-list"></span></div>
           <div class="ad-slot" id="ad-bottom" hidden></div>
           <div class="meltdown-screen" id="meltdown-screen" hidden>
             <div class="melt-code">503</div>
@@ -201,6 +205,7 @@
 <script src="js/content/achievements.js"></script>
 <script src="js/content/chatter.js"></script>
 <script src="js/content/cosmetics.js"></script>
+<script src="js/content/sponsors.js"></script>
 <script src="js/state.js"></script>
 <script src="js/systems/modifiers.js"></script>
 <script src="js/systems/economy.js"></script>
@@ -220,7 +225,8 @@
 <script src="js/ui/chat.js"></script>
 <script src="js/ui/layout.js"></script>
 <script src="js/ui/style-shop.js"></script>
-<script src="js/desktop.js"></script>
+<script src="js/ui/sponsors.js"></script>
+<script src="js/ui/help.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

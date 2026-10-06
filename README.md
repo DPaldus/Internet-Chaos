@@ -10,40 +10,9 @@ You create Attention, Attention earns Money, Money buys more content. The catch 
 ## Run it
 
 Open `index.html` in any modern browser. No server, build step or install is needed.
-Progress saves to the browser's local storage automatically.
-
-To serve it locally instead (optional):
-
-```bash
-python -m http.server 8765
-```
-
-and visit `http://localhost:8765/`.
-
-## Windows desktop app
-
-`dist\Internet Chaos.exe` is the game as a standalone Windows app: its own window
-and taskbar icon, no browser UI. It needs the Edge WebView2 runtime, which ships with
-Windows 10 and 11. Press **F11** for fullscreen.
-
-- Saves live in `%APPDATA%\Internet Chaos\`: the app's own storage plus a
-  `save.json` copy (and `save.json.bak`). If the app's storage is ever wiped, the game
-  restores from `save.json`. The game saves on close and every 15 seconds.
-- **Menu → Export save → Save as file…** opens a normal Windows save dialog.
-- Only one copy runs at a time.
-
-**Rebuild after changing the game:** double-click `build.bat`. The first run creates a
-private Python environment in `.venv` (pywebview, PyInstaller, Pillow); later runs just
-rebuild. `build.bat --shortcut` also refreshes the Desktop shortcut.
-
-Run the desktop version straight from source (no build) with:
-
-```bash
-.venv\Scripts\python.exe desktop\app.py
-```
-
-`desktop\app.py --selftest` boots the game hidden, writes
-`%APPDATA%\Internet Chaos\selftest.json` and quits, which is handy for checking a build.
+Progress saves to the browser's local storage automatically. Saves belong to that browser,
+so use **Settings → Export save** to move a game to another browser or keep a backup.
+Any static file host also works, since the game is plain HTML, CSS and JavaScript.
 
 ## How it plays
 
@@ -54,6 +23,28 @@ Run the desktop version straight from source (no build) with:
 | Chaos | Drifts toward `Pressure / (Pressure + Control)`. Boosts Attention and Yield. |
 | Tolerance | `10 + 80 × Capacity / (Capacity + Load)`. Servers add capacity, content adds load. |
 | Stability | Drains while Chaos sits above Tolerance and repairs below it. Under 60% production slows; 0% is a meltdown. |
+
+**Layout.** Three windows: your website (with Editorial Policy and Actions), the Shop
+(upgrades above buildings) and Community (goals, with Live Feed, Analytics and Automation as
+tabs). Achievements, Statistics, Settings and Sound live in the ☰ Menu.
+
+**For new players.** The screen starts with only the button, the Shop and the goals. Shop
+tabs, bulk buying (×10/×25/Max), the numbers summary, Chaos details and the 🎨 Style button
+appear once they matter, each with a short note. A new game opens with a 7-step tour, and
+the **?** button holds the core loop plus a glossary of every term (terms you have not met
+yet are marked "Later"). The tour can be replayed from there. Code: `js/ui/help.js`.
+
+**Sponsors.** Sponsorship upgrades and buildings put a sponsor on your website: a "Sponsored
+by" strip of brand badges, sponsor ads in the ad slots and, for the Energy Drink
+Sponsorship, a BLU VOLT can next to the button. Brands are defined in
+`js/content/sponsors.js`. They are purely visual, since the bonus stays on the upgrade.
+
+**About the Developer.** At the bottom of Settings, with the DPLDS logo (`assets/`).
+
+**Style Shop (🎨).** Unlock and apply backgrounds, glass colors, website styles and effects.
+Themes unlock through lifetime milestones (never Money), are purely cosmetic, and the choice
+is saved with the game. Items are defined in `js/content/cosmetics.js`, styled in
+`css/cosmetics.css`.
 
 **Live Feed pages.** The Blog Post, Meme Page and Comment Section tiles at the top of the
 Live Feed open living pages of your site: an article, a meme or a forum thread, with
@@ -74,7 +65,10 @@ index.html               entry point
 css/style.css            layout, components, Forum Era theme tokens
 css/themes.css           tokens for the later eras
 css/chat.css             website-name dialog and Live Feed pages
+css/cosmetics.css        Style Shop themes and window
 css/aero.css             Frutiger Aero skin for the interface (loaded last, applies to every era)
+css/guide.css            help window, tour, sponsors, About the Developer
+assets/                  DPLDS logo images
 js/core.js               namespace, helpers, seeded RNG, event bus
 js/format.js             number / money / time formatting (1K … 1Tg, or scientific)
 js/config.js             balance values, policies, eras        ← tune here
@@ -86,12 +80,7 @@ js/systems/*.js          rules: modifiers, economy, effects, events, actions/aut
 js/save.js               save/load, validation of untrusted data, export/import
 js/audio.js              Web Audio sound effects
 js/ui/*.js               DOM rendering (HUD, website, shop, panels, dialogs, Live Feed pages)
-js/desktop.js            desktop-app bridge (disk save mirror, native export, F11); inert in browsers
 js/main.js               boot, timing loop, autosave, notification wiring
-desktop/app.py           Windows launcher (pywebview window, fixed local port, save file API)
-desktop/build.py         builds dist\Internet Chaos.exe with PyInstaller; draws the icon
-desktop/icon.ico         app icon
-build.bat                one-click build
 tools/balance-sim.html   headless balance simulator using the real rules
 ```
 

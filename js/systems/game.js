@@ -70,6 +70,11 @@
     auto: g => g.m.autoClick > 0 || g.m.autoHotfix || g.m.autobuy || g.m.riskManager || g.m.prAutopilot || g.m.scheduler,
     analytics: g => siteLevel(g.s) >= 3,
     clout: g => g.s.cloutLifetime > 0,
+    bulk: g => Z.BUILDINGS.some(b => (g.s.buildings[b.id] || 0) >= 10) || g.s.cloutLifetime > 0,
+    style: g => !!Z.COSMETICS && Object.keys(Z.COSMETICS.ITEM).some(k => {
+      const r = Z.COSMETICS.ITEM[k].req;
+      return r && r.have(g.s) >= r.need;
+    }),
   };
 
   function updateReveals(g) {

@@ -252,7 +252,7 @@
     const exportArea = h('textarea', { id: 'export-code', class: 'code-area', readonly: true, rows: '4', 'aria-label': 'Save code', placeholder: 'Press "Create save code" to generate it.' });
     const exportBtn = h('button', { type: 'button', class: 'btn btn-primary', text: 'Create save code' });
     const copyBtn = h('button', { type: 'button', class: 'btn', text: 'Copy', disabled: true });
-    const dlBtn = h('button', { type: 'button', class: 'btn', text: 'Save as file…', disabled: true, hidden: inFrame() && !(Z.desktop && Z.desktop.active) });
+    const dlBtn = h('button', { type: 'button', class: 'btn', text: 'Save as file…', disabled: true, hidden: inFrame() });
     exportBtn.addEventListener('click', () => {
       exportArea.value = Z.save.exportString(s);
       s.flags.exported = true;
@@ -268,12 +268,6 @@
     });
     dlBtn.addEventListener('click', () => {
       const filename = 'internet-chaos-save-' + new Date().toISOString().slice(0, 10) + '.txt';
-      if (Z.desktop && Z.desktop.active) {
-        Z.desktop.exportFile(exportArea.value, filename).then(path => {
-          if (path) ui.toast({ icon: '💾', title: 'Save file written', text: String(path), kind: 'info' });
-        });
-        return;
-      }
       const blob = new Blob([exportArea.value], { type: 'text/plain' });
       const a = h('a', { href: URL.createObjectURL(blob), download: filename });
       document.body.appendChild(a); a.click(); a.remove();
@@ -333,7 +327,7 @@
       h('section', {}, [
         h('h3', { text: 'Saving' }),
         h('p', { class: 'muted', text: 'The game saves itself every ' + Z.BAL.autosaveSeconds + ' seconds and when you leave. '
-          + (Z.desktop && Z.desktop.active ? 'The desktop app also keeps a save file in your AppData folder.' : 'Saves live in this browser only.') }),
+          + 'Saves live in this browser only, so export a save code to move your game or keep a backup.' }),
         h('div', { class: 'btn-row' }, [saveNow, savedAt]),
       ]),
       h('section', {}, [
@@ -351,11 +345,31 @@
         h('h3', { text: 'Danger zone' }),
         resetBtn,
       ]),
+      aboutDeveloper(),
     ]);
 
     function refresh() { setText(savedAt, 'Last saved ' + Z.fmt.clock(s.lastSaved)); }
     refresh();
-    ui.modal.open({ id: 'settings', title: 'Menu & Saves', body, refresh });
+    ui.modal.open({ id: 'settings', title: 'Settings & saves', body, refresh });
+  }
+
+  function aboutDeveloper() {
+    return h('section', { class: 'about-dev' }, [
+      h('h3', { text: 'About the Developer' }),
+      h('img', { class: 'about-banner', src: 'assets/dplds-banner.webp', alt: 'DPLDS', width: '760', height: '349', loading: 'lazy' }),
+      h('div', { class: 'about-row' }, [
+        h('img', { class: 'about-logo', src: 'assets/dplds-logo.webp', alt: '', width: '256', height: '256', loading: 'lazy' }),
+        h('div', { class: 'about-id' }, [
+          h('b', { class: 'about-name', text: 'DPLDS' }),
+          h('span', { class: 'about-sub', text: 'One-man indie studio · Czech Republic' }),
+        ]),
+      ]),
+      h('p', { class: 'about-text', text: 'I’m an indie game developer from the Czech Republic, creating small games and experimental projects. '
+        + 'I mainly focus on browser games, simple but addictive mechanics, and retro or nostalgic visual styles. '
+        + 'I like mixing humor, internet culture, and old school game aesthetics with modern ideas. '
+        + 'I create everything as a one man studio under the name DPLDS.' }),
+      h('p', { class: 'about-credit', text: 'Internet Chaos is a DPLDS game. Thanks for playing!' }),
+    ]);
   }
 
   /* ---------- Website name ---------- */

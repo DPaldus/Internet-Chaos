@@ -15,6 +15,7 @@
       hudStab: $('hud-stab'), vStab: $('v-stab'), fStab: $('f-stab'), rStab: $('r-stab'), barStab: $('bar-stab'),
       hudClout: $('hud-clout'), vClout: $('v-clout'), rClout: $('r-clout'),
       eraChip: $('era-chip'), btnEras: $('btn-eras'), erasDot: $('eras-dot'), achCount: $('ach-count'),
+      btnStyle: $('btn-style'),
     };
   }
 
@@ -89,6 +90,7 @@
     setText(el.eraChip, Z.era(s.era).name);
     setText(el.achCount, String(g.m.achCount) + '/' + Z.ACHIEVEMENTS.length);
     setHidden(el.btnEras, !rev.eras);
+    setHidden(el.btnStyle, !rev.style);
     setHidden(el.erasDot, !Z.prestige.canPrestige(s));
   }
 

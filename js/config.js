@@ -133,7 +133,7 @@
   Z.SITE_LEVELS = ['Homepage', 'Hobby Site', 'Community', 'Network', 'Platform', 'Empire'];
 
   /* Interface sections that appear as the player discovers each system. */
-  Z.REVEAL_KEYS = ['chaos', 'stability', 'policy', 'actions', 'upgrades', 'eras', 'auto', 'analytics', 'clout'];
+  Z.REVEAL_KEYS = ['chaos', 'stability', 'policy', 'actions', 'upgrades', 'eras', 'auto', 'analytics', 'clout', 'bulk', 'style'];
 
   const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 
