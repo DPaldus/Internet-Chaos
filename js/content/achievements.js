@@ -51,6 +51,9 @@
     A('decisions', '🤔', 'Decision Fatigue', 'Answer 25 choice events yourself.', g => g.s.stats.choices >= 25),
     A('maincharacter', '🎬', 'Main Character', 'Experience 100 events.', g => g.s.stats.events >= 100),
     A('trending', '#️⃣', 'For You Page', 'Have one of your buildings trend.', g => ev(g.s, 'trend') >= 1),
+    A('gotmail', '🔔', 'You’ve Got Mail', 'Catch a floating notification.', g => g.s.stats.bonuses >= 1),
+    A('notifninja', '🥷', 'Notification Ninja', 'Catch 10 floating notifications.', g => g.s.stats.bonuses >= 10),
+    A('inboxzero', '📭', 'Inbox Zero', 'Catch 50 floating notifications.', g => g.s.stats.bonuses >= 50),
 
     // Actions
     A('stirrer', '🥄', 'Pot Stirrer', 'Stir the Pot 10 times.', g => g.s.stats.stirs >= 10),
@@ -74,6 +77,12 @@
     A('era7', '💀', 'Post-Internet', 'Reach the Post-Internet Era.', g => g.s.era >= 7),
     A('speedrun', '⏱️', 'Speedrunner', 'Finish an era in under 30 minutes.', g => g.s.stats.fastestEra > 0 && g.s.stats.fastestEra < 1800),
     A('clout100', '💫', 'Influencer of Influencers', 'Earn 100 Clout in total.', g => g.s.cloutLifetime >= 100),
+    A('os8', '🪟', 'Where Did the Start Button Go?', 'Upgrade your website to ChaosOS 8.', g => Z.OSES.indexOf(Z.opsys.current(g.s)) >= 1),
+    A('flat', '🟦', 'Flat Is the New Glossy', 'Unlock every ChaosOS 8 theme in the Style Shop.',
+      g => g.s.os.id === 'metro' && Z.COSMETICS.setFor('metro').every(c => c.items.every(i => !i.req || g.s.cosmetics.unlocked[c.id + ':' + i.id]))),
+    A('mango', '🥭', 'Liquid Assets', 'Upgrade your website to Mango OS.', g => Z.OSES.indexOf(Z.opsys.current(g.s)) >= 2),
+    A('glassy', '🫧', 'Every Corner Rounded', 'Unlock every Mango OS theme in the Style Shop.',
+      g => g.s.os.id === 'mango' && Z.COSMETICS.setFor('mango').every(c => c.items.every(i => !i.req || g.s.cosmetics.unlocked[c.id + ':' + i.id]))),
 
     // Time and meta
     A('nightshift', '🌙', 'Night Shift', 'Play for 1 hour.', g => g.s.stats.playTime >= 3600),

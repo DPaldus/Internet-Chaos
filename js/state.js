@@ -13,7 +13,7 @@
       highestChaos: 0, bestMps: 0, bestAps: 0, highestStability: 100, playTime: 0,
       events: 0, choices: 0, eras: 0, largestViral: 0, meltdowns: 0, buildingsBought: 0,
       upgradesBought: 0, offlineTime: 0, longestAway: 0, hotfixes: 0, stirs: 0, actions: 0,
-      cloutEarned: 0, unhingedTime: 0, fastestEra: 0,
+      cloutEarned: 0, unhingedTime: 0, fastestEra: 0, bonuses: 0,
     };
   }
 
@@ -28,6 +28,10 @@
       exported: false,
       muted: false,
       tutorial: false,     // the first-launch tour was finished or skipped
+      lastBackup: 0,       // when a backup file or save code was last made (ms)
+      backupAt: 0,         // play time at that backup, for the backup reminder
+      backupSnooze: 0,     // play time the reminder was postponed to
+      osOffer: '',         // the newest operating system the player was told about
     };
   }
 
@@ -67,9 +71,10 @@
         achievements: {},
         stats: freshStats(),
         flags: freshFlags(),
-        settings: { sound: true, volume: 0.6, notation: 'short', reduceMotion: false, buyQty: '1' },
+        settings: { sound: true, volume: 0.6, music: true, musicVolume: 0.5, notation: 'short', reduceMotion: false, buyQty: '1' },
         feed: [],
         cosmetics: { bg: 'sky', color: 'aqua', site: 'era', fx: 'bubbles', unlocked: {} },   // Style Shop choices
+        os: { id: 'aero', installed: 0, base: {} },   // operating system; `base` = stats at install time
       };
     },
   };

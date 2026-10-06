@@ -5,18 +5,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Internet Chaos</title>
 <meta name="description" content="An idle game about turning one useless website into an absurd internet empire.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23ff3d7f'/%3E%3Ctext x='32' y='44' font-size='32' font-family='Impact,Arial Black,sans-serif' text-anchor='middle' fill='%23fff'%3EIC%3C/text%3E%3C/svg%3E">
+<meta name="author" content="DPLDS">
+<meta name="theme-color" content="#1d6fc4">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Internet Chaos">
+<meta property="og:description" content="An idle game about turning one useless website into an absurd internet empire. Click, grow, and keep the Chaos just below meltdown.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=VT323&display=swap">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/themes.css">
-<link rel="stylesheet" href="css/chat.css">
-<link rel="stylesheet" href="css/aero.css">
-<link rel="stylesheet" href="css/cosmetics.css">
-<link rel="stylesheet" href="css/guide.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;500;600;700;800&family=Pacifico&family=VT323&display=swap">
+<link rel="stylesheet" href="css/game.css">
 </head>
-<body data-era="1" data-level="0">
+<body data-era="1" data-level="0" data-os="aero">
+<script>
+  /* Apply the saved operating system skin before the first paint, so a ChaosOS 8 or Mango OS
+     game does not flash the ChaosOS 7 look while the scripts load. js/ui/style-shop.js re-applies it. */
+  try {
+    var saved = JSON.parse(localStorage.getItem('internet-chaos:save') || 'null');
+    var osId = saved && saved.os && saved.os.id;
+    if (osId === 'metro' || osId === 'mango') document.body.setAttribute('data-os', osId);
+  } catch (err) { /* no save yet, or storage blocked */ }
+</script>
+
+<!-- Mango OS only: a desktop menu bar. Each menu opens a game window (js/ui/os.js). -->
+<div class="mango-bar" id="mango-bar" hidden>
+  <div class="mb-left">
+    <button type="button" class="mb-item mb-brand" id="mb-os" title="About this website’s operating system"><span aria-hidden="true">🥭</span> Mango OS</button>
+    <button type="button" class="mb-item" id="mb-file" title="Settings &amp; saves">File</button>
+    <button type="button" class="mb-item" id="mb-edit" title="Style Shop">Edit</button>
+    <button type="button" class="mb-item" id="mb-view" title="Statistics">View</button>
+    <button type="button" class="mb-item" id="mb-window" title="Internet Eras">Window</button>
+    <button type="button" class="mb-item" id="mb-help" title="Help">Help</button>
+  </div>
+  <div class="mb-right" aria-hidden="true">
+    <span class="mb-glyph mb-wifi"></span>
+    <span class="mb-glyph mb-battery"></span>
+    <span class="mb-clock" id="mb-clock"></span>
+  </div>
+</div>
 <noscript><p class="noscript">Internet Chaos needs JavaScript to run.</p></noscript>
 
 <div class="app" id="app">
@@ -62,6 +90,7 @@
     </div>
 
     <nav class="topnav" aria-label="Game menu">
+      <button type="button" class="nav-btn nav-os" id="btn-os" title="Operating System Upgrade" hidden><span aria-hidden="true" id="os-icon">🪟</span><span class="nav-label">Update</span><span class="nav-dot" id="os-dot" hidden></span></button>
       <button type="button" class="nav-btn nav-eras" id="btn-eras" hidden><span aria-hidden="true">🌐</span><span class="nav-label">Eras</span><span class="nav-dot" id="eras-dot" hidden></span></button>
       <button type="button" class="nav-btn" id="btn-style" title="Style Shop: themes for your website" hidden><span aria-hidden="true">🎨</span><span class="nav-label">Style</span><span class="nav-dot" id="style-dot" hidden></span></button>
       <button type="button" class="nav-btn nav-help" id="btn-help" title="Help: how to play and what everything means" aria-label="Help"><span class="help-q" aria-hidden="true">?</span><span class="nav-label">Help</span></button>
@@ -70,14 +99,19 @@
         <div class="menu-pop" id="menu-pop" hidden>
           <button type="button" class="menu-item" id="btn-ach"><span aria-hidden="true">🏆</span> Achievements <span class="menu-count" id="ach-count">0</span></button>
           <button type="button" class="menu-item" id="btn-stats"><span aria-hidden="true">📊</span> Statistics</button>
+          <button type="button" class="menu-item" id="btn-system" hidden><span aria-hidden="true" id="system-icon">🪟</span> System <span class="menu-count" id="os-name">ChaosOS 7</span></button>
           <button type="button" class="menu-item" id="btn-settings"><span aria-hidden="true">⚙️</span> Settings &amp; saves</button>
           <button type="button" class="menu-item" id="btn-sound" aria-pressed="true" title="Sound on"><span aria-hidden="true" id="sound-icon">🔊</span> Sound</button>
+          <button type="button" class="menu-item" id="btn-music" aria-pressed="true" title="Music on"><span aria-hidden="true" id="music-icon">🎵</span> Music</button>
         </div>
       </div>
     </nav>
   </header>
 
   <main class="layout" id="layout">
+    <!-- 0 · ChaosOS 8 and Mango OS: a navigation rail on wide screens (filled by js/ui/os.js) -->
+    <nav class="metro-rail" id="metro-rail" aria-label="Quick navigation" hidden></nav>
+
     <!-- 1 · Your website: the site, its editorial policy and actions in one window -->
     <section class="col col-site" aria-label="Your website">
       <div class="browser" id="browser">
@@ -93,8 +127,10 @@
         <div class="site" id="site">
           <div class="site-marquee" id="site-marquee" hidden><div class="marquee-track" id="marquee-track"></div></div>
           <div class="site-construction" id="site-construction">🚧 UNDER CONSTRUCTION 🚧</div>
-          <h1 class="site-name" id="site-name">My Website Forum</h1>
-          <p class="site-tagline" id="site-tagline">Best viewed in 800×600.</p>
+          <div class="site-hero">
+            <h1 class="site-name" id="site-name">My Website Forum</h1>
+            <p class="site-tagline" id="site-tagline">Best viewed in 800×600.</p>
+          </div>
           <div class="ad-slot" id="ad-top" hidden></div>
           <div class="click-zone" id="click-zone">
             <button type="button" class="create-btn" id="create-btn">
@@ -167,9 +203,9 @@
         </div>
 
         <div class="seg-tabs" id="side-tabs" role="tablist" aria-label="Community views">
-          <button type="button" role="tab" class="seg-tab" data-pane="pane-feed">📰 Live Feed</button>
-          <button type="button" role="tab" class="seg-tab" data-pane="panel-analytics">📈 Analytics</button>
-          <button type="button" role="tab" class="seg-tab" data-pane="panel-auto">🤖 Automation</button>
+          <button type="button" role="tab" class="seg-tab" data-pane="pane-feed"><span aria-hidden="true">📰</span> Live Feed</button>
+          <button type="button" role="tab" class="seg-tab" data-pane="panel-analytics"><span aria-hidden="true">📈</span> Analytics</button>
+          <button type="button" role="tab" class="seg-tab" data-pane="panel-auto"><span aria-hidden="true">🤖</span> Automation</button>
         </div>
 
         <div class="tab-pane" id="pane-feed">
@@ -192,6 +228,7 @@
 </div>
 
 <div class="choice-root" id="choice-root"></div>
+<div class="bonus-layer" id="bonus-layer"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <div class="modal-root" id="modal-root"></div>
 
@@ -213,9 +250,12 @@
 <script src="js/systems/events.js"></script>
 <script src="js/systems/actions.js"></script>
 <script src="js/systems/progression.js"></script>
+<script src="js/systems/bonus.js"></script>
+<script src="js/systems/os.js"></script>
 <script src="js/systems/game.js"></script>
 <script src="js/save.js"></script>
 <script src="js/audio.js"></script>
+<script src="js/music.js"></script>
 <script src="js/ui/dom.js"></script>
 <script src="js/ui/hud.js"></script>
 <script src="js/ui/site.js"></script>
@@ -227,6 +267,9 @@
 <script src="js/ui/style-shop.js"></script>
 <script src="js/ui/sponsors.js"></script>
 <script src="js/ui/help.js"></script>
+<script src="js/ui/bonus.js"></script>
+<script src="js/ui/backup.js"></script>
+<script src="js/ui/os.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

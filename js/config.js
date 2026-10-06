@@ -36,15 +36,16 @@
     events: { firstDelay: 60, minInterval: 45, maxInterval: 100, chaosSpeedup: 0.4, choiceTimeout: 30, quietUntil: 30 },
     trends: { interval: 150, duration: 90, mult: 3 },
     viralChainChance: 0.3,
+    bonus: { firstDelay: 75, minInterval: 150, maxInterval: 330, lifetime: 12, minAttention: 30 },   // catchable notification
 
     offline: { minSeconds: 30, capHours: 8, efficiency: 0.6, step: 10, maxSteps: 5000 },
 
     prestige: {
       requirement: 1e10,               // Attention needed this era to reach the next era (era 1)
-      requirementGrowth: 100,          // each later era needs this much more
+      requirementGrowth: 150,          // each later era needs this much more (tuned so eras get longer, not shorter)
       cloutScale: 10,                  // Clout = scale × (eraAttention / requirement)^exponent
       cloutExponent: 0.4,
-      cloutBonus: 0.04,                // +4% Attention per Clout ever earned
+      cloutBonus: 0.015,               // +1.5% Attention per Clout ever earned
       eraBonus: 0.25,                  // +25% Attention per era reached
     },
     achievementBonus: 0.01,            // +1% Attention per achievement
@@ -98,6 +99,64 @@
       unlocks: 'The Dead Internet. After this, eras repeat with ever larger numbers.' },
   ];
 
+  /* Operating systems the player's website runs on. The first is where everyone starts;
+     each later one is a one-time purchase that survives every era. Installing one brings a
+     new interface skin, new music and its own Style Shop themes (the old themes stay behind).
+     `cost` is Money, paid from the current era. */
+  Z.OSES = [
+    { id: 'aero', name: 'ChaosOS 7', edition: 'Aero', icon: '🫧', look: 'Glossy glass, blue skies and bubbles.', effects: [] },
+    { id: 'metro', name: 'ChaosOS 8', edition: 'Metro', icon: '🪟', cost: 1e13,
+      era: 2,                          // available from this Internet Era on
+      look: 'Flat tiles, bold colors and big clean type.',
+      pitch: 'Faster, flatter and fully tiled. Your website will never look back.',
+      // Tuned with tools/sim.js: bought mid Social Media Era, it makes the rest of the game
+      // about 15% faster while later eras still get longer than earlier ones.
+      effects: [
+        { t: 'attMult', x: 1.3 },
+        { t: 'yieldMult', x: 1.2 },
+        { t: 'clickMult', x: 2 },
+        { t: 'meltdownMult', x: 0.5 },
+        { t: 'regenMult', x: 1.25 },
+        { t: 'offlineEff', v: 0.1 },
+      ],
+      // One headline per effect above, in the same order.
+      features: [
+        ['⚡', 'Faster everything'], ['🧱', 'Live Tiles sell ads'], ['👆', 'Touch-first design'],
+        ['🔁', 'Fast Startup'], ['🧰', 'Leaner kernel'], ['🌙', 'Connected Standby'],
+      ],
+      newLook: 'A brand-new look: flat Metro tiles, bold colors and big, clean type.',
+      newMusic: 'New lo-fi music made for ChaosOS 8.',
+      feed: 'Everything is faster, flatter and tiled.',
+      setup: ['Hi.', 'We’re upgrading {site} to {os}.', 'Removing every gradient…', 'Hiding the Start button where nobody will find it…',
+        'Packing your {prev} themes into a box…', 'Almost there. Don’t turn off your website.', 'Let’s go.'],
+    },
+    { id: 'mango', name: 'Mango OS', edition: 'Liquid Glass', icon: '🥭', cost: 2e16,
+      era: 3,
+      look: 'Liquid glass, soft light and colorful wallpapers.',
+      pitch: 'Everything is made of glass now. Even the money.',
+      // Tuned with tools/sim.js: bought about 8 minutes into the Viral Era, it makes the
+      // eras after it about 15% faster, on top of ChaosOS 8.
+      effects: [
+        { t: 'attMult', x: 1.15 },
+        { t: 'yieldMult', x: 1.15 },
+        { t: 'capacityMult', x: 1.25 },
+        { t: 'buffDuration', x: 1.3 },
+        { t: 'hotfixCooldown', x: 0.75 },
+        { t: 'offlineCap', v: 2 },
+      ],
+      features: [
+        ['🚀', 'Mango Silicon'], ['💳', 'Mango Pay'], ['☁️', 'Mango Cloud'],
+        ['🔔', 'Live Activities'], ['🛠️', 'Background updates'], ['🔋', 'All-day battery'],
+      ],
+      newLook: 'A brand-new look: translucent liquid glass, rounded windows and bright wallpapers.',
+      newMusic: 'New music made for Mango OS: airy, glassy and a little bit keynote.',
+      feed: 'Every window is liquid glass now.',
+      setup: ['hello', 'Moving {site} to {os}…', 'Pouring liquid glass over every window…', 'Rounding every corner. Twice…',
+        'Packing your {prev} themes into a box…', 'Almost there. Keep your website plugged in.', 'Welcome to {os}.'],
+    },
+  ];
+  Z.OS = Z.util.byId(Z.OSES);
+
   /* The player's website name. Era titles and URLs above use {Name}, {NAME}, {name} and {slug}. */
   Z.SITE_NAME_MAX = 32;
   Z.DEFAULT_SITE_NAME = 'My Website';
@@ -133,7 +192,7 @@
   Z.SITE_LEVELS = ['Homepage', 'Hobby Site', 'Community', 'Network', 'Platform', 'Empire'];
 
   /* Interface sections that appear as the player discovers each system. */
-  Z.REVEAL_KEYS = ['chaos', 'stability', 'policy', 'actions', 'upgrades', 'eras', 'auto', 'analytics', 'clout', 'bulk', 'style'];
+  Z.REVEAL_KEYS = ['chaos', 'stability', 'policy', 'actions', 'upgrades', 'eras', 'auto', 'analytics', 'clout', 'bulk', 'style', 'os'];
 
   const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 

@@ -10,6 +10,9 @@
   'use strict';
 
   const own = (s, id) => s.buildings[id] || 0;
+  // Sponsor events need that sponsor on the site (js/content/sponsors.js).
+  const sponsor = id => s => !!(Z.SPONSOR && Z.SPONSOR[id] && Z.SPONSOR[id].active(s));
+  const sponsorCount = s => (Z.SPONSORS ? Z.SPONSORS.filter(sp => sp.active(s)).length : 0);
 
   Z.TEXT = {
     topic: ['whether a hot dog is a sandwich', 'the correct way to hang toilet paper',
@@ -60,6 +63,8 @@
     cancelled: { name: 'Cancelled', icon: '🚫', kind: 'bad', duration: 60, att: 1.8, yield: 0.5 },
     cookieLaw: { name: 'Cookie Regulation', icon: '🍪', kind: 'bad', duration: 120, yield: 0.75 },
     banWave: { name: 'Ban Wave', icon: '🔨', kind: 'bad', duration: 30, att: 0.85 },
+    sponsorPush: { name: 'Sponsor Push', icon: '🤝', kind: 'good', duration: 60, yield: 2 },
+    sponsorSulk: { name: 'Sponsor Sulking', icon: '🤝', kind: 'bad', duration: 60, yield: 0.8 },
   };
 
   const E = def => def;
@@ -190,6 +195,54 @@
         { label: 'Squeeze the users', stance: 'bold', effects: [{ buff: 'squeeze' }, { stability: -20 }] },
         { label: 'Promise "synergy"', stance: 'safe', effects: [{ money: 120 }] },
       ] }),
+
+    /* ---------- Sponsors (only while that brand sponsors the site) ---------- */
+    E({ id: 'voltRecall', kind: 'bad', icon: '⚡', weight: 3, title: 'BLU VOLT recall',
+      text: ['BLU VOLT is recalling a batch of cans. Customers report their tongues are now permanently blue. They want {site} to say something.'],
+      req: sponsor('volt'),
+      choices: [
+        { label: 'Post “blue is a lifestyle”', stance: 'bold', effects: [{ buff: 'drama' }, { chaos: 15 }, { money: 45 }] },
+        { label: 'Pause the sponsorship for a day', stance: 'safe', effects: [{ buff: 'sponsorSulk' }, { chaos: -10 }, { stability: 8 }] },
+      ] }),
+    E({ id: 'crumbLeak', kind: 'bad', icon: '🍪', weight: 3, title: 'CrumbTrack tracking scandal',
+      text: ['CrumbTrack’s cookies were caught tracking what users dream about. Regulators want to know which site showed the most cookie banners. It was {site}.'],
+      req: sponsor('crumb'),
+      choices: [
+        { label: 'Add even more cookie banners', stance: 'bold', effects: [{ buff: 'biddingWar' }, { chaos: 15 }, { stability: -10 }] },
+        { label: 'Switch the tracking off', stance: 'safe', effects: [{ buff: 'cookieLaw' }, { stability: 10 }] },
+      ] }),
+    E({ id: 'sauceFeud', kind: 'good', icon: '🌶️', weight: 3, title: 'Hot Take Sauce started a feud',
+      text: ['Hot Take Sauce posted that mild salsa is "for cowards". The salsa community is furious, and they are in your comments.'],
+      req: sponsor('sauce'),
+      choices: [
+        { label: 'Agree, loudly', stance: 'bold', effects: [{ buff: 'argument' }, { chaos: 15 }] },
+        { label: 'Stay neutral and eat a cracker', stance: 'safe', effects: [{ money: 45 }] },
+      ] }),
+    E({ id: 'reelzWedding', kind: 'bad', icon: '▶️', weight: 3, title: 'Reelz+ crashed a wedding',
+      text: ['A Reelz+ ad autoplayed during a wedding livestream on {site}. At full volume. During the vows.'],
+      req: sponsor('reelz'),
+      choices: [
+        { label: 'Call it “engagement”', stance: 'bold', effects: [{ buff: 'leakBuzz' }, { chaos: 15 }, { stability: -8 }] },
+        { label: 'Refund the happy couple', stance: 'safe', effects: [{ loseMoney: 0.03, cap: 60 }, { stability: 10 }] },
+      ] }),
+    E({ id: 'snoozeDemand', kind: 'good', icon: '🛏️', weight: 3, title: 'SnoozeCloud has a request',
+      text: ['SnoozeCloud wants every post on {site} to mention mattresses at least once. Including the obituaries.'],
+      req: sponsor('snooze'),
+      choices: [
+        { label: 'Mattress everything', stance: 'bold', effects: [{ buff: 'sponsorPush' }, { chaos: 10 }] },
+        { label: 'Offer every other post', stance: 'safe', effects: [{ money: 60 }] },
+      ] }),
+    E({ id: 'dealGlitch', kind: 'bad', icon: '🔗', weight: 3, title: 'DealHoarder code glitch',
+      text: ['DealHoarder’s code CHAOS is giving 100% off by mistake. Your users have ordered 40,000 air fryers.'],
+      req: sponsor('deal'),
+      choices: [
+        { label: 'Say nothing and enjoy the traffic', stance: 'bold', effects: [{ att: 90 }, { chaos: 20 }, { stability: -10 }] },
+        { label: 'Warn your users', stance: 'safe', effects: [{ stability: 10 }, { money: 30 }] },
+      ] }),
+    E({ id: 'sponsorParty', kind: 'good', icon: '🤝', weight: 3, title: 'Your sponsors are thrilled',
+      text: ['Your sponsors loved this week’s numbers. They sent a fruit basket and a slightly larger check.'],
+      req: s => sponsorCount(s) >= 2,
+      effects: [{ buff: 'sponsorPush' }] }),
   ];
   Z.EV = Z.util.byId(Z.EVENTS);
 })(window.ICHAOS = window.ICHAOS || {});

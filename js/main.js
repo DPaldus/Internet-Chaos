@@ -24,6 +24,7 @@
       forceSlow = false;
       ui.shop.render(g);
       ui.panels.renderSlow(g);
+      ui.os.render(g);
       ui.modal.refresh();
     }
   }
@@ -52,11 +53,22 @@
     ui.$('sound-icon').textContent = on ? '🔊' : '🔇';
   };
 
+  ui.setMusic = function (on) {
+    g.s.settings.music = !!on;
+    Z.music.setEnabled(on);
+    const btn = ui.$('btn-music');
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.title = on ? 'Music on' : 'Music off';
+    ui.$('music-icon').textContent = on ? '🎵' : '🔇';
+  };
+
   function applySettings() {
     const set = g.s.settings;
     Z.fmt.setNotation(set.notation);
     Z.audio.setVolume(set.volume);
     ui.setSound(set.sound);
+    Z.music.setVolume(set.musicVolume);
+    ui.setMusic(set.music);
     document.body.classList.toggle('reduce-motion', !!set.reduceMotion);
   }
 
@@ -72,6 +84,7 @@
     ui.resetAll();
     Z.save.write(g.s);
     ui.styleShop.apply();
+    ui.os.sync();
     if (!g.s.siteName) ui.modals.openSiteName({ first: true, onDone: ui.help.maybeTour });
     else ui.help.maybeTour();
   };
@@ -111,6 +124,7 @@
     analytics: ['📈', 'Analytics dashboard', 'Your site is big enough to need charts nobody reads.'],
     bulk: ['✖️', 'Bulk buying', 'Buy ×10, ×25 or Max at once with the buttons above the shop list.'],
     style: ['🎨', 'Style Shop unlocked', 'You can now unlock themes for your website. Open 🎨 Style in the top bar.'],
+    os: ['🪟', 'Operating System Upgrade available', 'A new operating system can be installed: a faster site, permanent bonuses and a brand-new look. Open 🪟 Update in the top bar.'],
   };
 
   function wire() {
@@ -176,7 +190,10 @@
     ui.$('btn-stats').addEventListener('click', ui.modals.openStats);
     ui.$('btn-settings').addEventListener('click', ui.modals.openSettings);
     ui.$('btn-style').addEventListener('click', () => ui.styleShop.open());
+    ui.$('btn-os').addEventListener('click', () => ui.os.open());
+    ui.$('btn-system').addEventListener('click', () => ui.os.open());
     ui.$('btn-sound').addEventListener('click', () => { ui.setSound(!g.s.settings.sound); if (g.s.settings.sound) Z.audio.play('buy'); });
+    ui.$('btn-music').addEventListener('click', () => ui.setMusic(!g.s.settings.music));
   }
 
   function saveNow() { if (g) Z.save.write(g.s); }
@@ -204,8 +221,11 @@
     ui.chat.init(g);
     ui.layout.init();
     ui.styleShop.init(g);
+    ui.os.init(g);
     ui.sponsors.init(g);
     ui.help.init(g);
+    ui.bonus.init(g);
+    ui.backup.init(g);
     wire();
     wireNav();
     applySettings();

@@ -148,15 +148,17 @@
   function initGoals() {
     const root = $('goals');
     for (let i = 0; i < 4; i++) {
+      const icon = h('span', { class: 'goal-icon', 'aria-hidden': 'true' });
       const title = h('span', { class: 'goal-title' });
       const nums = h('span', { class: 'goal-nums' });
       const fill = h('span', { class: 'goal-fill' });
       const row = h('div', { class: 'goal', hidden: true }, [
-        h('div', { class: 'goal-line' }, [title, nums]),
+        h('div', { class: 'goal-line' }, [h('span', { class: 'goal-name' }, [icon, title]), nums]),
         h('div', { class: 'goal-bar' }, [fill]),
       ]);
+      row.addEventListener('click', () => { if (row.classList.contains('goal-os')) ui.os.open(); });
       root.appendChild(row);
-      goalRows.push({ row, title, nums, fill });
+      goalRows.push({ row, icon, title, nums, fill });
     }
   }
 
@@ -171,7 +173,13 @@
       && !((b.cat === 'infra' || b.cat === 'mod') && !s.flags.reveal.chaos));
     if (next) {
       const need = next.cost * 0.3;
-      goals.push({ title: '❔ Discover new ' + Z.CAT[next.cat].name.toLowerCase(), nums: f.money(s.run.money) + ' / ' + f.money(need), p: s.run.money / need });
+      goals.push({ icon: '❔', title: 'Discover new ' + Z.CAT[next.cat].name.toLowerCase(), nums: f.money(s.run.money) + ' / ' + f.money(need), p: s.run.money / need });
+    }
+
+    const os = Z.opsys.next(s);
+    if (s.flags.reveal.os && Z.opsys.available(s, os)) {
+      const ready = s.res.money >= os.cost;
+      goals.push({ icon: os.icon, title: ready ? os.name + ' is ready to install!' : 'Upgrade to ' + os.name, nums: f.money(s.res.money) + ' / ' + f.money(os.cost), p: ready ? 1 : logProgress(s.res.money, os.cost), ready, os: true });
     }
 
     let bestTier = null;
@@ -184,20 +192,22 @@
     }
     if (bestTier) {
       const b = Z.B[bestTier.u.building];
-      goals.push({ title: b.icon + ' Own ' + bestTier.u.tier + ' ' + b.plural + ' for an upgrade', nums: bestTier.owned + ' / ' + bestTier.u.tier, p: bestTier.p });
+      goals.push({ icon: b.icon, title: 'Own ' + bestTier.u.tier + ' ' + b.plural + ' for an upgrade', nums: bestTier.owned + ' / ' + bestTier.u.tier, p: bestTier.p });
     }
 
     const lvl = Z.siteLevel(s), levels = Z.BAL.siteLevels;
     if (lvl + 1 < levels.length) {
-      goals.push({ title: '🏗️ Grow into a ' + Z.SITE_LEVELS[lvl + 1], nums: f.int(s.run.attention) + ' / ' + f.int(levels[lvl + 1]), p: s.run.attention / levels[lvl + 1] });
+      const level = Z.SITE_LEVELS[lvl + 1];
+      goals.push({ icon: '🏗️', title: 'Grow into ' + (/^[AEIOU]/.test(level) ? 'an ' : 'a ') + level, nums: f.int(s.run.attention) + ' / ' + f.int(levels[lvl + 1]), p: s.run.attention / levels[lvl + 1], level: true });
     }
 
     if (s.flags.reveal.eras) {
       const req = Z.prestige.requirement(s);
       const ready = s.run.attention >= req;
-      goals.push({ title: ready ? '🌐 New Internet Era ready!' : '🌐 Next Internet Era', nums: f.int(s.run.attention) + ' / ' + f.int(req), p: ready ? 1 : logProgress(s.run.attention, req), ready });
+      goals.push({ icon: '🌐', title: ready ? 'New Internet Era ready!' : 'Next Internet Era', nums: f.int(s.run.attention) + ' / ' + f.int(req), p: ready ? 1 : logProgress(s.run.attention, req), ready });
     }
-    return goals.slice(0, 4);
+    // Four rows at most: the site level is the first to make room.
+    return (goals.length > 4 ? goals.filter(x => !x.level) : goals).slice(0, 4);
   }
 
   function renderGoals(g) {
@@ -206,10 +216,12 @@
       const goal = goals[i];
       setHidden(r.row, !goal);
       if (!goal) return;
+      setText(r.icon, goal.icon);
       setText(r.title, goal.title);
       setText(r.nums, goal.nums);
       setStyle(r.fill, 'width', (Math.min(1, Math.max(0, goal.p)) * 100).toFixed(1) + '%');
       r.row.classList.toggle('ready', !!goal.ready);
+      r.row.classList.toggle('goal-os', !!goal.os);
     });
   }
 
@@ -282,7 +294,7 @@
   /* ---------- Analytics sparkline ---------- */
 
   const samples = [];
-  let sampleTimer = 0, colors = null, colorEra = -1;
+  let sampleTimer = 0, colors = null, colorKey = '';
 
   function readColors() {
     const cs = getComputedStyle(document.body);
@@ -302,7 +314,8 @@
     const show = !!g.s.flags.reveal.analytics;
     setHidden($('panel-analytics'), !show);
     if (!show) return;
-    if (colorEra !== g.s.era || !colors) { colorEra = g.s.era; readColors(); }
+    const key = g.s.era + '|' + g.s.os.id + '|' + g.s.cosmetics.color;
+    if (colorKey !== key || !colors) { colorKey = key; readColors(); }
     const cv = $('spark'), ctx = cv.getContext('2d');
     const W = cv.width, H = cv.height, pad = 6;
     ctx.clearRect(0, 0, W, H);

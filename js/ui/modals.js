@@ -45,7 +45,7 @@
       ]),
       h('p', { class: 'prestige-gain' }, ['Starting the ', h('b', { text: next.name }), ' now earns ', refs.gain, ' Clout. ', refs.bonus]),
       h('p', { class: 'prestige-unlocks' }, [h('b', { text: 'New in the ' + next.name + ': ' }), next.unlocks]),
-      h('p', { class: 'prestige-note', text: 'Resetting clears Attention, Money, buildings and upgrades. You keep Clout, perks, achievements, statistics and settings. Each Clout you ever earn adds +' + Math.round(Z.BAL.prestige.cloutBonus * 100) + '% Attention forever.' }),
+      h('p', { class: 'prestige-note', text: 'Resetting clears Attention, Money, buildings and upgrades. You keep Clout, perks, achievements, statistics, settings and your operating system. Each Clout you ever earn adds +' + Z.fmt.num(Z.BAL.prestige.cloutBonus * 100, { dec: 1 }) + '% Attention forever.' }),
       refs.go,
     ]);
 
@@ -206,6 +206,7 @@
         ['Play time', () => f.time(st().playTime)],
         ['Time away (offline)', () => f.time(st().offlineTime)],
         ['Achievements', () => g.m.achCount + ' / ' + Z.ACHIEVEMENTS.length],
+        ['Operating system', () => { const os = Z.opsys.current(s); return os.name + ' ' + os.edition; }],
       ]),
     ]);
     const refresh = () => { for (const r of rows) setText(r.dd, r.fn()); };
@@ -231,6 +232,13 @@
     vol.addEventListener('input', () => { set.volume = Number(vol.value); Z.audio.setVolume(set.volume); });
     vol.addEventListener('change', () => Z.audio.play('buy'));
 
+    const music = h('input', { type: 'checkbox', id: 'set-music', class: 'switch' });
+    music.checked = set.music;
+    music.addEventListener('change', () => ui.setMusic(music.checked));
+    const musicVol = h('input', { type: 'range', id: 'set-music-volume', min: '0', max: '1', step: '0.05', 'aria-label': 'Music volume' });
+    musicVol.value = String(set.musicVolume);
+    musicVol.addEventListener('input', () => { set.musicVolume = Number(musicVol.value); Z.music.setVolume(set.musicVolume); });
+
     const notation = h('select', { id: 'set-notation' }, [
       h('option', { value: 'short', text: 'Short (1.23M, 4.56B)' }),
       h('option', { value: 'sci', text: 'Scientific (1.23e6)' }),
@@ -243,6 +251,7 @@
     motion.addEventListener('change', () => { set.reduceMotion = motion.checked; document.body.classList.toggle('reduce-motion', motion.checked); });
 
     const savedAt = h('span', { class: 'muted' });
+    const backupNote = h('span', { class: 'muted backup-note' });
     const saveNow = h('button', { type: 'button', class: 'btn', text: 'Save now' });
     saveNow.addEventListener('click', () => {
       if (Z.save.write(s)) { ui.toast({ icon: '💾', title: 'Game saved', kind: 'info', duration: 2000 }); refresh(); }
@@ -255,7 +264,7 @@
     const dlBtn = h('button', { type: 'button', class: 'btn', text: 'Save as file…', disabled: true, hidden: inFrame() });
     exportBtn.addEventListener('click', () => {
       exportArea.value = Z.save.exportString(s);
-      s.flags.exported = true;
+      ui.backup.markBackedUp();
       copyBtn.disabled = false;
       dlBtn.disabled = false;
       exportArea.select();
@@ -321,6 +330,8 @@
         h('h3', { text: 'Preferences' }),
         row('Sound effects', sound),
         row('Volume', vol),
+        row('Music', music, 'Calm ambient music, made live in your browser.'),
+        row('Music volume', musicVol),
         row('Number format', notation),
         row('Reduce motion', motion, 'Turns off floating numbers and shaking.'),
       ]),
@@ -329,6 +340,11 @@
         h('p', { class: 'muted', text: 'The game saves itself every ' + Z.BAL.autosaveSeconds + ' seconds and when you leave. '
           + 'Saves live in this browser only, so export a save code to move your game or keep a backup.' }),
         h('div', { class: 'btn-row' }, [saveNow, savedAt]),
+        h('div', { class: 'btn-row backup-row' }, [
+          h('button', { type: 'button', class: 'btn btn-primary', text: '💾 Download backup', onclick: () => { ui.backup.download(); refresh(); } }),
+          h('button', { type: 'button', class: 'btn', text: '📋 Copy save code', onclick: () => ui.backup.copy() }),
+          backupNote,
+        ]),
       ]),
       h('section', {}, [
         h('h3', { text: 'Export save' }),
@@ -348,7 +364,7 @@
       aboutDeveloper(),
     ]);
 
-    function refresh() { setText(savedAt, 'Last saved ' + Z.fmt.clock(s.lastSaved)); }
+    function refresh() { setText(savedAt, 'Last saved ' + Z.fmt.clock(s.lastSaved)); setText(backupNote, ui.backup.lastText()); }
     refresh();
     ui.modal.open({ id: 'settings', title: 'Settings & saves', body, refresh });
   }
@@ -368,7 +384,10 @@
         + 'I mainly focus on browser games, simple but addictive mechanics, and retro or nostalgic visual styles. '
         + 'I like mixing humor, internet culture, and old school game aesthetics with modern ideas. '
         + 'I create everything as a one man studio under the name DPLDS.' }),
-      h('p', { class: 'about-credit', text: 'Internet Chaos is a DPLDS game. Thanks for playing!' }),
+      h('div', { class: 'about-game' }, [
+        h('img', { class: 'about-game-logo', src: 'assets/internet-chaos-logo-480.png', alt: 'Internet Chaos', width: '480', height: '270', loading: 'lazy' }),
+        h('p', { class: 'about-credit', text: 'Internet Chaos is a DPLDS game. Thanks for playing!' }),
+      ]),
     ]);
   }
 

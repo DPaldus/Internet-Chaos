@@ -17,18 +17,19 @@
       pressure: 0, control: 0, modControl: 0, target: 0, load: 0, capacity: 0, tolerance: 0,
       regen: 0, drain: 0, stabRate: 0, stabEff: 1, chaosAttMult: 1, chaosYieldMult: 1,
       modShare: 0, modMult: 1, globalAtt: 1, policy: Z.POLICY.normal, meltdown: false, trendId: null,
-      buff: { att: 1, yield: 1, control: 1, chaosAdd: 0, noDrain: false, chaosLock: false, b: Object.create(null) },
+      buff: { att: 1, yield: 1, control: 1, click: 1, chaosAdd: 0, noDrain: false, chaosLock: false, b: Object.create(null) },
     };
   }
 
   function aggregateBuffs(s, c) {
     const b = c.buff;
-    b.att = 1; b.yield = 1; b.control = 1; b.chaosAdd = 0; b.noDrain = false; b.chaosLock = false;
+    b.att = 1; b.yield = 1; b.control = 1; b.click = 1; b.chaosAdd = 0; b.noDrain = false; b.chaosLock = false;
     b.b = Object.create(null);
     for (const x of s.buffs) {
       if (x.att) b.att *= x.att;
       if (x.yield) b.yield *= x.yield;
       if (x.control) b.control *= x.control;
+      if (x.click) b.click *= x.click;
       if (x.chaosAdd) b.chaosAdd += x.chaosAdd;
       if (x.noDrain) b.noDrain = true;
       if (x.chaosLock) b.chaosLock = true;
@@ -111,7 +112,7 @@
     c.yieldBonus = yieldAdd;
     c.yield = BAL.yieldBase * (1 + yieldAdd) * m.yieldMult * c.chaosYieldMult * c.buff.yield;
     c.mps = c.aps * c.yield;
-    c.clickAtt = (BAL.click.base + m.clickFlat) * m.clickMult * c.globalAtt + m.clickAps * c.aps;
+    c.clickAtt = ((BAL.click.base + m.clickFlat) * m.clickMult * c.globalAtt + m.clickAps * c.aps) * c.buff.click;
 
     const over = chaos - c.tolerance;
     c.drain = over > 0 && !c.buff.noDrain && !c.meltdown ? over * BAL.stability.drainPerPoint * m.drainMult : 0;

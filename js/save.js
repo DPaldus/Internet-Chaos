@@ -127,22 +127,37 @@
     d.flags.exported = b(fl.exported, false);
     d.flags.muted = b(fl.muted, false);
     d.flags.tutorial = b(fl.tutorial, false);
+    d.flags.lastBackup = n(fl.lastBackup, 0, 0, Number.MAX_SAFE_INTEGER);
+    d.flags.backupAt = n(fl.backupAt, 0, 0, BIG);
+    d.flags.backupSnooze = n(fl.backupSnooze, 0, 0, BIG);
+    d.flags.osOffer = typeof fl.osOffer === 'string' && Z.OS[fl.osOffer] ? fl.osOffer : '';
 
     const se = o(raw.settings);
     d.settings.sound = b(se.sound, true);
     d.settings.volume = n(se.volume, 0.6, 0, 1);
+    d.settings.music = b(se.music, true);
+    d.settings.musicVolume = n(se.musicVolume, 0.5, 0, 1);
     d.settings.notation = se.notation === 'sci' ? 'sci' : 'short';
     d.settings.reduceMotion = b(se.reduceMotion, false);
     d.settings.buyQty = ['1', '10', '25', 'max'].indexOf(se.buyQty) >= 0 ? se.buyQty : '1';
 
+    const os = o(raw.os), osBase = o(os.base);
+    d.os.id = typeof os.id === 'string' && Z.OS[os.id] ? os.id : Z.OSES[0].id;
+    d.os.installed = n(os.installed, 0, 0, Number.MAX_SAFE_INTEGER);
+    if (d.os.id !== Z.OSES[0].id) {
+      for (const k of Z.state.STAT_KEYS) d.os.base[k] = Math.min(n(osBase[k], 0, 0, BIG), d.stats[k]);
+    }
+
+    // Only the current OS's themes count; choices fall back to that OS's free defaults.
     const cos = o(raw.cosmetics), owned = o(cos.unlocked);
+    Object.assign(d.cosmetics, Z.COSMETICS.defaultsFor(d.os.id));
     for (const key in Z.COSMETICS.ITEM) {
       const item = Z.COSMETICS.ITEM[key];
-      if (item.req && owned[key] === true) d.cosmetics.unlocked[key] = true;
+      if (item.os === d.os.id && item.req && owned[key] === true) d.cosmetics.unlocked[key] = true;
     }
-    for (const cat of Z.COSMETICS.CATEGORIES) {
+    for (const cat of Z.COSMETICS.setFor(d.os.id)) {
       const item = typeof cos[cat.id] === 'string' ? Z.COSMETICS.ITEM[cat.id + ':' + cos[cat.id]] : null;
-      if (item && (!item.req || d.cosmetics.unlocked[cat.id + ':' + item.id])) d.cosmetics[cat.id] = item.id;
+      if (item && item.os === d.os.id && (!item.req || d.cosmetics.unlocked[cat.id + ':' + item.id])) d.cosmetics[cat.id] = item.id;
     }
 
     if (Array.isArray(raw.feed)) {

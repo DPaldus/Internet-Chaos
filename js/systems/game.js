@@ -17,6 +17,8 @@
       efficiency: 1,      // production multiplier (offline efficiency)
       summary: null,      // collects totals during offline simulation
       secondTimer: 0,
+      clock: 0,           // seconds this session has ticked (paces reveals)
+      nextRevealAt: 0,
     };
 
     g.notify = function (type, data) {
@@ -37,8 +39,10 @@
       Z.events.tick(g, dt);
       Z.events.tickTrends(g, dt);
       Z.auto.tick(g, dt);
+      Z.bonus.tick(g, dt);
       g.refresh();
       track(g, dt);
+      g.clock += dt;
       g.secondTimer += dt;
       if (g.secondTimer >= 1) {
         g.secondTimer = 0;
@@ -63,7 +67,8 @@
     chaos: g => g.c.pressure > 0 || g.s.res.chaos > 0.5,
     stability: g => !!g.s.flags.reveal.chaos && (g.s.res.chaos >= g.c.tolerance - 10 || g.s.res.stability < 100
       || Z.BUILDINGS.some(b => b.cat === 'infra' && (g.s.buildings[b.id] || 0) > 0)),
-    policy: g => !!g.s.flags.reveal.chaos && g.s.run.maxChaos >= 15,
+    // Policy is the answer to Stability trouble, so it follows Stability instead of racing it.
+    policy: g => !!g.s.flags.reveal.stability && g.s.run.maxChaos >= 25,
     actions: g => Z.ACTIONS.some(a => a.unlock(g)),
     upgrades: g => g.s.run.upgrades > 0 || Z.UPGRADES.some(u => Z.econ.upgradeVisible(g.s, u)),
     eras: g => g.s.era > 1 || g.s.run.attention >= Z.prestige.requirement(g.s) * 0.001,
@@ -71,18 +76,20 @@
     analytics: g => siteLevel(g.s) >= 3,
     clout: g => g.s.cloutLifetime > 0,
     bulk: g => Z.BUILDINGS.some(b => (g.s.buildings[b.id] || 0) >= 10) || g.s.cloutLifetime > 0,
-    style: g => !!Z.COSMETICS && Object.keys(Z.COSMETICS.ITEM).some(k => {
-      const r = Z.COSMETICS.ITEM[k].req;
-      return r && r.have(g.s) >= r.need;
-    }),
+    style: g => !!Z.COSMETICS && Z.COSMETICS.setFor(g.s.os.id).some(cat => cat.items.some(i => i.req && i.req.have(g.s) >= i.req.need)),
+    os: g => g.s.os.id !== Z.OSES[0].id || Z.opsys.available(g.s, Z.opsys.next(g.s)),
   };
 
+  const REVEAL_GAP = 20;   // seconds between two newly introduced systems, so each gets noticed
+
   function updateReveals(g) {
+    if (g.clock < g.nextRevealAt) return;
     const rev = g.s.flags.reveal;
     for (const key of Z.REVEAL_KEYS) {
       if (rev[key] || !REVEALS[key](g)) continue;
       rev[key] = true;
       g.notify('reveal', { key });
+      if (!g.offline) { g.nextRevealAt = g.clock + REVEAL_GAP; return; }
     }
   }
 

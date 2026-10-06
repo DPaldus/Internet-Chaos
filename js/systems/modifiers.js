@@ -54,6 +54,8 @@
       if (p.effects) for (const e of p.effects) applyEffect(m, e, lvl);
       if (p.apply) p.apply(m, lvl);
     }
+    const os = s.os && Z.OS[s.os.id];
+    if (os) for (const e of os.effects) applyEffect(m, e, 1);
     m.achCount = Object.keys(s.achievements).length;
     m.achMult = 1 + BAL.achievementBonus * m.achCount;
     m.cloutMult = 1 + BAL.prestige.cloutBonus * s.cloutLifetime;
@@ -102,6 +104,8 @@
       case 'tolerance': return 'Tolerance +' + e.v;
       case 'crashGuard': return 'Blue screens ' + Math.round((1 - e.x) * 100) + '% rarer and shorter';
       case 'stabilityBonus': return 'Stability +' + e.v + '% now, then +' + e.v + '% per minute';
+      case 'offlineEff': return 'Offline progress +' + Math.round(e.v * 100) + '% efficiency';
+      case 'offlineCap': return 'Offline progress up to +' + e.v + ' hours';
       default: return '';
     }
   }

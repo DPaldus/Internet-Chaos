@@ -59,10 +59,10 @@
 
     const btn = $('btn-menu'), pop = $('menu-pop');
     btn.addEventListener('click', e => { e.stopPropagation(); setMenu(pop.hidden); });
-    // Any item closes the menu after its own handler has run (sound stays open to toggle again).
+    // Any item closes the menu after its own handler has run (sound and music stay open to toggle again).
     pop.addEventListener('click', e => {
       const item = e.target.closest('.menu-item');
-      if (item && item.id !== 'btn-sound') setTimeout(() => setMenu(false), 0);
+      if (item && item.id !== 'btn-sound' && item.id !== 'btn-music') setTimeout(() => setMenu(false), 0);
     });
     document.addEventListener('click', e => { if (!pop.hidden && !e.target.closest('.menu-wrap')) setMenu(false); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidden) { setMenu(false); btn.focus(); } });

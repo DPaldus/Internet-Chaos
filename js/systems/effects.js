@@ -17,6 +17,7 @@
       att: v.att || 0,
       yield: def.yield || 0,
       control: def.control || 0,
+      click: def.click || 0,
       chaosAdd: def.chaosAdd || 0,
       building: def.building || null,
       bMult: def.bMult || 0,
@@ -99,6 +100,7 @@
     if (att) parts.push('Attention ' + Z.fmt.mult(att));
     if (def.yield) parts.push('Money per Attention ' + Z.fmt.mult(def.yield));
     if (def.control) parts.push('Moderation ' + Z.fmt.mult(def.control));
+    if (def.click) parts.push('Click power ' + Z.fmt.mult(def.click));
     if (def.building) parts.push(Z.B[def.building].plural + ' ' + Z.fmt.mult(def.bMult));
     if (def.chaosAdd) parts.push('Chaos target ' + sign(def.chaosAdd));
     if (def.noDrain) parts.push('no Stability drain');

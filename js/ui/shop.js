@@ -264,5 +264,5 @@
     renderUpgrades(g);
   }
 
-  ui.shop = { init, render, selectTab, reset() { upgradeKey = ''; } };
+  ui.shop = { init, render, selectTab, current() { return tab; }, reset() { upgradeKey = ''; } };
 })(window.ICHAOS = window.ICHAOS || {});

@@ -52,6 +52,7 @@
       ] },
       { group: 'Events', items: [
         ['📨', 'Events', 'Random things happen: viral posts, outages, drama. Some ask you to choose. No answer picks the safe option.', null],
+        ['🔔', 'Floating notifications', 'Every few minutes a glowing bell floats across the screen for a few seconds. Click it for a surprise bonus.', null],
         ['#️⃣', 'Trending', 'Now and then one kind of building trends and produces several times more for a while.', null],
       ] },
       { group: 'Long term', items: [
@@ -61,6 +62,7 @@
         ['🤖', 'Automation', 'Upgrades that click, buy or repair for you. Switch them on and off in the Automation tab.', 'auto'],
         ['📈', 'Analytics', 'A chart of Attention and Chaos over the last two minutes.', 'analytics'],
         ['🎨', 'Style Shop', 'Themes for your website, unlocked by milestones. Pure looks, no effect on gameplay.', 'style'],
+        ['🪟', 'Operating System', 'One-time upgrades for your website: ChaosOS 8 from the Social Media Era on, then Mango OS from the Viral Era on. Each brings permanent bonuses, a new look and new music. Its Style Shop themes unlock from scratch.', 'os'],
         ['💤', 'Offline progress', 'Your site keeps earning, a bit slower, while the game is closed.', null],
       ] },
     ];
@@ -166,6 +168,7 @@
     back.addEventListener('click', () => go(-1));
     next.addEventListener('click', () => go(1));
     skip.addEventListener('click', () => endTour(true));
+    if (i === 0) card.appendChild(h('img', { class: 'tour-logo', src: 'assets/internet-chaos-logo-480.png', alt: 'Internet Chaos', width: '480', height: '270' }));
     card.append(
       h('div', { class: 'tour-count', text: (i + 1) + ' / ' + STEPS.length }),
       h('h3', { class: 'tour-title', text: typeof step.title === 'function' ? step.title(s) : step.title }),

@@ -1,6 +1,7 @@
 /* Style Shop: unlock and apply visual themes (backgrounds, colors, website styles,
    effects). Choices live in state.cosmetics, so they save with the game and survive
-   restarts and era resets. Purely cosmetic: nothing here touches the economy. */
+   restarts and era resets. Each operating system has its own catalogue, so an OS upgrade
+   starts the collection over. Purely cosmetic: nothing here touches the economy. */
 (function (Z) {
   'use strict';
 
@@ -12,6 +13,9 @@
 
   function cos() { return game.s.cosmetics; }
 
+  /** The Style Shop catalogue of the OS the website runs on. */
+  function cats() { return C.setFor(game.s.os.id); }
+
   function owned(item) { return !item.req || !!cos().unlocked[C.key(item.cat, item.id)]; }
 
   function progress(item) {
@@ -21,11 +25,12 @@
 
   function canUnlock(item) { return !owned(item) && progress(item) >= 1; }
 
-  /** Puts the chosen look on <body>; css/cosmetics.css does the rest. */
+  /** Puts the OS and the chosen look on <body>; css/game.css does the rest. */
   function apply() {
     if (!game) return;
-    const c = cos();
-    for (const cat of C.CATEGORIES) document.body.dataset[cat.id === 'site' ? 'siteStyle' : cat.id] = c[cat.id] || C.DEFAULTS[cat.id];
+    const c = cos(), def = C.defaultsFor(game.s.os.id);
+    document.body.dataset.os = game.s.os.id;
+    for (const cat of cats()) document.body.dataset[cat.id === 'site' ? 'siteStyle' : cat.id] = c[cat.id] || def[cat.id];
   }
 
   function choose(item) {
@@ -45,8 +50,7 @@
 
   /** The 🎨 button gets a dot when something new can be unlocked. */
   function renderDot() {
-    let ready = false;
-    for (const key in C.ITEM) if (canUnlock(C.ITEM[key])) { ready = true; break; }
+    const ready = cats().some(cat => cat.items.some(i => canUnlock(C.ITEM[C.key(cat.id, i.id)])));
     const dot = $('style-dot');
     if (dot && dot.hidden === ready) dot.hidden = !ready;
   }
@@ -71,18 +75,21 @@
     const root = view.root;
     root.textContent = '';
     view.cards = [];
-    const tabs = h('div', { class: 'style-tabs', role: 'tablist', 'aria-label': 'Style categories' }, C.CATEGORIES.map(cat => {
+    const list = cats();
+    if (!list.some(c => c.id === tab)) tab = list[0].id;
+    const tabs = h('div', { class: 'style-tabs', role: 'tablist', 'aria-label': 'Style categories' }, list.map(cat => {
       const ready = cat.items.some(canUnlock);
       return h('button', {
         type: 'button', role: 'tab', class: 'style-tab' + (cat.id === tab ? ' is-on' : ''), 'aria-selected': cat.id === tab ? 'true' : 'false',
         onclick: () => { tab = cat.id; render(); },
       }, [h('span', { 'aria-hidden': 'true', text: cat.icon }), ' ' + cat.name, ready ? h('span', { class: 'style-new', text: 'NEW' }) : null]);
     }));
-    const cat = C.CAT[tab];
+    const cat = list.find(c => c.id === tab);
+    const os = Z.opsys.current(game.s);
     const grid = h('div', { class: 'style-grid' });
     for (const item of cat.items.map(i => C.ITEM[C.key(cat.id, i.id)])) grid.appendChild(card(item));
     root.append(
-      h('p', { class: 'style-intro', text: 'Make ' + Z.siteName(game.s) + ' look the way you want. Themes unlock through milestones and never cost Money, so customizing never slows you down.' }),
+      h('p', { class: 'style-intro', text: 'Make ' + Z.siteName(game.s) + ' look the way you want on ' + os.name + ' ' + os.edition + '. Themes unlock through milestones and never cost Money, so customizing never slows you down.' }),
       tabs,
       h('p', { class: 'style-blurb', text: cat.blurb }),
       grid,
@@ -140,5 +147,13 @@
     setInterval(renderDot, 2000);
   }
 
-  ui.styleShop = { init, open, apply };
+  /** After an OS upgrade: new catalogue, new defaults, and a fresh window if one is open. */
+  function osChanged() {
+    tab = 'bg';
+    apply();
+    renderDot();
+    if (view) render();
+  }
+
+  ui.styleShop = { init, open, apply, osChanged };
 })(window.ICHAOS = window.ICHAOS || {});

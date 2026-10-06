@@ -7,8 +7,8 @@
   let enabled = true, volume = 0.6;
   let lastClick = 0;
 
-  function ensure() {
-    if (!enabled) return null;
+  /** The shared AudioContext (music uses it too, even with sound effects off). */
+  function context() {
     if (!ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return null;
@@ -19,6 +19,10 @@
     }
     if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     return ctx;
+  }
+
+  function ensure() {
+    return enabled ? context() : null;
   }
 
   /** One enveloped oscillator note. */
@@ -57,10 +61,22 @@
     meltdown() { tone(420, 1.1, 'sawtooth', 0.16, 0, 50); tone(300, 1.1, 'square', 0.06, 0.1, 40); },
     recovered() { tone(392, 0.12, 'triangle', 0.15); tone(587, 0.18, 'triangle', 0.15, 0.1); },
     action() { tone(740, 0.08, 'sine', 0.16); tone(555, 0.1, 'sine', 0.12, 0.06); },
+    ding() { tone(1568, 0.16, 'sine', 0.09); tone(2093, 0.22, 'sine', 0.07, 0.09); },
+    bonus() { [1047, 1319, 1568, 2093, 2637].forEach((f, i) => tone(f, 0.14, 'triangle', 0.11, i * 0.045)); },
     popup() { tone(1046, 0.07, 'square', 0.08); tone(1046, 0.07, 'square', 0.08, 0.1); },
     prestige() {
       [262, 330, 392, 523].forEach(f => tone(f, 1.4, 'triangle', 0.1));
       [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.25, 'sine', 0.12, 0.3 + i * 0.12));
+    },
+    // The new operating system boots: a clean rising chime over a soft chord.
+    startup() {
+      [262, 392, 494, 587].forEach(f => tone(f, 2.2, 'sine', 0.07, 0.05));
+      [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.5, 'sine', 0.1, 0.12 + i * 0.11));
+    },
+    // Mango OS boots: one big, warm major chord that rings out, with a glassy shimmer on top.
+    chime() {
+      [92.5, 185, 277.2, 370, 466.2, 554.4].forEach((f, i) => tone(f, 3.2 - i * 0.2, i < 2 ? 'sine' : 'triangle', 0.075, i * 0.008));
+      [1480, 1865, 2217].forEach((f, i) => tone(f, 1.4, 'sine', 0.03, 0.06 + i * 0.05));
     },
   };
 
@@ -69,7 +85,8 @@
       if (!enabled || !SOUNDS[name]) return;
       try { SOUNDS[name](); } catch (err) { /* audio is optional */ }
     },
-    unlock() { ensure(); },
+    unlock() { ensure(); if (Z.music) Z.music.kick(); },
+    context,
     setEnabled(on) { enabled = !!on; if (enabled) ensure(); },
     setVolume(v) {
       volume = Math.max(0, Math.min(1, v));

@@ -74,7 +74,16 @@
 
   /* ---------- Toasts ---------- */
 
+  /* While a full-screen moment (the OS install) covers the game, toasts wait their turn. */
+  let toastsHeld = false;
+  const waiting = [];
+  function holdToasts(on) {
+    toastsHeld = !!on;
+    if (!toastsHeld) waiting.splice(0).forEach((o, i) => setTimeout(() => toast(o), i * 350));
+  }
+
   function toast(o) {
+    if (toastsHeld) { waiting.push(o); return; }
     const root = $('toasts');
     if (!root) return;
     const el = h('div', { class: 'toast toast-' + (o.kind || 'info'), role: 'status' }, [
@@ -187,7 +196,7 @@
   }
 
   Object.assign(ui, {
-    $, h, setText, setHidden, setStyle, toast, icon, feedIcon,
+    $, h, setText, setHidden, setStyle, toast, holdToasts, icon, feedIcon,
     modal: { open: openModal, close: closeModal, isOpen: modalOpen, refresh: refreshModal },
     confirm: confirmBox,
     feed: { add: feedAdd, renderAll: feedRenderAll },
