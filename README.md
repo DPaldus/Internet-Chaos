@@ -53,7 +53,9 @@ event (a recall, a tracking scandal, a salsa feud…). Brands live in
 style per operating system. ChaosOS 7 has calm Frutiger Aero ambient: pad chords, glassy
 bells, soft bass, water drops and the odd melody. ChaosOS 8 has a mellow lo-fi beat:
 electric piano chords with tape wobble, round bass, soft swung drums, vinyl crackle and a
-sparse pluck melody. Neither quite loops. Music starts on the first click, pauses in hidden
+sparse pluck melody. Mango OS has bright, airy keynote-style electronica: wide pads that
+breathe with the beat, a glassy arpeggio, sub bass, finger snaps, a shaker and a soft
+gliding lead. None of them quite loops. Music starts on the first click, pauses in hidden
 tabs, and has its own switch and volume (☰ Menu, Settings). Code: `js/music.js`.
 
 **Save safety.** Settings has one-click **Download backup** and **Copy save code**. After
@@ -76,9 +78,22 @@ live tiles in the top bar, a navigation rail on wide screens, tile upgrades, piv
 full-width confirmation bands and a sad blue screen for meltdowns. The music switches to a
 lo-fi Metro beat. The Style Shop starts over: the Aero themes stay behind, and ChaosOS 8 has
 its own 24 themes (18 to unlock), with milestones counted from the moment of the upgrade.
-Rules: `js/systems/os.js` and `Z.OSES` in `js/config.js`; window, setup screen and rail:
-`js/ui/os.js`; look: sections 7–9 of `css/game.css`. "ChaosOS" is a made-up name, so the
-game stays clear of real trademarks.
+
+From the Viral Era on, *Mango OS Liquid Glass* follows for $20Qa (on top of ChaosOS 8):
+Attention ×1.15, Money per Attention ×1.15, server capacity ×1.25, good events last ×1.3
+longer, Hotfix cooldown ×0.75 and +2 hours of offline progress (eras after it run about 15%
+faster in the simulator). A "Mango OS is available" notification announces it. The install
+screen greets you with a big handwritten "hello" and a progress bar, a startup chime plays,
+and the interface becomes macOS-style liquid glass: a desktop menu bar with a clock (File,
+Edit, View, Window and Help open Settings, the Style Shop, Statistics, Eras and Help), a
+colorful wavy wallpaper, a floating glass toolbar with colored icon orbs, a glass sidebar,
+window lights on every window, frosted cards, round switches and notification-style toasts.
+Its Style Shop has 24 themes of its own (18 to unlock): wallpapers, accent colors, website
+styles (Liquid Glass, Notes, Widgets, Keynote, Spatial…) and light effects.
+
+Rules: `js/systems/os.js` and `Z.OSES` in `js/config.js`; window, setup screen, rail and
+menu bar: `js/ui/os.js`; look: sections 7–11 of `css/game.css`. "ChaosOS" and "Mango OS"
+are made-up names, so the game stays clear of real trademarks.
 
 **Live Feed pages.** The Blog Post, Meme Page and Comment Section tiles at the top of the
 Live Feed open living pages of your site: an article, a meme or a forum thread, with
@@ -102,7 +117,7 @@ index.html               entry point
 css/game.css             all styles, in sections: base layout and Forum Era tokens, era
                          themes, Live Feed pages, the Frutiger Aero skin, Style Shop themes,
                          help/tour/sponsors/notifications/backups, the OS upgrade window,
-                         the ChaosOS 8 Metro skin and its themes
+                         the ChaosOS 8 Metro and Mango OS Liquid Glass skins and themes
 assets/                  game logo (+ favicon, home-screen and top-bar copies), DPLDS logo
 js/core.js               namespace, helpers, seeded RNG, event bus
 js/format.js             number / money / time formatting (1K … 1Tg, or scientific)
@@ -137,9 +152,9 @@ seed: 1, minutes: 60 })` prints what a player meets and when (profiles: `attenti
 `casual`, `idle`), including quiet stretches with nothing new.
 
 Current pacing for an attentive scripted player (it catches most notifications and buys
-ChaosOS 8 about ten minutes into the Social Media Era): the first era takes about 30
-minutes, then roughly 15–20, 10–25, 25–35, 25–40 and 55–70 minutes, so eras still get longer
-as the game goes on. A casual player reaches the first era in about 35 minutes, a mostly
+ChaosOS 8 about ten minutes into the Social Media Era and Mango OS about eight minutes into
+the Viral Era): the first era takes about 30–35 minutes, then roughly 12–18, 13–22, 20–22,
+24–32 and 50–60 minutes, so eras still get longer as the game goes on. A casual player reaches the first era in about 35 minutes, a mostly
 idle one in about 45.
 
 ## Saves

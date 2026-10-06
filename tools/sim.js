@@ -227,7 +227,8 @@
       }
       if (Z.SPONSORS) for (const sp of Z.SPONSORS) if (!seen['s' + sp.id] && sp.active(s)) { seen['s' + sp.id] = 1; mark(t, 'sponsor', sp.brand); }
       if (s.stats.meltdowns && !seen.melt) { seen.melt = 1; mark(t, 'meltdown', 'first meltdown'); }
-      if (!seen['os' + s.os.id] && s.os.id !== Z.OSES[0].id) { seen['os' + s.os.id] = 1; mark(t, 'os', 'installed ' + Z.opsys.current(s).name); }      if (!seen.era && Z.prestige.canPrestige(s)) { seen.era = 1; mark(t, 'era', 'next Internet Era available'); }
+      if (!seen['os' + s.os.id] && s.os.id !== Z.OSES[0].id) { seen['os' + s.os.id] = 1; mark(t, 'os', 'installed ' + Z.opsys.current(s).name); }
+      if (!seen.era && Z.prestige.canPrestige(s)) { seen.era = 1; mark(t, 'era', 'next Internet Era available'); }
       if (Z.bonus && s.stats.bonuses && !seen['bonus' + s.stats.bonuses] && s.stats.bonuses <= 3) { seen['bonus' + s.stats.bonuses] = 1; mark(t, 'bonus', 'caught #' + s.stats.bonuses); }
     }
     novel.push(end);

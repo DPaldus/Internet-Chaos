@@ -1,6 +1,6 @@
 /* CSS audit for css/game.css (developer tool, not loaded by the game).
    Load it into the running game page (http, not file://) and call:
-     await CSS_AUDIT.capture()          snapshot ~50 game states (every era, modals, themes, both OS skins…)
+     await CSS_AUDIT.capture()          snapshot ~50 game states (every era, modals, themes, all three OS skins…)
      await CSS_AUDIT.frames([1500, 520]) render each snapshot in hidden iframes at those widths
      await CSS_AUDIT.findDead()         declarations whose removal changes no computed style anywhere
      await CSS_AUDIT.compare(hrefA, hrefB) every element's computed style under two stylesheets
@@ -142,6 +142,11 @@
     const metro = cat => C.setFor('metro').find(c => c.id === cat).items.map(i => i.id);
     for (let i = 0; i < 6; i++) {
       variant('metro-' + i, 'mid', { 'data-os': 'metro', 'data-era': String(2 + i), 'data-bg': metro('bg')[i], 'data-color': metro('color')[i], 'data-site-style': metro('site')[i], 'data-fx': metro('fx')[i] });
+    }
+    // Mango OS Liquid Glass: the same screen again with each of its themes.
+    const mango = cat => C.setFor('mango').find(c => c.id === cat).items.map(i => i.id);
+    for (let i = 0; i < 6; i++) {
+      variant('mango-' + i, 'mid', { 'data-os': 'mango', 'data-era': String(3 + (i % 5)), 'data-bg': mango('bg')[i], 'data-color': mango('color')[i], 'data-site-style': mango('site')[i], 'data-fx': mango('fx')[i] });
     }
     variant('reduce-motion', 'mid', {}, 'reduce-motion');
     variant('shake', 'mid', {}, 'shake era-flash');

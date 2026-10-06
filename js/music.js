@@ -728,7 +728,7 @@
       if (pos === 15 && Math.random() < 0.18) sparkle(t);
     }
 
-    return { step: SIXTEENTH, lowpass: 9000, echo: SIXTEENTH * 3, level: 0.5, begin, end, schedule };
+    return { step: SIXTEENTH, lowpass: 9000, echo: SIXTEENTH * 3, level: 0.42, begin, end, schedule };
   })();
 
   const STYLES = { aero: AERO, metro: METRO, mango: MANGO };
