@@ -20,12 +20,14 @@
       clock: 0,           // seconds this session has ticked (paces reveals)
       nextRevealAt: 0,
     };
+    Z.skinBuildings(state.era);           // every era names the buildings its own way
 
     g.notify = function (type, data) {
       if (!g.silent && !g.offline) Z.bus.emit(type, data);
     };
 
     g.refresh = function () {
+      Z.skinBuildings(g.s.era);             // returns at once unless the era changed
       if (g.dirty || !g.m) { g.m = Z.mods.compute(g.s); g.dirty = false; }
       Z.econ.compute(g);
     };
@@ -40,6 +42,7 @@
       Z.events.tickTrends(g, dt);
       Z.auto.tick(g, dt);
       Z.bonus.tick(g, dt);
+      Z.mech.tick(g, dt);
       g.refresh();
       track(g, dt);
       g.clock += dt;
@@ -48,6 +51,7 @@
         g.secondTimer = 0;
         updateReveals(g);
         Z.econ.updateSeen(g);
+        Z.meta.tick(g);
         Z.ach.check(g);
       }
     };
@@ -78,6 +82,7 @@
     bulk: g => Z.BUILDINGS.some(b => (g.s.buildings[b.id] || 0) >= 10) || g.s.cloutLifetime > 0,
     style: g => !!Z.COSMETICS && Z.COSMETICS.setFor(g.s.os.id).some(cat => cat.items.some(i => i.req && i.req.have(g.s) >= i.req.need)),
     os: g => g.s.os.id !== Z.OSES[0].id || Z.opsys.available(g.s, Z.opsys.next(g.s)),
+    daily: g => !!g.s.daily.mod && (g.s.cloutLifetime > 0 || (!!g.s.flags.reveal.upgrades && g.s.run.time > 300)),
   };
 
   const REVEAL_GAP = 20;   // seconds between two newly introduced systems, so each gets noticed
@@ -106,6 +111,12 @@
     if (c.aps > st.bestAps) st.bestAps = c.aps;
     if (chaos < 10) s.flags.lowChaosAt = s.run.time;
     if (s.policy === 'unhinged') st.unhingedTime += dt;
+    const run = s.run;
+    if (s.policy === 'edgy' || s.policy === 'unhinged') run.wildTime += dt;
+    if (s.policy === 'wholesome' || s.policy === 'safe') run.safeTime += dt;
+    if (s.res.stability < run.minStab && s.meltdown <= 0) run.minStab = s.res.stability;
+    if (s.meltdown > 0) run.minStab = 0;
+    if (chaos <= c.tolerance && chaos >= c.tolerance - 3) run.edgeTime += dt;
     if (s.flags.serverWatch > 0) {
       s.flags.serverWatch -= dt;
       if (s.flags.serverWatch <= 0) { s.flags.serverWatch = 0; s.flags.serverSurvived = true; }

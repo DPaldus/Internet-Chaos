@@ -107,7 +107,7 @@
 
   function renderEffects(g) {
     const s = g.s, f = Z.fmt;
-    const items = s.buffs.map(b => {
+    const items = s.buffs.filter(b => !Z.BUFFS[b.key].noChip).map(b => {
       const def = Z.BUFFS[b.key];
       return { id: b.key, icon: def.icon, name: def.name, kind: def.kind, time: b.time, duration: b.duration, mag: b.att };
     });
@@ -115,6 +115,8 @@
       const b = Z.B[g.c.trendId];
       items.push({ id: 'trend', icon: '#️⃣', name: 'Trending: ' + b.plural + ' ×' + (Z.BAL.trends.mult + g.m.trendMult), kind: 'good', time: s.trend.time, duration: Z.BAL.trends.duration * g.m.buffDuration });
     }
+    const daily = ui.meta.dailyChip(s);
+    if (daily) items.push(daily);
     if (s.meltdown > 0) items.unshift({ id: 'meltdown', icon: '🔥', name: 'MELTDOWN · output ×' + Z.BAL.meltdown.productionMult, kind: 'bad', time: s.meltdown, duration: Z.BAL.meltdown.duration * g.m.meltdownMult });
     const root = $('effects');
     const key = items.map(x => x.id).join(',');
@@ -125,7 +127,9 @@
       for (const it of items) {
         const label = h('span', { class: 'chip-name' });
         const time = h('span', { class: 'chip-time' });
-        const chip = h('span', { class: 'chip chip-' + it.kind }, [h('span', { 'aria-hidden': 'true', text: it.icon }), label, time]);
+        const chip = h(it.daily ? 'button' : 'span', { class: 'chip chip-' + it.kind + (it.daily ? ' chip-daily' : ''), type: it.daily ? 'button' : null, title: it.title || null },
+          [h('span', { 'aria-hidden': 'true', text: it.icon }), label, time]);
+        if (it.daily) chip.addEventListener('click', () => ui.meta.openDaily());
         root.appendChild(chip);
         effectEls.push({ chip, label, time });
       }
@@ -135,7 +139,7 @@
       if (!e) return;
       const name = it.mag && it.id === 'viral' ? it.name + ' ' + f.mult(it.mag) : it.name;
       setText(e.label, name);
-      setText(e.time, Math.ceil(it.time) + 's');
+      setText(e.time, it.daily ? Z.fmt.time(it.time) : Math.ceil(it.time) + 's');
       setStyle(e.chip, '--left', (it.time / it.duration * 100).toFixed(1) + '%');
     });
     setHidden(root, !items.length);
@@ -147,7 +151,7 @@
 
   function initGoals() {
     const root = $('goals');
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       const icon = h('span', { class: 'goal-icon', 'aria-hidden': 'true' });
       const title = h('span', { class: 'goal-title' });
       const nums = h('span', { class: 'goal-nums' });
@@ -156,7 +160,10 @@
         h('div', { class: 'goal-line' }, [h('span', { class: 'goal-name' }, [icon, title]), nums]),
         h('div', { class: 'goal-bar' }, [fill]),
       ]);
-      row.addEventListener('click', () => { if (row.classList.contains('goal-os')) ui.os.open(); });
+      row.addEventListener('click', () => {
+        if (row.classList.contains('goal-os')) ui.os.open();
+        else if (row.classList.contains('goal-daily')) ui.meta.openDaily();
+      });
       root.appendChild(row);
       goalRows.push({ row, icon, title, nums, fill });
     }
@@ -206,8 +213,10 @@
       const ready = s.run.attention >= req;
       goals.push({ icon: '🌐', title: ready ? 'New Internet Era ready!' : 'Next Internet Era', nums: f.int(s.run.attention) + ' / ' + f.int(req), p: ready ? 1 : logProgress(s.run.attention, req), ready });
     }
-    // Four rows at most: the site level is the first to make room.
-    return (goals.length > 4 ? goals.filter(x => !x.level) : goals).slice(0, 4);
+    const daily = ui.meta.dailyGoal(s);
+    if (daily) goals.push(daily);
+    // Five rows at most: the site level is the first to make room.
+    return (goals.length > 5 ? goals.filter(x => !x.level) : goals).slice(0, 5);
   }
 
   function renderGoals(g) {
@@ -222,6 +231,7 @@
       setStyle(r.fill, 'width', (Math.min(1, Math.max(0, goal.p)) * 100).toFixed(1) + '%');
       r.row.classList.toggle('ready', !!goal.ready);
       r.row.classList.toggle('goal-os', !!goal.os);
+      r.row.classList.toggle('goal-daily', !!goal.daily);
     });
   }
 

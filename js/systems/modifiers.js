@@ -54,8 +54,11 @@
       if (p.effects) for (const e of p.effects) applyEffect(m, e, lvl);
       if (p.apply) p.apply(m, lvl);
     }
-    const os = s.os && Z.OS[s.os.id];
-    if (os) for (const e of os.effects) applyEffect(m, e, 1);
+    // Operating systems stack: every system up to the installed one keeps its bonuses.
+    const osIndex = s.os ? Z.OSES.findIndex(o => o.id === s.os.id) : 0;
+    for (let k = 1; k <= osIndex; k++) for (const e of Z.OSES[k].effects) applyEffect(m, e, 1);
+    if (Z.meta && Z.meta.dailyActive(s)) for (const e of Z.DAILY_MOD[s.daily.mod].effects) applyEffect(m, e, 1);
+    if (Z.mech) for (const e of Z.mech.modEffects(s)) applyEffect(m, e, 1);
     m.achCount = Object.keys(s.achievements).length;
     m.achMult = 1 + BAL.achievementBonus * m.achCount;
     m.cloutMult = 1 + BAL.prestige.cloutBonus * s.cloutLifetime;
@@ -101,11 +104,12 @@
       case 'autoClick': return '+' + e.v + ' automatic clicks per second';
       case 'autoHotfix': return 'Automatic Hotfix below your threshold';
       case 'trendMult': return 'Trending multiplier +' + e.v;
-      case 'tolerance': return 'Tolerance +' + e.v;
+      case 'tolerance': return 'Tolerance ' + (e.v < 0 ? '−' + -e.v : '+' + e.v);
       case 'crashGuard': return 'Blue screens ' + Math.round((1 - e.x) * 100) + '% rarer and shorter';
       case 'stabilityBonus': return 'Stability +' + e.v + '% now, then +' + e.v + '% per minute';
       case 'offlineEff': return 'Offline progress +' + Math.round(e.v * 100) + '% efficiency';
       case 'offlineCap': return 'Offline progress up to +' + e.v + ' hours';
+      case 'costMult': return 'Prices ' + f.mult(e.x);
       default: return '';
     }
   }

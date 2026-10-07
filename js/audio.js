@@ -73,6 +73,17 @@
       [262, 392, 494, 587].forEach(f => tone(f, 2.2, 'sine', 0.07, 0.05));
       [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.5, 'sine', 0.1, 0.12 + i * 0.11));
     },
+    // Prism OS boots: a rising shimmer that opens into a wide, airy chord.
+    holoStart() {
+      tone(220, 1.6, 'sine', 0.06, 0, 880);
+      [440, 554.4, 659.3, 830.6, 987.8].forEach((f, i) => tone(f, 2.4 - i * 0.2, 'sine', 0.05, 0.5 + i * 0.07));
+      [1760, 2217, 2637].forEach((f, i) => tone(f, 1.2, 'triangle', 0.025, 0.8 + i * 0.09));
+    },
+    // ChaosOS 95 boots: a bright four-note fanfare from a cheap sound card.
+    retroStart() {
+      [523.3, 659.3, 784, 1046.5].forEach((f, i) => tone(f, i === 3 ? 0.9 : 0.16, 'square', 0.05, i * 0.13));
+      [261.6, 329.6, 392].forEach(f => tone(f, 1.2, 'triangle', 0.06, 0.4));
+    },
     // Mango OS boots: one big, warm major chord that rings out, with a glassy shimmer on top.
     chime() {
       [92.5, 185, 277.2, 370, 466.2, 554.4].forEach((f, i) => tone(f, 3.2 - i * 0.2, i < 2 ? 'sine' : 'triangle', 0.075, i * 0.008));

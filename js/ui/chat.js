@@ -701,9 +701,10 @@
 
   /** Which page a feed entry is about, if any. */
   function pageForText(text) {
-    if (/Blog Post/.test(text)) return 'blog';
-    if (/Meme Page/.test(text)) return 'meme';
-    if (/comment section/i.test(text)) return 'comments';
+    const has = (re, id) => re.test(text) || text.indexOf(Z.B[id].name) >= 0;
+    if (has(/Blog Post/, 'blog')) return 'blog';
+    if (has(/Meme Page/, 'meme')) return 'meme';
+    if (has(/comment section/i, 'comments')) return 'comments';
     return null;
   }
 

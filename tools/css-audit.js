@@ -143,10 +143,13 @@
     for (let i = 0; i < 6; i++) {
       variant('metro-' + i, 'mid', { 'data-os': 'metro', 'data-era': String(2 + i), 'data-bg': metro('bg')[i], 'data-color': metro('color')[i], 'data-site-style': metro('site')[i], 'data-fx': metro('fx')[i] });
     }
-    // Mango OS Liquid Glass: the same screen again with each of its themes.
-    const mango = cat => C.setFor('mango').find(c => c.id === cat).items.map(i => i.id);
-    for (let i = 0; i < 6; i++) {
-      variant('mango-' + i, 'mid', { 'data-os': 'mango', 'data-era': String(3 + (i % 5)), 'data-bg': mango('bg')[i], 'data-color': mango('color')[i], 'data-site-style': mango('site')[i], 'data-fx': mango('fx')[i] });
+    // Mango OS, Prism OS and ChaosOS 95: the same screen again with each of their themes.
+    const themes = (os, cat) => C.setFor(os).find(c => c.id === cat).items.map(i => i.id);
+    for (const [os, firstEra] of [['mango', 3], ['holo', 5], ['retro', 7]]) {
+      const n = themes(os, 'bg').length;
+      for (let i = 0; i < n; i++) {
+        variant(os + '-' + i, 'mid', { 'data-os': os, 'data-era': String(Math.min(7, firstEra + (i % 3))), 'data-bg': themes(os, 'bg')[i], 'data-color': themes(os, 'color')[i], 'data-site-style': themes(os, 'site')[i], 'data-fx': themes(os, 'fx')[i] });
+      }
     }
     variant('reduce-motion', 'mid', {}, 'reduce-motion');
     variant('shake', 'mid', {}, 'shake era-flash');

@@ -4,7 +4,16 @@
   'use strict';
 
   function freshRun() {
-    return { attention: 0, money: 0, time: 0, clicks: 0, maxChaos: 0, meltdowns: 0, upgrades: 0 };
+    return {
+      attention: 0, money: 0, time: 0, clicks: 0, maxChaos: 0, meltdowns: 0, upgrades: 0,
+      // For era challenges and era mechanics:
+      wildTime: 0,      // seconds on the Edgy or Unhinged policy
+      safeTime: 0,      // seconds on the Wholesome or Brand Safe policy
+      edgeTime: 0,      // seconds with Chaos within 3 points under Tolerance
+      minStab: 100,     // lowest Stability this era
+      connections: 0,   // Social Media Era friend network
+      feedMode: 1,      // Algorithm Era feed mode: 0 calm, 1 balanced, 2 max engagement
+    };
   }
 
   function freshStats() {
@@ -75,6 +84,11 @@
         feed: [],
         cosmetics: { bg: 'sky', color: 'aqua', site: 'era', fx: 'bubbles', unlocked: {} },   // Style Shop choices
         os: { id: 'aero', installed: 0, base: {} },   // operating system; `base` = stats at install time
+        history: [],                                   // finished eras (js/systems/meta.js)
+        challenges: { done: {}, run: {} },             // era challenges: ever completed / completed this era
+        runBase: { stats: {}, ev: {} },                // statistics when this era started
+        daily: { date: '', mod: '', goal: '', base: 0, done: false, streak: 0, last: '' },
+        mech: {},                                      // this era's signature mechanic (js/systems/eramech.js)
       };
     },
   };

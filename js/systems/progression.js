@@ -30,9 +30,11 @@
     return BAL.prestige.requirement * Math.pow(BAL.prestige.requirementGrowth, s.era - 1);
   }
 
+  /** Clout for starting the next era now, including this era's challenge bonus. */
   function cloutGain(s) {
     const p = BAL.prestige;
-    return Math.floor(p.cloutScale * Math.pow(Math.max(0, s.run.attention) / p.requirement, p.cloutExponent));
+    const base = p.cloutScale * Math.pow(Math.max(0, s.run.attention) / p.requirement, p.cloutExponent);
+    return Math.floor(base * (1 + Z.meta.challengeBonus(s)));
   }
 
   function canPrestige(s) { return s.run.attention >= requirement(s); }
@@ -56,6 +58,9 @@
     s.accum = { autoClick: 0, autobuy: 0, risk: 0 };
     s.flags.lowChaosAt = -999;
     s.flags.serverWatch = 0;
+    s.challenges.run = {};
+    s.mech = {};
+    Z.meta.snapshotRun(s);
     g.dirty = true;
     g.refresh();
     const m = g.m;
@@ -72,7 +77,9 @@
   function prestige(g) {
     const s = g.s;
     if (!canPrestige(s)) return 0;
+    Z.meta.sealEnd(g);
     const gain = cloutGain(s);
+    Z.meta.recordEra(g, gain);
     s.clout += gain;
     s.cloutLifetime += gain;
     s.stats.cloutEarned += gain;

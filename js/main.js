@@ -18,6 +18,7 @@
     ui.hud.render(g);
     ui.site.render(g, dt);
     ui.panels.renderFast(g, dt);
+    ui.mech.render(g);
     slowTimer += dt;
     if (slowTimer >= 0.25 || forceSlow) {
       slowTimer = 0;
@@ -25,6 +26,7 @@
       ui.shop.render(g);
       ui.panels.renderSlow(g);
       ui.os.render(g);
+      ui.meta.render(g);
       ui.modal.refresh();
     }
   }
@@ -125,6 +127,7 @@
     bulk: ['✖️', 'Bulk buying', 'Buy ×10, ×25 or Max at once with the buttons above the shop list.'],
     style: ['🎨', 'Style Shop unlocked', 'You can now unlock themes for your website. Open 🎨 Style in the top bar.'],
     os: ['🪟', 'Operating System Upgrade available', 'A new operating system can be installed: a faster site, permanent bonuses and a brand-new look. Open 🪟 Update in the top bar.'],
+    daily: ['📅', 'Daily challenge', 'Every day brings a new modifier for everyone and a goal that pays Clout. Find it in Next Goals or the ☰ Menu.'],
   };
 
   function wire() {
@@ -201,6 +204,7 @@
   /* ---------- Boot ---------- */
 
   function start() {
+    Z.i18n.start();                 // translates the page as it is drawn (English needs nothing)
     const loaded = Z.save.load();
     const state = loaded.state || Z.state.create(Date.now());
     g = Z.game = Z.createGame(state);
@@ -226,6 +230,10 @@
     ui.help.init(g);
     ui.bonus.init(g);
     ui.backup.init(g);
+    ui.meta.init(g);
+    ui.mech.init(g);
+    ui.share.init(g);
+    ui.keys.init(g);
     wire();
     wireNav();
     applySettings();

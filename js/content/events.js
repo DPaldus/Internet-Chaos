@@ -54,6 +54,14 @@
     tuning: { name: 'Algorithmic Tuning', icon: '🎛️', kind: 'good', duration: 60, chaosLock: true },
     lobbying: { name: 'Lobbying', icon: '💼', kind: 'good', duration: 60, noDrain: true },
 
+    // Era mechanics (js/systems/eramech.js)
+    flameWar: { name: 'Flame War', icon: '🔥', kind: 'good', duration: 120, att: 1.3, chaosAdd: 12, noChip: true },   // shown in the website window instead
+    trendWave: { name: 'Riding a Trend', icon: '🌊', kind: 'good', duration: 30, att: 2.5 },
+    aiHype: { name: 'AI Hype', icon: '🌈', kind: 'good', duration: 20, att: 3 },
+    stockSurge: { name: 'Stock Surge', icon: '📈', kind: 'good', duration: 60, yield: 1.5 },
+    botHelp: { name: 'Friendly Bots', icon: '🤖', kind: 'good', duration: 30, att: 1.5 },
+    botWall: { name: 'Bot Firewall', icon: '🧱', kind: 'good', duration: 30, control: 1.3 },
+
     algoChange: { name: 'Algorithm Change', icon: '📉', kind: 'bad', duration: 60, att: 0.5 },
     advertiserGone: { name: 'Advertiser Exodus', icon: '🚪', kind: 'bad', duration: 60, yield: 0.7 },
     boycott: { name: 'Advertiser Boycott', icon: '🚪', kind: 'bad', duration: 30, yield: 0.5 },

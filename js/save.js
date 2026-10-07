@@ -41,7 +41,10 @@
     d.res.stability = n(res.stability, 100, 0, Z.BAL.stability.max);
 
     const run = o(raw.run);
-    for (const k of Z.state.RUN_KEYS) d.run[k] = n(run[k], 0, 0, BIG);
+    for (const k of Z.state.RUN_KEYS) d.run[k] = n(run[k], d.run[k], 0, BIG);
+    d.run.feedMode = i(d.run.feedMode, 1, 0, 2);
+    d.run.connections = i(d.run.connections, 0, 0, Z.mech.MAX_FRIENDS);
+    d.run.minStab = Math.min(d.run.minStab, 100);
 
     const bld = o(raw.buildings), seen = o(raw.seen);
     for (const x of Z.BUILDINGS) {
@@ -116,7 +119,9 @@
 
     const fl = o(raw.flags), rev = o(fl.reveal), evc = o(fl.ev);
     for (const k of Z.REVEAL_KEYS) if (rev[k] === true) d.flags.reveal[k] = true;
-    for (const k of Z.EVENTS.map(e => e.id).concat(['apology', 'trend'])) {
+    // Event counts, action counts (act:<id>) and era-mechanic counters (mech:…, mechIntro:…).
+    for (const k in evc) {
+      if (!/^(act:|mech:|mechIntro:)?[A-Za-z0-9_-]{1,32}$/.test(k)) continue;
       const v = i(evc[k], 0, 0, 1e9);
       if (v > 0) d.flags.ev[k] = v;
     }
@@ -159,6 +164,52 @@
       const item = typeof cos[cat.id] === 'string' ? Z.COSMETICS.ITEM[cat.id + ':' + cos[cat.id]] : null;
       if (item && item.os === d.os.id && (!item.req || d.cosmetics.unlocked[cat.id + ':' + item.id])) d.cosmetics[cat.id] = item.id;
     }
+
+    // Finished eras.
+    if (Array.isArray(raw.history)) {
+      for (const x of raw.history.slice(-200)) {
+        const hx = o(x);
+        d.history.push({
+          era: i(hx.era, 1, 1, 999), time: n(hx.time, 0, 0, BIG), clout: n(hx.clout, 0, 0, BIG),
+          attention: n(hx.attention, 0, 0, BIG), money: n(hx.money, 0, 0, BIG), meltdowns: i(hx.meltdowns, 0, 0, 1e6),
+          clicks: i(hx.clicks, 0, 0, 1e12), upgrades: i(hx.upgrades, 0, 0, 1e6),
+          os: typeof hx.os === 'string' && Z.OS[hx.os] ? hx.os : Z.OSES[0].id,
+          challenges: i(hx.challenges, 0, 0, 3), at: n(hx.at, 0, 0, Number.MAX_SAFE_INTEGER),
+        });
+      }
+    }
+
+    // Era challenges.
+    const ch = o(raw.challenges), chDone = o(ch.done), chRun = o(ch.run);
+    for (const c of Z.CHALLENGES) {
+      const t = n(chDone[c.id], 0, 0, Number.MAX_SAFE_INTEGER);
+      if (t > 0) d.challenges.done[c.id] = t;
+      if (chRun[c.id] === true && c.era === Math.min(d.era, 7)) d.challenges.run[c.id] = true;
+    }
+
+    // Statistics when this era started. Older saves have none: count "this era" from now.
+    const rb = o(raw.runBase);
+    if (raw.runBase && typeof raw.runBase === 'object') {
+      const rbs = o(rb.stats), rbe = o(rb.ev);
+      for (const k of Z.state.STAT_KEYS) d.runBase.stats[k] = Math.min(n(rbs[k], 0, 0, BIG), d.stats[k]);
+      for (const k in d.flags.ev) d.runBase.ev[k] = Math.min(i(rbe[k], 0, 0, 1e9), d.flags.ev[k]);
+    } else {
+      Z.meta.snapshotRun(d);
+    }
+
+    // Daily challenge.
+    const dl = o(raw.daily), dayOk = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+    if (dayOk(dl.date) && Z.DAILY_MOD[dl.mod] && Z.DAILY_GOAL[dl.goal]) {
+      d.daily.date = dl.date;
+      d.daily.mod = dl.mod;
+      d.daily.goal = dl.goal;
+      d.daily.base = Math.min(n(dl.base, 0, 0, BIG), d.stats[Z.DAILY_GOAL[dl.goal].stat] || 0);
+      d.daily.done = b(dl.done, false);
+    }
+    d.daily.streak = i(dl.streak, 0, 0, 100000);
+    d.daily.last = dayOk(dl.last) ? dl.last : '';
+
+    // The era mechanic's moment-to-moment state is not kept: it simply starts again.
 
     if (Array.isArray(raw.feed)) {
       const kinds = ['good', 'bad', 'info', 'achieve', 'era'];

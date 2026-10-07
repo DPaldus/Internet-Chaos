@@ -8,6 +8,10 @@
      mango · Mango OS: bright, airy keynote-style electronica. Wide pads in E major that
              breathe with the beat, a glassy FM arpeggio, a round sub bass, finger snaps,
              a shaker and now and then a soft gliding lead.
+     holo  · Prism OS: dreamy synthwave in A minor. Wide pads through a slowly sweeping
+             filter, a saw arpeggio, pulsing bass, a roomy snare and a gliding lead.
+     retro · ChaosOS 95: sound-card chiptune in C major. Square-wave arpeggios, a triangle
+             bass, a little looping lead melody and noise drums.
    All share one reverb and one echo. Randomness keeps them from looping audibly. Music
    starts on the first click or key press (browsers require a gesture) and pauses while
    the tab is hidden. */
@@ -731,7 +735,305 @@
     return { step: SIXTEENTH, lowpass: 9000, echo: SIXTEENTH * 3, level: 0.42, begin, end, schedule };
   })();
 
-  const STYLES = { aero: AERO, metro: METRO, mango: MANGO };
+  /* ======================================================================
+     Prism OS · holographic synthwave
+     ====================================================================== */
+
+  const HOLO = (function () {
+    const BPM = 88;
+    const SIXTEENTH = 60 / BPM / 4;
+    const BAR = 16;
+
+    // A minor with dreamy extensions; everything diatonic, so the arpeggio fits every chord.
+    const CHORDS = {
+      Am: { root: 45, pad: [57, 60, 64, 71], arp: [57, 60, 64, 67, 71, 72] },     // Am9
+      F: { root: 41, pad: [57, 60, 64, 65], arp: [53, 57, 60, 64, 65, 69] },      // Fmaj7
+      C: { root: 48, pad: [55, 59, 64, 67], arp: [55, 59, 60, 64, 67, 71] },      // Cmaj7
+      G: { root: 43, pad: [55, 59, 62, 64], arp: [55, 59, 62, 64, 67, 71] },      // G6
+      Em: { root: 40, pad: [55, 59, 62, 66], arp: [52, 55, 59, 62, 64, 67] },     // Em7
+    };
+    const PROGRESSIONS = [['Am', 'F', 'C', 'G'], ['F', 'G', 'Em', 'Am'], ['Am', 'Em', 'F', 'G'], ['C', 'G', 'Am', 'F']];
+    const LEAD = [69, 71, 72, 74, 76, 79, 81];      // A natural minor, high
+
+    let prog = PROGRESSIONS[0], chord = CHORDS.Am, padBus = null, lfo = null;
+
+    function begin() {
+      // Pads share one filter that sweeps slowly, like light moving through a prism.
+      padBus = ctx.createBiquadFilter();
+      padBus.type = 'lowpass';
+      padBus.frequency.value = 1400;
+      padBus.Q.value = 2;
+      lfo = ctx.createOscillator();
+      lfo.frequency.value = 0.07;
+      const amt = ctx.createGain();
+      amt.gain.value = 900;
+      lfo.connect(amt); amt.connect(padBus.frequency);
+      lfo.start();
+      route(padBus, 0.7, 0.12, 0);
+      prog = PROGRESSIONS[0];
+    }
+
+    function end(at) {
+      try { if (lfo) lfo.stop(at || ctx.currentTime); } catch (err) { /* already stopped */ }
+      lfo = null; padBus = null;
+    }
+
+    function pad(notes, t, dur) {
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.0001, t);
+      env.gain.linearRampToValueAtTime(0.018, t + 1.2);
+      env.gain.setValueAtTime(0.018, t + dur - 0.2);
+      env.gain.exponentialRampToValueAtTime(0.0001, t + dur + 2);
+      env.connect(padBus || dry);
+      for (const n of notes) {
+        for (const cents of [-12, 0, 11]) {
+          const o = ctx.createOscillator();
+          o.type = 'sawtooth';
+          o.frequency.value = mtof(n);
+          o.detune.value = cents;
+          o.connect(env);
+          o.start(t); o.stop(t + dur + 2.1);
+        }
+      }
+    }
+
+    /** A short saw pluck through a closing filter: the classic synthwave arpeggio. */
+    function arp(n, t, vel, pan) {
+      const o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.value = mtof(n);
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.Q.value = 6;
+      lp.frequency.setValueAtTime(3800, t);
+      lp.frequency.exponentialRampToValueAtTime(500, t + 0.22);
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.0001, t);
+      env.gain.linearRampToValueAtTime(0.03 * vel, t + 0.004);
+      env.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+      o.connect(lp); lp.connect(env);
+      route(env, 0.35, 0.45, pan);
+      o.start(t); o.stop(t + 0.32);
+    }
+
+    function bass(n, t, dur) {
+      const o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.value = mtof(n);
+      const sub = ctx.createOscillator();
+      sub.frequency.value = mtof(n - 12);
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 420;
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.0001, t);
+      env.gain.linearRampToValueAtTime(0.07, t + 0.01);
+      env.gain.exponentialRampToValueAtTime(0.03, t + dur * 0.8);
+      env.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.05);
+      o.connect(lp); sub.connect(lp); lp.connect(env);
+      route(env, 0.05, 0, 0);
+      o.start(t); sub.start(t);
+      o.stop(t + dur + 0.1); sub.stop(t + dur + 0.1);
+    }
+
+    function kick(t) {
+      const o = ctx.createOscillator();
+      o.frequency.setValueAtTime(120, t);
+      o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.0001, t);
+      env.gain.linearRampToValueAtTime(0.28, t + 0.004);
+      env.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+      o.connect(env);
+      route(env, 0.05, 0, 0);
+      o.start(t); o.stop(t + 0.37);
+    }
+
+    /** A big, roomy snare: a noise burst sent mostly to the reverb. */
+    function snare(t) {
+      noiseHit(t, 'bandpass', 1500, 0.8, 0.09, 0.25, 1.1, 0);
+      noiseHit(t, 'highpass', 5000, 0.5, 0.03, 0.12, 0.6, 0.1);
+    }
+
+    function hat(t, vel) { noiseHit(t, 'highpass', 9000, 0.6, 0.02 * vel, 0.04, 0.15, -0.25); }
+
+    /** A soft gliding lead, sine and a touch of square. */
+    function lead(n, t, len) {
+      const f = mtof(n);
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.0001, t);
+      env.gain.linearRampToValueAtTime(0.026, t + 0.05);
+      env.gain.setValueAtTime(0.026, t + len * 0.8);
+      env.gain.exponentialRampToValueAtTime(0.0001, t + len + 0.4);
+      for (const [type, amp] of [['sine', 1], ['square', 0.12]]) {
+        const o = ctx.createOscillator();
+        o.type = type;
+        o.frequency.setValueAtTime(f * 0.98, t);
+        o.frequency.exponentialRampToValueAtTime(f, t + 0.08);
+        const vib = ctx.createOscillator();
+        vib.frequency.value = 5.2;
+        const va = ctx.createGain();
+        va.gain.value = f * 0.004;
+        vib.connect(va); va.connect(o.frequency);
+        const g = ctx.createGain();
+        g.gain.value = amp;
+        o.connect(g); g.connect(env);
+        o.start(t); vib.start(t);
+        o.stop(t + len + 0.45); vib.stop(t + len + 0.45);
+      }
+      route(env, 0.6, 0.4, 0.1);
+    }
+
+    function melody(t) {
+      let idx = Math.floor(Math.random() * 3) + 2;
+      const rhythm = pick([[0, 6, 8, 12], [0, 4, 10], [2, 6, 8, 14], [0, 8, 12]]);
+      rhythm.forEach((p, k) => {
+        const len = ((rhythm[k + 1] || 16) - p) * SIXTEENTH;
+        lead(LEAD[idx], t + p * SIXTEENTH, Math.min(len, SIXTEENTH * 8));
+        idx = Math.max(0, Math.min(LEAD.length - 1, idx + pick([-2, -1, 1, 1, 2])));
+      });
+    }
+
+    function schedule(i, t) {
+      const pos = i % BAR;
+      const bar = Math.floor(i / BAR);
+      const section = Math.floor(bar / 8) % 4;          // intro · groove · lift · drift
+      const inBar = bar % 8;
+      if (pos === 0) {
+        if (inBar === 0 && (section === 0 || Math.random() < 0.6)) prog = pick(PROGRESSIONS);
+        chord = CHORDS[prog[bar % prog.length]];
+        pad(chord.pad, t, BAR * SIXTEENTH);
+        if (section === 2 && inBar % 2 === 0) melody(t);
+      }
+      // Up-and-down arpeggio over two octaves.
+      const notes = chord.arp, span = notes.length * 2 - 2;
+      const k = i % span, idx = k < notes.length ? k : span - k;
+      const octave = (bar % 2) ? 12 : 0;
+      if (section !== 0 || pos % 2 === 0) arp(notes[idx] + octave, t, pos % 4 === 0 ? 1 : 0.65, pos % 2 ? 0.3 : -0.3);
+      if (section === 1 || section === 2) {
+        if (pos === 0 || pos === 8) kick(t);
+        if (pos === 4 || pos === 12) snare(t);
+        if (pos % 2 === 0) hat(t, pos % 4 === 2 ? 1 : 0.5);
+      }
+      if (section !== 0 && pos % 2 === 0) bass(chord.root - 12 + (pos === 14 ? 12 : 0), t, SIXTEENTH * 1.6);
+    }
+
+    return { step: SIXTEENTH, lowpass: 7500, echo: SIXTEENTH * 3, level: 0.48, begin, end, schedule };
+  })();
+
+  /* ======================================================================
+     ChaosOS 95 · sound-card chiptune
+     ====================================================================== */
+
+  const RETRO = (function () {
+    const BPM = 126;
+    const SIXTEENTH = 60 / BPM / 4;
+    const BAR = 16;
+
+    // C major / A minor: bright and a little bit 1995.
+    const CHORDS = {
+      C: { root: 36, arp: [60, 64, 67], scale: [72, 74, 76, 79, 81, 84] },
+      Am: { root: 45, arp: [57, 60, 64], scale: [69, 72, 74, 76, 79, 81] },
+      F: { root: 41, arp: [53, 57, 60], scale: [69, 72, 74, 77, 79, 81] },
+      G: { root: 43, arp: [55, 59, 62], scale: [71, 74, 76, 79, 81, 83] },
+      Em: { root: 40, arp: [52, 55, 59], scale: [71, 72, 74, 76, 79, 83] },
+    };
+    const PROGRESSIONS = [['C', 'Am', 'F', 'G'], ['Am', 'F', 'C', 'G'], ['F', 'G', 'Em', 'Am'], ['C', 'G', 'Am', 'F']];
+    // Lead rhythms in 16ths: [start, length]
+    const RHYTHMS = [
+      [[0, 2], [2, 2], [4, 4], [8, 2], [10, 2], [12, 4]],
+      [[0, 3], [3, 3], [6, 2], [8, 4], [12, 2], [14, 2]],
+      [[0, 4], [4, 2], [6, 2], [8, 6], [14, 2]],
+      [[0, 2], [2, 1], [3, 1], [4, 4], [8, 2], [10, 1], [11, 1], [12, 4]],
+    ];
+
+    let prog = PROGRESSIONS[0], chord = CHORDS.C, rhythm = RHYTHMS[0], phrase = [];
+
+    function begin() { prog = PROGRESSIONS[0]; }
+    function end() {}
+
+    function pulse(n, t, len, vel, type, pan, vibrato) {
+      const f = mtof(n);
+      const o = ctx.createOscillator();
+      o.type = type || 'square';
+      o.frequency.value = f;
+      let vib = null;
+      if (vibrato) {
+        vib = ctx.createOscillator();
+        vib.frequency.value = 6;
+        const va = ctx.createGain();
+        va.gain.setValueAtTime(0, t);
+        va.gain.linearRampToValueAtTime(f * 0.012, t + Math.min(len, 0.3));
+        vib.connect(va); va.connect(o.frequency);
+        vib.start(t); vib.stop(t + len + 0.05);
+      }
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.0001, t);
+      env.gain.linearRampToValueAtTime(vel, t + 0.005);
+      env.gain.setValueAtTime(vel * 0.8, t + Math.max(0.01, len - 0.03));
+      env.gain.linearRampToValueAtTime(0.0001, t + len);
+      o.connect(env);
+      route(env, 0.12, 0.15, pan || 0);
+      o.start(t); o.stop(t + len + 0.02);
+    }
+
+    function kick(t) {
+      const o = ctx.createOscillator();
+      o.type = 'square';
+      o.frequency.setValueAtTime(150, t);
+      o.frequency.exponentialRampToValueAtTime(40, t + 0.08);
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 600;
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.0001, t);
+      env.gain.linearRampToValueAtTime(0.16, t + 0.003);
+      env.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+      o.connect(lp); lp.connect(env);
+      route(env, 0.02, 0, 0);
+      o.start(t); o.stop(t + 0.16);
+    }
+
+    function makePhrase() {
+      // A short motif that repeats with small changes, the way game music does.
+      let idx = Math.floor(Math.random() * 3) + 1;
+      phrase = rhythm.map(() => {
+        idx = Math.max(0, Math.min(5, idx + pick([-2, -1, 0, 1, 1, 2])));
+        return idx;
+      });
+    }
+
+    function schedule(i, t) {
+      const pos = i % BAR;
+      const bar = Math.floor(i / BAR);
+      const section = Math.floor(bar / 8) % 4;          // intro · theme · bridge · theme
+      const inBar = bar % 8;
+      if (pos === 0) {
+        if (inBar === 0) { prog = pick(PROGRESSIONS); rhythm = pick(RHYTHMS); makePhrase(); }
+        else if (inBar === 4 && Math.random() < 0.5) makePhrase();
+        chord = CHORDS[prog[bar % prog.length]];
+      }
+      // Fast chord arpeggio, the sound card's way of playing a chord.
+      if (section !== 1 || pos % 2 === 0) pulse(chord.arp[i % 3] + (section === 2 ? 12 : 0), t, SIXTEENTH * 0.9, 0.012, 'square', -0.3);
+      // Bass: root and octave on eighths.
+      if (pos % 2 === 0 && section !== 0) pulse(chord.root + (pos % 4 === 2 ? 12 : 0), t, SIXTEENTH * 1.7, 0.06, 'triangle', 0);
+      // Lead melody in the theme sections.
+      if (section === 1 || section === 3) {
+        rhythm.forEach(([start, len], k) => {
+          if (start === pos) pulse(chord.scale[phrase[k] || 0], t, len * SIXTEENTH * 0.95, 0.022, 'square', 0.2, len >= 4);
+        });
+      }
+      if (section !== 0) {
+        if (pos === 0 || pos === 8 || (pos === 10 && section === 3)) kick(t);
+        if (pos === 4 || pos === 12) noiseHit(t, 'bandpass', 2400, 0.9, 0.07, 0.09, 0.08, 0);
+        if (pos % 2 === 0) noiseHit(t, 'highpass', 8000, 0.7, 0.018, 0.025, 0.02, 0.2);
+      }
+    }
+
+    return { step: SIXTEENTH, lowpass: 5200, echo: SIXTEENTH * 3, level: 0.78, begin, end, schedule };
+  })();
+
+  const STYLES = { aero: AERO, metro: METRO, mango: MANGO, holo: HOLO, retro: RETRO };
   style = AERO;
 
   /* ---------- Transport ---------- */

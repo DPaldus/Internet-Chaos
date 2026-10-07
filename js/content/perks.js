@@ -12,7 +12,7 @@
       desc: 'Start each era with $1K, then ×30 per extra level.',
       apply(m, lvl) { m.startMoney = 1000 * Math.pow(30, lvl - 1); } },
     { id: 'legacy', name: 'Legacy Content', icon: '📚', cost: 2, growth: 2.2, max: 5,
-      desc: 'Start each era with 10 Blog Posts, 5 Meme Pages and 1 Closet Server per level.',
+      get desc() { return 'Start each era with 10 ' + Z.B.blog.plural + ', 5 ' + Z.B.meme.plural + ' and 1 ' + Z.B.closet.name + ' per level.'; },
       apply(m, lvl) { m.startBuildings = { blog: 10 * lvl, meme: 5 * lvl, closet: lvl }; } },
     { id: 'redundancy', name: 'Redundant Servers', icon: '🧯', cost: 3, growth: 1.8, max: 5,
       desc: '+4 Chaos Tolerance per level.', effects: [{ t: 'tolerance', v: 4 }] },

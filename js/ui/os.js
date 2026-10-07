@@ -83,7 +83,7 @@
         h('p', { class: 'os-pitch', text: next.pitch }),
         h('section', { class: 'os-section' }, [
           h('h3', { text: 'What you get' }),
-          h('p', { class: 'os-note', text: 'Permanent bonuses. ' + next.name + ' stays installed through every Internet Era.' }),
+          h('p', { class: 'os-note', text: 'Permanent bonuses, on top of the ones you already have. ' + next.name + ' stays installed through every Internet Era.' }),
           features(next),
         ]),
         h('section', { class: 'os-section' }, [
@@ -118,7 +118,8 @@
       body.append(
         card(cur, 'Your website runs'),
         h('p', { class: 'os-uptodate', text: '✅ You’re up to date. ' + cur.name + ' was installed on ' + new Date(s.os.installed || Date.now()).toLocaleDateString() + '.' }),
-        h('section', { class: 'os-section' }, [h('h3', { text: 'Active bonuses' }), h('p', { class: 'os-note', text: 'Permanent, through every Internet Era.' }), features(cur)]),
+        h('section', { class: 'os-section' }, [h('h3', { text: 'Active bonuses' }), h('p', { class: 'os-note', text: 'Permanent, through every Internet Era. Every system you installed keeps its bonuses.' })]
+          .concat(Z.OSES.slice(1, Z.OSES.indexOf(cur) + 1).reverse().map(os => h('div', { class: 'os-stack' }, [h('b', { class: 'os-stack-name', text: os.icon + ' ' + os.name + ' ' + os.edition }), features(os)])))),
         h('section', { class: 'os-section' }, [h('h3', { text: 'Style Shop' }), styleLine,
           h('button', { type: 'button', class: 'btn', text: '🎨 Open the Style Shop', onclick: () => ui.styleShop.open() })]),
       );
@@ -218,7 +219,7 @@
       sync();
       ui.site.refreshLook();
       ui.requestRender(true);
-      Z.audio.play(os.id === 'mango' ? 'chime' : 'startup');
+      Z.audio.play({ mango: 'chime', holo: 'holoStart', retro: 'retroStart' }[os.id] || 'startup');
       Z.music.hold(false);
       root.classList.add('is-done');
       ui.feed.add(game, os.icon, 'Your website now runs ' + os.name + ' ' + os.edition + '. ' + os.feed + ' The '
@@ -309,6 +310,48 @@
     if (text !== clockText) { clockText = text; setText($('mb-clock'), text); }
   }
 
+  /* ---------- ChaosOS 95 taskbar and Start menu ---------- */
+
+  let tbClock = '';
+
+  function buildTaskbar() {
+    const bar = $('retro-taskbar');
+    if (!bar) return;
+    const start = $('tb-start'), menu = $('tb-menu');
+    const items = [
+      ['🌐', 'Internet Eras', 'btn-eras'], ['🎨', 'Style Shop', 'btn-style'], ['📅', 'Daily Challenge', 'btn-daily'],
+      ['🏆', 'Achievements', 'btn-ach'], ['📊', 'Statistics', 'btn-stats'], ['🏁', 'Era Records', 'btn-records'],
+      ['📸', 'Share Website', 'btn-share'], ['⚙️', 'Settings', 'btn-settings'], ['❔', 'Help', 'btn-help'], ['📺', 'System', 'btn-system'],
+    ];
+    const setOpen = on => { setHidden(menu, !on); start.setAttribute('aria-expanded', on ? 'true' : 'false'); start.classList.toggle('is-down', on); };
+    for (const [icon, label, target] of items) {
+      const b = h('button', { type: 'button', class: 'tb-item', 'data-target': target }, [h('span', { class: 'tb-item-icon', 'aria-hidden': 'true', text: icon }), label]);
+      b.addEventListener('click', () => { setOpen(false); const t = $(target); if (t) t.click(); });
+      menu.appendChild(b);
+    }
+    start.addEventListener('click', e => { e.stopPropagation(); setOpen(menu.hidden); });
+    document.addEventListener('click', e => { if (!menu.hidden && !menu.contains(e.target)) setOpen(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) setOpen(false); });
+    $('tb-task').addEventListener('click', () => window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' }));
+    $('tb-sound').addEventListener('click', () => ui.setSound(!game.s.settings.sound));
+  }
+
+  function renderTaskbar(s) {
+    const bar = $('retro-taskbar');
+    if (!bar) return;
+    const on = s.os.id === 'retro';
+    setHidden(bar, !on);
+    document.body.classList.toggle('has-taskbar', on);
+    if (!on) return;
+    for (const b of $('tb-menu').querySelectorAll('.tb-item')) {
+      const t = $(b.dataset.target);
+      setHidden(b, !t || t.hidden);
+    }
+    setText($('tb-sound'), s.settings.sound ? '🔊' : '🔇');
+    const text = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    if (text !== tbClock) { tbClock = text; setText($('tb-clock'), text); }
+  }
+
   /* ---------- A newer OS becomes available ---------- */
 
   /** The first offer comes with the 'os' reveal tip (main.js); later ones get their own toast. */
@@ -341,12 +384,14 @@
     setText($('os-name'), Z.opsys.current(s).name);
     renderRail(s);
     renderMenuBar(s);
+    renderTaskbar(s);
   }
 
   function init(g) {
     game = g;
     buildRail();
     buildMenuBar();
+    buildTaskbar();
     Z.music.setStyle(g.s.os.id);
     render(g);
   }

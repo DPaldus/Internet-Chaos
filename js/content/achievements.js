@@ -5,7 +5,12 @@
 
   const own = (s, id) => s.buildings[id] || 0;
   const ev = (s, id) => s.flags.ev[id] || 0;
-  const A = (id, icon, name, desc, check, hidden) => ({ id, icon, name, desc, check, hidden: !!hidden });
+  // `desc` may be a function, for texts that name buildings (their names change with the era).
+  const A = (id, icon, name, desc, check, hidden) => ({
+    id, icon, name, check, hidden: !!hidden,
+    get desc() { return typeof desc === 'function' ? desc() : desc; },
+  });
+  const ownText = (n, id) => () => 'Own ' + n + ' ' + Z.B[id].plural + '.';
 
   Z.ACHIEVEMENTS = [
     // Reach
@@ -61,11 +66,11 @@
     A('sorry', '😔', 'We Hear You', 'Post an Apology Video.', g => ev(g.s, 'apology') >= 1),
 
     // Buildings and upgrades
-    A('contentmill', '📝', 'Content Mill', 'Own 100 Blog Posts.', g => own(g.s, 'blog') >= 100),
-    A('botornot', '🤖', 'Bot or Not', 'Own 100 Bot Farms.', g => own(g.s, 'bots') >= 100),
-    A('adblind', '📢', 'Ad Blindness', 'Own 50 Ad Banners.', g => own(g.s, 'adbanner') >= 50),
-    A('powertrip', '🧹', 'Power Tripping', 'Own 25 Volunteer Moderators.', g => own(g.s, 'volunteer') >= 25),
-    A('serverfarm', '🗄️', 'Server Farm', 'Own 50 Server Racks.', g => own(g.s, 'rack') >= 50),
+    A('contentmill', '📝', 'Content Mill', ownText(100, 'blog'), g => own(g.s, 'blog') >= 100),
+    A('botornot', '🤖', 'Bot or Not', ownText(100, 'bots'), g => own(g.s, 'bots') >= 100),
+    A('adblind', '📢', 'Ad Blindness', ownText(50, 'adbanner'), g => own(g.s, 'adbanner') >= 50),
+    A('powertrip', '🧹', 'Power Tripping', ownText(25, 'volunteer'), g => own(g.s, 'volunteer') >= 25),
+    A('serverfarm', '🗄️', 'Server Farm', ownText(50, 'rack'), g => own(g.s, 'rack') >= 50),
     A('everything', '🛒', 'Bought Everything', 'Own at least one of every building available in your era.',
       g => Z.BUILDINGS.every(b => b.era > g.s.era || own(g.s, b.id) > 0)),
     A('featurecreep', '🧩', 'Feature Creep', 'Buy 25 upgrades in a single era.', g => g.s.run.upgrades >= 25),
@@ -80,6 +85,16 @@
     A('os8', '🪟', 'Where Did the Start Button Go?', 'Upgrade your website to ChaosOS 8.', g => Z.OSES.indexOf(Z.opsys.current(g.s)) >= 1),
     A('flat', '🟦', 'Flat Is the New Glossy', 'Unlock every ChaosOS 8 theme in the Style Shop.',
       g => g.s.os.id === 'metro' && Z.COSMETICS.setFor('metro').every(c => c.items.every(i => !i.req || g.s.cosmetics.unlocked[c.id + ':' + i.id]))),
+    A('challenger', '🎯', 'Challenger', 'Complete 5 era challenges.', g => Object.keys(g.s.challenges.done).length >= 5),
+    A('overachiever', '🏅', 'Overachiever', 'Complete every era challenge.', g => Z.CHALLENGES.every(c => g.s.challenges.done[c.id])),
+    A('daily', '📅', 'Daily Grind', 'Finish a daily challenge.', g => !!g.s.daily.last),
+    A('streak7', '🔥', 'Seven Days Online', 'Finish daily challenges seven days in a row.', g => g.s.daily.streak >= 7),
+    A('holo', '💠', 'Hologram Me', 'Upgrade your website to Prism OS.', g => Z.OSES.indexOf(Z.opsys.current(g.s)) >= 3),
+    A('holoall', '🌌', 'Floating Point', 'Unlock every Prism OS theme in the Style Shop.',
+      g => g.s.os.id === 'holo' && Z.COSMETICS.setFor('holo').every(c => c.items.every(i => !i.req || g.s.cosmetics.unlocked[c.id + ':' + i.id]))),
+    A('retro', '📺', 'Back to 1995', 'Upgrade your website to ChaosOS 95.', g => Z.OSES.indexOf(Z.opsys.current(g.s)) >= 4),
+    A('retroall', '💾', 'Fully Defragmented', 'Unlock every ChaosOS 95 theme in the Style Shop.',
+      g => g.s.os.id === 'retro' && Z.COSMETICS.setFor('retro').every(c => c.items.every(i => !i.req || g.s.cosmetics.unlocked[c.id + ':' + i.id]))),
     A('mango', '🥭', 'Liquid Assets', 'Upgrade your website to Mango OS.', g => Z.OSES.indexOf(Z.opsys.current(g.s)) >= 2),
     A('glassy', '🫧', 'Every Corner Rounded', 'Unlock every Mango OS theme in the Style Shop.',
       g => g.s.os.id === 'mango' && Z.COSMETICS.setFor('mango').every(c => c.items.every(i => !i.req || g.s.cosmetics.unlocked[c.id + ':' + i.id]))),

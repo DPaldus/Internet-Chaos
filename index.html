@@ -25,7 +25,7 @@
   try {
     var saved = JSON.parse(localStorage.getItem('internet-chaos:save') || 'null');
     var osId = saved && saved.os && saved.os.id;
-    if (osId === 'metro' || osId === 'mango') document.body.setAttribute('data-os', osId);
+    if (/^(metro|mango|holo|retro)$/.test(osId)) document.body.setAttribute('data-os', osId);
   } catch (err) { /* no save yet, or storage blocked */ }
 </script>
 
@@ -98,7 +98,10 @@
         <button type="button" class="nav-btn" id="btn-menu" aria-haspopup="true" aria-expanded="false" aria-controls="menu-pop"><span aria-hidden="true">☰</span><span class="nav-label">Menu</span></button>
         <div class="menu-pop" id="menu-pop" hidden>
           <button type="button" class="menu-item" id="btn-ach"><span aria-hidden="true">🏆</span> Achievements <span class="menu-count" id="ach-count">0</span></button>
+          <button type="button" class="menu-item" id="btn-daily" hidden><span aria-hidden="true">📅</span> Daily challenge</button>
           <button type="button" class="menu-item" id="btn-stats"><span aria-hidden="true">📊</span> Statistics</button>
+          <button type="button" class="menu-item" id="btn-records" hidden><span aria-hidden="true">🏁</span> Era records</button>
+          <button type="button" class="menu-item" id="btn-share"><span aria-hidden="true">📸</span> Share your website</button>
           <button type="button" class="menu-item" id="btn-system" hidden><span aria-hidden="true" id="system-icon">🪟</span> System <span class="menu-count" id="os-name">ChaosOS 7</span></button>
           <button type="button" class="menu-item" id="btn-settings"><span aria-hidden="true">⚙️</span> Settings &amp; saves</button>
           <button type="button" class="menu-item" id="btn-sound" aria-pressed="true" title="Sound on"><span aria-hidden="true" id="sound-icon">🔊</span> Sound</button>
@@ -150,6 +153,9 @@
           </div>
         </div>
         <div class="site-tip" id="site-tip" role="status"></div>
+
+        <!-- This era's signature mechanic (js/ui/eramech.js) -->
+        <div class="win-section mech" id="panel-mech" aria-live="polite" hidden></div>
 
         <div class="win-section" id="panel-policy" hidden>
           <div class="section-head"><h2>Editorial Policy</h2><span class="panel-note" id="policy-note">Chaos ×1</span></div>
@@ -227,12 +233,22 @@
   </main>
 </div>
 
+<!-- ChaosOS 95 only: the taskbar with the Start menu (js/ui/os.js). -->
+<div class="retro-taskbar" id="retro-taskbar" hidden>
+  <button type="button" class="tb-start" id="tb-start" aria-haspopup="true" aria-expanded="false" aria-controls="tb-menu"><span class="tb-logo" aria-hidden="true">📺</span>Start</button>
+  <div class="tb-menu" id="tb-menu" hidden><div class="tb-menu-side" aria-hidden="true">ChaosOS<b>95</b></div></div>
+  <button type="button" class="tb-task" id="tb-task"><span aria-hidden="true">🌐</span> Internet Chaos</button>
+  <div class="tb-tray"><button type="button" class="tb-tray-btn" id="tb-sound" title="Sound" aria-label="Sound on or off">🔊</button><span class="tb-clock" id="tb-clock"></span></div>
+</div>
+
 <div class="choice-root" id="choice-root"></div>
 <div class="bonus-layer" id="bonus-layer"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <div class="modal-root" id="modal-root"></div>
 
 <script src="js/core.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/lang/cs.js"></script>
 <script src="js/format.js"></script>
 <script src="js/config.js"></script>
 <script src="js/content/buildings.js"></script>
@@ -240,6 +256,7 @@
 <script src="js/content/events.js"></script>
 <script src="js/content/perks.js"></script>
 <script src="js/content/achievements.js"></script>
+<script src="js/content/challenges.js"></script>
 <script src="js/content/chatter.js"></script>
 <script src="js/content/cosmetics.js"></script>
 <script src="js/content/sponsors.js"></script>
@@ -252,6 +269,8 @@
 <script src="js/systems/progression.js"></script>
 <script src="js/systems/bonus.js"></script>
 <script src="js/systems/os.js"></script>
+<script src="js/systems/meta.js"></script>
+<script src="js/systems/eramech.js"></script>
 <script src="js/systems/game.js"></script>
 <script src="js/save.js"></script>
 <script src="js/audio.js"></script>
@@ -270,6 +289,11 @@
 <script src="js/ui/bonus.js"></script>
 <script src="js/ui/backup.js"></script>
 <script src="js/ui/os.js"></script>
+<script src="js/ui/meta.js"></script>
+<script src="js/ui/eramech.js"></script>
+<script src="js/ui/share.js"></script>
+<script src="js/ui/keys.js"></script>
 <script src="js/main.js"></script>
+<script src="js/ui/dev.js"></script>
 </body>
 </html>

@@ -33,6 +33,7 @@
     if (id === 'hotfix') s.stats.hotfixes++;
     if (id === 'stir') s.stats.stirs++;
     if (id === 'apology') s.flags.ev.apology = (s.flags.ev.apology || 0) + 1;
+    s.flags.ev['act:' + id] = (s.flags.ev['act:' + id] || 0) + 1;
     g.notify('action', { action: a, auto: !!auto });
     return true;
   }

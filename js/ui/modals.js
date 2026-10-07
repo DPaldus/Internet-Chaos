@@ -74,9 +74,13 @@
       refs.perks.push({ p, btn, lvl, cost });
     }
 
+    const challenges = ui.meta.challengeSection(g);
+    const records = h('button', { type: 'button', class: 'btn', text: '🏁 Era records', onclick: () => ui.meta.openRecords() });
     const body = h('div', { class: 'eras' }, [
       timeline,
       prestigeBox,
+      challenges.el,
+      h('div', { class: 'btn-row' }, [records]),
       h('section', { class: 'perk-section' }, [
         h('div', { class: 'perk-head' }, [h('h3', { text: 'Clout Perks' }), refs.clout]),
         h('p', { class: 'perk-intro', text: 'Spend Clout on permanent upgrades. Perks survive every reset.' }),
@@ -85,12 +89,14 @@
     ]);
 
     function refresh() {
+      challenges.refresh();
       const req = Z.prestige.requirement(s);
       const pv = Z.prestige.previewBonus(s);
       const can = Z.prestige.canPrestige(s);
       setText(refs.progressNums, f.int(s.run.attention) + ' / ' + f.int(req));
       refs.progressFill.style.width = (Math.min(1, s.run.attention <= 1 ? 0 : Math.log(s.run.attention) / Math.log(req)) * 100).toFixed(1) + '%';
-      setText(refs.gain, can ? '+' + f.int(pv.gain) : '+0 (needs ' + f.int(req) + ')');
+      const chal = Z.meta.challengeBonus(s);
+      setText(refs.gain, can ? '+' + f.int(pv.gain) + (chal ? ' (challenges +' + Math.round(chal * 100) + '%)' : '') : '+0 (needs ' + f.int(req) + ')');
       setText(refs.bonus, 'Permanent Attention bonus: ' + f.mult(pv.now) + ' → ' + f.mult(can ? pv.next : pv.now) + '.');
       refs.go.disabled = !can;
       setText(refs.clout, '✦ ' + f.int(s.clout) + ' Clout to spend');
@@ -199,6 +205,8 @@
         ['Meltdowns', () => f.int(st().meltdowns)],
         ['Internet Eras completed', () => f.int(st().eras)],
         ['Fastest era', () => st().fastestEra ? f.time(st().fastestEra) : '—'],
+        ['Era challenges completed', () => Object.keys(s.challenges.done).length + ' / ' + Z.CHALLENGES.length],
+        ['Daily challenge streak', () => s.daily.streak + ' day' + (s.daily.streak === 1 ? '' : 's')],
         ['Clout earned', () => f.int(st().cloutEarned)],
         ['Buildings bought', () => f.int(st().buildingsBought)],
         ['Upgrades bought', () => f.int(st().upgradesBought)],
@@ -209,6 +217,10 @@
         ['Operating system', () => { const os = Z.opsys.current(s); return os.name + ' ' + os.edition; }],
       ]),
     ]);
+    body.appendChild(h('div', { class: 'btn-row stats-links' }, [
+      h('button', { type: 'button', class: 'btn', text: '🏁 Era records', onclick: () => ui.meta.openRecords() }),
+      h('button', { type: 'button', class: 'btn', text: '📸 Share your website', onclick: () => ui.share.open() }),
+    ]));
     const refresh = () => { for (const r of rows) setText(r.dd, r.fn()); };
     refresh();
     ui.modal.open({ id: 'stats', title: 'Statistics', body, wide: true, refresh });
@@ -245,6 +257,10 @@
     ]);
     notation.value = set.notation;
     notation.addEventListener('change', () => { set.notation = notation.value === 'sci' ? 'sci' : 'short'; Z.fmt.setNotation(set.notation); ui.requestRender(true); });
+
+    const language = h('select', { id: 'set-lang' }, Object.keys(Z.i18n.LANGS).map(k => h('option', { value: k, text: Z.i18n.LANGS[k] })));
+    language.value = Z.i18n.lang;
+    language.addEventListener('change', () => { Z.i18n.setLang(language.value); Z.save.write(s); location.reload(); });
 
     const motion = h('input', { type: 'checkbox', id: 'set-motion', class: 'switch' });
     motion.checked = set.reduceMotion;
@@ -334,6 +350,7 @@
         row('Music volume', musicVol),
         row('Number format', notation),
         row('Reduce motion', motion, 'Turns off floating numbers and shaking.'),
+        row('Language', language, 'Changing the language reloads the page.'),
       ]),
       h('section', {}, [
         h('h3', { text: 'Saving' }),
@@ -462,14 +479,34 @@
 
   /* ---------- Welcome back ---------- */
 
+  /** Counts a number up from 0 for the welcome-back tiles (instantly with reduced motion). */
+  function countUp(el, value, format) {
+    const reduce = game.s.settings.reduceMotion || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    if (reduce || !(value > 0)) { el.textContent = format(value); return; }
+    const start = performance.now(), dur = 1400;
+    const step = now => {
+      const t = Math.min(1, (now - start) / dur), eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = format(value * eased);
+      if (t < 1 && el.isConnected) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
   function showOffline(sum) {
     const f = Z.fmt;
+    const tiles = [
+      ['👁', 'Attention', sum.att, v => '+' + f.num(v), 'att'],
+      ['💵', 'Money', sum.money, v => '+' + f.money(v), 'money'],
+      ['📰', 'Events', sum.events, v => f.int(v), 'events'],
+      ['🔥', 'Meltdowns', sum.meltdowns, v => f.int(v), sum.meltdowns ? 'bad' : 'calm'],
+    ];
+    const tileEls = tiles.map(([icon, label, value, format, tone]) => {
+      const num = h('b', { class: 'off-num', text: format(0) });
+      countUp(num, value, format);
+      return h('div', { class: 'off-tile off-' + tone }, [h('span', { class: 'off-icon', 'aria-hidden': 'true', text: icon }), num, h('span', { class: 'off-label', text: label })]);
+    });
     const lines = [
-      ['Attention generated', f.int(sum.att)],
-      ['Money earned', f.money(sum.money)],
       ['Chaos created', f.num(sum.chaos) + ' pts'],
-      ['Events triggered', f.int(sum.events)],
-      ['Meltdowns', f.int(sum.meltdowns)],
       ['Stability', sum.stabilityStart.toFixed(0) + '% → ' + sum.stabilityEnd.toFixed(0) + '%'],
     ];
     if (sum.buys > 0) lines.push(['Bought by the Auto-Buyer', f.int(sum.buys) + ' buildings']);
@@ -478,14 +515,15 @@
       : sum.events > 3 ? 'The internet kept happening without you. Some of it was even about you.'
         : 'Your site survived without you. Honestly, it seems a little offended.';
     const body = h('div', { class: 'offline' }, [
-      h('p', { class: 'offline-lead' }, ['You were away for ', h('b', { text: f.time(sum.away) }), '.']),
+      h('p', { class: 'offline-lead' }, ['You were away for ', h('b', { text: f.time(sum.away) }), '. Here is what happened.']),
+      h('div', { class: 'off-tiles' }, tileEls),
       h('dl', { class: 'stat-table' }, lines.map(([k, v]) => h('div', { class: 'stat-row' }, [h('dt', { text: k }), h('dd', { text: v })]))),
       sum.achievements.length ? h('p', { class: 'offline-ach', text: '🏆 Unlocked: ' + sum.achievements.join(', ') }) : null,
       h('p', { class: 'offline-quip', text: quip }),
       h('p', { class: 'muted', text: 'Offline progress runs at ' + Math.round(sum.efficiency * 100) + '% efficiency for up to ' + sum.capHours + ' hours' + (sum.capped ? ' (you hit the cap; the Night Shift perk raises it)' : '') + '. Chaos, Stability and events keep running while you are away.' }),
       h('button', { type: 'button', class: 'btn btn-primary btn-big', 'data-autofocus': true, text: 'Back to work', onclick: () => ui.modal.close() }),
     ]);
-    ui.modal.open({ id: 'offline', title: 'Welcome back', body });
+    ui.modal.open({ id: 'offline', title: '👋 While you were away…', body });
   }
 
   ui.modals = {

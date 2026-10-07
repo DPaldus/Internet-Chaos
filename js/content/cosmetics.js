@@ -281,11 +281,138 @@
     },
   ];
 
-  const SETS = { aero: AERO, metro: METRO, mango: MANGO };
+  /* Prism OS: holograms floating in deep space. */
+  const onHolo = onOS('holo');
+  const neon = (a, b) => 'radial-gradient(circle at 50% 50%, rgba(255,255,255,.9) 0 8%, transparent 9%), conic-gradient(from 200deg, ' + a + ', ' + b + ', ' + a + ')';
+  const HOLO = [
+    {
+      id: 'bg', name: 'Backgrounds', icon: '🌌', blurb: 'The space your holograms float in.',
+      items: [
+        { id: 'prism', name: 'Prism Nebula', desc: 'Deep violet space with iridescent streaks of light. The Prism OS classic.', req: null,
+          swatch: 'linear-gradient(120deg, transparent 30%, rgba(120,220,255,.6) 45%, rgba(255,120,220,.5) 55%, transparent 70%), linear-gradient(#120a3a, #3b1c8c 60%, #0d4c8c)' },
+        { id: 'datastream', name: 'Data Stream', desc: 'Columns of glowing data falling through the dark.',
+          req: R('Click 500 times on Prism OS', onHolo('totalClicks'), 500),
+          swatch: 'repeating-linear-gradient(90deg, rgba(94,231,255,.5) 0 2px, transparent 2px 12px), linear-gradient(#020b1c, #062a4a)' },
+        { id: 'deepfield', name: 'Deep Field', desc: 'A quiet field of distant galaxies.',
+          req: R('Reach the next Internet Era on Prism OS', onHolo('eras'), 1),
+          swatch: 'radial-gradient(circle at 30% 40%, #fff 0 1.5px, transparent 2px), radial-gradient(circle at 70% 25%, #ffd 0 1px, transparent 2px), radial-gradient(ellipse 30% 20% at 60% 65%, rgba(160,120,255,.6), transparent 70%), linear-gradient(#030312, #0b0b26)' },
+        { id: 'iris', name: 'Iridescent', desc: 'Pearl and oil-slick colors, shifting like a soap film.',
+          req: R('Play for 1 hour on Prism OS', onHolo('playTime', 60), 60),
+          swatch: 'conic-gradient(from 90deg at 40% 60%, #8ef, #c8f, #fac, #fe9, #9fd, #8ef)' },
+      ],
+    },
+    {
+      id: 'color', name: 'Neon Colors', icon: '🎨', blurb: 'The glow of buttons, edges and highlights.',
+      items: [
+        { id: 'cyan', name: 'Neon Cyan', desc: 'Cool cyan light. Where Prism OS starts.', req: null, swatch: neon('#5ee7ff', '#7b5cff') },
+        { id: 'neonpink', name: 'Hot Pink', desc: 'Pink light, loud on purpose.',
+          req: R('Buy 30 upgrades on Prism OS', onHolo('upgradesBought'), 30), swatch: neon('#ff5ec8', '#a24dff') },
+        { id: 'ultraviolet', name: 'Ultraviolet', desc: 'Deep violet that glows like a blacklight.',
+          req: R('Use 15 Actions on Prism OS', onHolo('actions'), 15), swatch: neon('#a45bff', '#4b2bd8') },
+        { id: 'gold', name: 'Solar Gold', desc: 'Warm gold light, like a sunrise in orbit.',
+          req: R('Earn 1,000 Clout on Prism OS', onHolo('cloutEarned'), 1000), swatch: neon('#ffd25e', '#ff8a3d') },
+      ],
+    },
+    {
+      id: 'site', name: 'Website Styles', icon: '🖥️', blurb: 'How your own website looks to visitors.',
+      items: [
+        { id: 'holo', name: 'Hologram', desc: 'Your site as a glowing projection with scan lines.', req: null,
+          swatch: 'repeating-linear-gradient(rgba(94,231,255,.25) 0 1px, transparent 1px 5px), linear-gradient(rgba(94,231,255,.15), rgba(162,77,255,.3)), linear-gradient(#0b0730, #1a0f50)' },
+        { id: 'eraholo', name: 'Follows the Era', desc: 'Your site changes style with every Internet Era.', req: null,
+          swatch: 'linear-gradient(135deg, #ffffff 0 25%, #f5f6f8 25% 50%, #231036 50% 75%, #0b0f14 75%)' },
+        { id: 'neural', name: 'Neural Net', desc: 'Glowing nodes and connections behind your name.',
+          req: R('Experience 25 internet events on Prism OS', onHolo('events'), 25),
+          swatch: 'radial-gradient(circle at 25% 30%, #5ee7ff 0 4px, transparent 5px), radial-gradient(circle at 70% 60%, #ff5ec8 0 4px, transparent 5px), radial-gradient(circle at 40% 80%, #a45bff 0 4px, transparent 5px), linear-gradient(#070720, #14143c)' },
+        { id: 'chrome', name: 'Chrome Future', desc: 'Polished liquid chrome, very 2077.',
+          req: R('Buy 300 buildings on Prism OS', onHolo('buildingsBought'), 300),
+          swatch: 'linear-gradient(180deg, #f4f7ff 0%, #9aa6c2 45%, #2a3352 50%, #c9d2ea 70%, #ffffff 100%)' },
+      ],
+    },
+    {
+      id: 'fx', name: 'Effects', icon: '✨', blurb: 'Light floating in the projection.',
+      items: [
+        { id: 'rings', name: 'Holo Rings', desc: 'Slowly turning rings of light.', req: null,
+          swatch: 'radial-gradient(circle, transparent 0 30%, rgba(94,231,255,.8) 31% 33%, transparent 34% 52%, rgba(255,94,200,.6) 53% 55%, transparent 56%), linear-gradient(#120a3a, #2a1670)' },
+        { id: 'off', name: 'Quiet', desc: 'No effects. Just space.', req: null, swatch: 'linear-gradient(#120a3a, #2a1670)' },
+        { id: 'particles', name: 'Particle Field', desc: 'Glowing particles drifting up through the projection.',
+          req: R('Catch 2 floating notifications on Prism OS', onHolo('bonuses'), 2),
+          swatch: 'radial-gradient(circle at 20% 70%, #5ee7ff 0 2px, transparent 3px), radial-gradient(circle at 60% 40%, #ff5ec8 0 2px, transparent 3px), radial-gradient(circle at 80% 80%, #fff 0 1.5px, transparent 2.5px), linear-gradient(#120a3a, #2a1670)' },
+        { id: 'scan', name: 'Scan Beam', desc: 'A bright scan line sweeping the screen now and then.',
+          req: R('Click 1,500 times on Prism OS', onHolo('totalClicks'), 1500),
+          swatch: 'linear-gradient(transparent 45%, rgba(94,231,255,.9) 50%, transparent 55%), linear-gradient(#120a3a, #2a1670)' },
+      ],
+    },
+  ];
+
+  /* ChaosOS 95: grey windows on a teal desktop, seen through a CRT. */
+  const onRetro = onOS('retro');
+  const bevel = c => 'linear-gradient(135deg, #ffffff 0 12%, transparent 12%), linear-gradient(315deg, #404040 0 12%, transparent 12%), linear-gradient(' + c + ', ' + c + ')';
+  const RETRO = [
+    {
+      id: 'bg', name: 'Wallpapers', icon: '🖼️', blurb: 'The desktop behind the windows.',
+      items: [
+        { id: 'desktop', name: 'Classic Teal', desc: 'The one and only teal desktop.', req: null, swatch: 'linear-gradient(#008080, #008080)' },
+        { id: 'clouds', name: 'Cloud Nine', desc: 'Fluffy clouds in a very blue sky.',
+          req: R('Click 500 times on ChaosOS 95', onRetro('totalClicks'), 500),
+          swatch: 'radial-gradient(ellipse 30% 18% at 30% 40%, #fff, transparent 70%), radial-gradient(ellipse 26% 14% at 70% 65%, #fff, transparent 70%), linear-gradient(#1f5fd0, #5a9ae8)' },
+        { id: 'bricks', name: 'Red Bricks', desc: 'A brick wall. Tiled. Lovingly.',
+          req: R('Buy 30 upgrades on ChaosOS 95', onRetro('upgradesBought'), 30),
+          swatch: 'linear-gradient(#c0c0c0 2px, transparent 2px) 0 0 / 24px 12px, linear-gradient(90deg, #c0c0c0 2px, transparent 2px) 0 0 / 24px 24px, linear-gradient(90deg, #c0c0c0 2px, transparent 2px) 12px 12px / 24px 24px, linear-gradient(#8b2a1a, #8b2a1a)' },
+        { id: 'starfield', name: 'Starfield', desc: 'Black space and white stars, like the screensaver.',
+          req: R('Play for 1 hour on ChaosOS 95', onRetro('playTime', 60), 60),
+          swatch: 'radial-gradient(circle at 20% 30%, #fff 0 1px, transparent 2px), radial-gradient(circle at 70% 60%, #fff 0 1.5px, transparent 2px), radial-gradient(circle at 45% 80%, #fff 0 1px, transparent 2px), linear-gradient(#000, #000)' },
+      ],
+    },
+    {
+      id: 'color', name: 'Window Colors', icon: '🎨', blurb: 'The color of title bars and selections.',
+      items: [
+        { id: 'navy', name: 'Navy', desc: 'Navy title bars. Standard issue.', req: null, swatch: bevel('#000080') },
+        { id: 'plum', name: 'Plum', desc: 'A purple scheme for the bold.',
+          req: R('Use 15 Actions on ChaosOS 95', onRetro('actions'), 15), swatch: bevel('#800080') },
+        { id: 'olive', name: 'Olive', desc: 'Olive green, like an old army laptop.',
+          req: R('Experience 25 internet events on ChaosOS 95', onRetro('events'), 25), swatch: bevel('#808000') },
+        { id: 'maroon', name: 'Maroon', desc: 'Dark red, very serious business.',
+          req: R('Buy 300 buildings on ChaosOS 95', onRetro('buildingsBought'), 300), swatch: bevel('#800000') },
+      ],
+    },
+    {
+      id: 'site', name: 'Website Styles', icon: '🖥️', blurb: 'How your own website looks to visitors.',
+      items: [
+        { id: 'web1', name: 'Web 1.0', desc: 'Grey background, blue links, Times New Roman.', req: null,
+          swatch: 'linear-gradient(#c0c0c0 0 30%, transparent 30%), repeating-linear-gradient(#ffffff 0 6px, #e8e8e8 6px 7px)' },
+        { id: 'eranet', name: 'Follows the Era', desc: 'Your site changes style with every Internet Era.', req: null,
+          swatch: 'linear-gradient(135deg, #ffffff 0 25%, #f5f6f8 25% 50%, #231036 50% 75%, #0b0f14 75%)' },
+        { id: 'terminal', name: 'Terminal', desc: 'Green text on a black screen. Blinking cursor included.',
+          req: R('Catch 2 floating notifications on ChaosOS 95', onRetro('bonuses'), 2),
+          swatch: 'repeating-linear-gradient(transparent 0 6px, rgba(57,255,106,.5) 6px 7px), linear-gradient(#000, #000)' },
+        { id: 'construction', name: 'Under Construction', desc: 'Yellow and black stripes and a digging man GIF energy.',
+          req: R('Click 1,500 times on ChaosOS 95', onRetro('totalClicks'), 1500),
+          swatch: 'repeating-linear-gradient(45deg, #ffd400 0 8px, #111 8px 16px)' },
+      ],
+    },
+    {
+      id: 'fx', name: 'Effects', icon: '✨', blurb: 'What the monitor does.',
+      items: [
+        { id: 'scanlines', name: 'CRT Scanlines', desc: 'Fine scanlines and a soft glow, like a real monitor.', req: null,
+          swatch: 'repeating-linear-gradient(rgba(0,0,0,.35) 0 1px, transparent 1px 3px), linear-gradient(#008080, #00a0a0)' },
+        { id: 'clear', name: 'Flat Panel', desc: 'No CRT effect. Crisp and clean.', req: null, swatch: 'linear-gradient(#008080, #008080)' },
+        { id: 'warp', name: 'Warp Speed', desc: 'Stars rushing past, straight from a screensaver.',
+          req: R('Reach the next Internet Era on ChaosOS 95', onRetro('eras'), 1),
+          swatch: 'radial-gradient(circle at 50% 50%, transparent 0 10%, #fff 11% 12%, transparent 13%), radial-gradient(circle at 30% 30%, #fff 0 1px, transparent 2px), radial-gradient(circle at 75% 70%, #fff 0 1.5px, transparent 2px), linear-gradient(#000, #000)' },
+        { id: 'glitch', name: 'Bad Signal', desc: 'The picture rolls and tears now and then.',
+          req: R('Survive a meltdown on ChaosOS 95', onRetro('meltdowns'), 1),
+          swatch: 'linear-gradient(transparent 40%, rgba(255,0,80,.6) 40% 44%, transparent 44% 60%, rgba(0,255,220,.6) 60% 63%, transparent 63%), linear-gradient(#008080, #004040)' },
+      ],
+    },
+  ];
+
+  const SETS = { aero: AERO, metro: METRO, mango: MANGO, holo: HOLO, retro: RETRO };
   const DEFAULTS = {
     aero: { bg: 'sky', color: 'aqua', site: 'era', fx: 'bubbles' },
     metro: { bg: 'light', color: 'cobalt', site: 'modern', fx: 'drift' },
     mango: { bg: 'dawn', color: 'blue', site: 'glass', fx: 'flow' },
+    holo: { bg: 'prism', color: 'cyan', site: 'holo', fx: 'rings' },
+    retro: { bg: 'desktop', color: 'navy', site: 'web1', fx: 'scanlines' },
   };
 
   const ITEM = Object.create(null);

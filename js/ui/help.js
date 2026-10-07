@@ -30,7 +30,7 @@
         ['👁', 'Attention', 'Your main score. Clicks and buildings make it, and it earns Money automatically.', null],
         ['💵', 'Money', 'Earned from Attention every second. Spend it in the Shop.', null],
         ['👆', 'Create Content', 'The big button on your website. Each click earns Attention. Most useful at the start.', null],
-        ['🛒', 'Buildings', 'Shop items that keep producing on their own. Each one costs a little more than the last.', null],
+        ['🛒', 'Buildings', 'Shop items that keep producing on their own. Each one costs a little more than the last. Every Internet Era gives them new names.', null],
         ['🎯', 'Next Goals', 'Your next targets with progress bars. Follow them when you are not sure what to do.', null],
         ['📰', 'Live Feed', 'Everything that happens on your site. Click a Blog Post, Meme Page or Comment Section to read its comments.', null],
       ] },
@@ -54,18 +54,32 @@
         ['📨', 'Events', 'Random things happen: viral posts, outages, drama. Some ask you to choose. No answer picks the safe option.', null],
         ['🔔', 'Floating notifications', 'Every few minutes a glowing bell floats across the screen for a few seconds. Click it for a surprise bonus.', null],
         ['#️⃣', 'Trending', 'Now and then one kind of building trends and produces several times more for a while.', null],
+        ['🎲', 'Era mechanic', 'Every era has one thing of its own in your website window: flame wars, a friend network, trend alerts, a feed switch, AI claims, quarterly targets and bot swarms.', null],
       ] },
       { group: 'Long term', items: [
         ['🌐', 'Internet Eras', 'Start over in the next era of the internet. You lose buildings and Money but earn permanent Clout.', 'eras'],
         ['✦', 'Clout and Perks', 'Clout permanently boosts Attention. Spend it on Perks that survive every reset.', 'eras'],
+        ['🎯', 'Era challenges', 'Three optional goals per era, in the Eras window. Each one you complete adds extra Clout when you start the next era.', 'eras'],
+        ['🏁', 'Era records', 'Every finished era with its time and Clout, and your fastest run of each one. In the ☰ Menu.', 'eras'],
+        ['📅', 'Daily challenge', 'A new modifier and goal every day, the same for everyone. The goal pays Clout; days in a row build a streak.', 'daily'],
         ['🏆', 'Achievements', 'Milestones in the ☰ Menu. Each one adds +' + ach + '% Attention forever.', null],
         ['🤖', 'Automation', 'Upgrades that click, buy or repair for you. Switch them on and off in the Automation tab.', 'auto'],
         ['📈', 'Analytics', 'A chart of Attention and Chaos over the last two minutes.', 'analytics'],
         ['🎨', 'Style Shop', 'Themes for your website, unlocked by milestones. Pure looks, no effect on gameplay.', 'style'],
-        ['🪟', 'Operating System', 'One-time upgrades for your website: ChaosOS 8 from the Social Media Era on, then Mango OS from the Viral Era on. Each brings permanent bonuses, a new look and new music. Its Style Shop themes unlock from scratch.', 'os'],
+        ['🪟', 'Operating System', 'One-time upgrades for your website: ChaosOS 8 (Social Media Era), Mango OS (Viral Era), Prism OS (AI Era) and ChaosOS 95 (Post-Internet Era). Each brings permanent bonuses, a new look and new music. Its Style Shop themes unlock from scratch.', 'os'],
+        ['📸', 'Share your website', 'Makes a picture of your website and its numbers to download or copy. In the ☰ Menu.', null],
         ['💤', 'Offline progress', 'Your site keeps earning, a bit slower, while the game is closed.', null],
       ] },
     ];
+  }
+
+  function shortcuts() {
+    return h('section', { class: 'help-group' }, [
+      h('h3', { text: 'Keyboard shortcuts' }),
+      h('dl', { class: 'help-keys' }, ui.keys.SHORTCUTS.map(([key, what]) => h('div', { class: 'help-key' }, [
+        h('dt', {}, [h('kbd', { text: key })]), h('dd', { text: what }),
+      ]))),
+    ]);
   }
 
   function open() {
@@ -90,14 +104,14 @@
         loopStrip(),
         h('ol', { class: 'help-first' }, [
           h('li', { text: 'Click the big button until you have $5.' }),
-          h('li', { text: 'Buy a 📝 Blog Post in the Shop. It earns Attention by itself.' }),
+          h('li', { text: 'Buy a ' + Z.B.blog.icon + ' ' + Z.B.blog.name + ' in the Shop. It earns Attention by itself.' }),
           h('li', { text: 'Keep buying buildings and follow Next Goals.' }),
           h('li', { text: 'New systems appear one at a time. Each comes with a short note.' }),
         ]),
         h('div', { class: 'btn-row' }, [tour]),
       ]),
       h('p', { class: 'help-legend' }, ['Terms marked ', h('span', { class: 'help-later', text: 'Later' }), ' belong to systems you have not unlocked yet.']),
-    ].concat(groups));
+    ].concat(groups, [shortcuts()]));
 
     ui.modal.open({ id: 'help', title: '❔ Help', body, wide: true, className: 'modal-help' });
   }
@@ -113,7 +127,7 @@
     { target: () => $('hud'), title: 'Your numbers',
       text: 'Attention and Money live up here. The small line shows how much you earn every second.' },
     { target: () => document.querySelector('.panel-shop'), title: 'Spend Money in the Shop',
-      text: 'Buildings keep working when you stop clicking. Start with a 📝 Blog Post for $5, then keep buying.' },
+      get text() { return 'Buildings keep working when you stop clicking. Start with a ' + Z.B.blog.icon + ' ' + Z.B.blog.name + ' for $5, then keep buying.'; } },
     { target: () => $('panel-goals'), title: 'What next?',
       text: 'Next Goals always shows your next targets and how close you are.' },
     { target: () => $('pane-feed'), title: 'The Live Feed',

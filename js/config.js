@@ -100,7 +100,8 @@
   ];
 
   /* Operating systems the player's website runs on. The first is where everyone starts;
-     each later one is a one-time purchase that survives every era. Installing one brings a
+     each later one is a one-time purchase that survives every era, and the bonuses of
+     every installed system stack (js/systems/modifiers.js). Installing one brings a
      new interface skin, new music and its own Style Shop themes (the old themes stay behind).
      `cost` is Money, paid from the current era. */
   Z.OSES = [
@@ -134,25 +135,71 @@
       era: 3,
       look: 'Liquid glass, soft light and colorful wallpapers.',
       pitch: 'Everything is made of glass now. Even the money.',
-      // Tuned with tools/sim.js: bought about 8 minutes into the Viral Era, it makes the
-      // eras after it about 15% faster, on top of ChaosOS 8.
+      // Bonuses stack with the systems before it. Tuned with tools/sim.js so that later
+      // eras still take longer than earlier ones.
       effects: [
-        { t: 'attMult', x: 1.15 },
-        { t: 'yieldMult', x: 1.15 },
-        { t: 'capacityMult', x: 1.25 },
-        { t: 'buffDuration', x: 1.3 },
+        { t: 'attMult', x: 1.05 },
+        { t: 'yieldMult', x: 1.05 },
+        { t: 'capacityMult', x: 1.1 },
         { t: 'hotfixCooldown', x: 0.75 },
+        { t: 'regenMult', x: 1.1 },
         { t: 'offlineCap', v: 2 },
       ],
       features: [
         ['🚀', 'Mango Silicon'], ['💳', 'Mango Pay'], ['☁️', 'Mango Cloud'],
-        ['🔔', 'Live Activities'], ['🛠️', 'Background updates'], ['🔋', 'All-day battery'],
+        ['🛠️', 'Background updates'], ['🩹', 'Self-healing apps'], ['🔋', 'All-day battery'],
       ],
       newLook: 'A brand-new look: translucent liquid glass, rounded windows and bright wallpapers.',
       newMusic: 'New music made for Mango OS: airy, glassy and a little bit keynote.',
       feed: 'Every window is liquid glass now.',
       setup: ['hello', 'Moving {site} to {os}…', 'Pouring liquid glass over every window…', 'Rounding every corner. Twice…',
         'Packing your {prev} themes into a box…', 'Almost there. Keep your website plugged in.', 'Welcome to {os}.'],
+    },
+    { id: 'holo', name: 'Prism OS', edition: 'Hologram', icon: '💠', cost: 2e20,
+      era: 5,
+      look: 'Floating holograms, neon light and glass in mid-air.',
+      pitch: 'Your website leaves the screen. It now floats in the air, slightly in the way.',
+      // Tuned with tools/sim.js: bought a few minutes into the AI Era.
+      effects: [
+        { t: 'attMult', x: 1.05 },
+        { t: 'yieldMult', x: 1.05 },
+        { t: 'capacityMult', x: 1.1 },
+        { t: 'autoClick', v: 10 },
+        { t: 'goodEvents', x: 1.1 },
+        { t: 'offlineEff', v: 0.1 },
+      ],
+      features: [
+        ['🧠', 'Neural Engine'], ['💠', 'Holographic ads'], ['🛰️', 'Orbital storage'],
+        ['🖐️', 'Gesture clicks'], ['🔮', 'Predictive luck'], ['🌙', 'Sleep projection'],
+      ],
+      newLook: 'A brand-new look: floating holographic panels, neon light and iridescent glass in deep space.',
+      newMusic: 'New music made for Prism OS: dreamy, shimmering synthwave.',
+      feed: 'Every window now floats in mid-air.',
+      setup: ['Initializing neural interface…', 'Projecting {site} into three dimensions…', 'Teaching your pixels to float…',
+        'Calibrating the hologram to your face…', 'Packing your {prev} themes into a box…', 'Almost there. Please do not walk through the website.', 'Welcome to {os}.'],
+    },
+    { id: 'retro', name: 'ChaosOS 95', edition: 'Retro CRT', icon: '📺', cost: 3e24,
+      era: 7,
+      look: 'Grey windows, a Start button and a humming CRT monitor.',
+      pitch: 'The internet ended. Everyone went back to what worked.',
+      // Tuned with tools/sim.js: the last upgrade, bought a few minutes into the Post-Internet Era.
+      effects: [
+        { t: 'attMult', x: 1.05 },
+        { t: 'yieldMult', x: 1.05 },
+        { t: 'crashGuard', x: 0.7 },
+        { t: 'regenMult', x: 1.25 },
+        { t: 'clickMult', x: 3 },
+        { t: 'offlineCap', v: 4 },
+      ],
+      features: [
+        ['📺', 'Nostalgia boost'], ['💾', 'Shareware fees'], ['🧱', 'Rock-solid kernel'],
+        ['🔧', 'Defragmented disks'], ['🖱️', 'Ball mouse'], ['🌙', 'Screensaver mode'],
+      ],
+      newLook: 'A brand-new old look: grey bevelled windows, a Start button, a taskbar and a humming CRT screen.',
+      newMusic: 'New chiptune music made for ChaosOS 95, straight from a sound card.',
+      feed: 'Everything is grey, bevelled and somehow faster.',
+      setup: ['ChaosOS 95 Setup', 'Copying files… (disk 1 of 47)', 'Please insert disk 2. Any disk. We are not picky.',
+        'Detecting Plug and Play hardware… found: one (1) mouse.', 'Packing your {prev} themes into a box…', 'Restarting. Do not unplug the monitor.', 'Starting {os}…'],
     },
   ];
   Z.OS = Z.util.byId(Z.OSES);
@@ -192,7 +239,7 @@
   Z.SITE_LEVELS = ['Homepage', 'Hobby Site', 'Community', 'Network', 'Platform', 'Empire'];
 
   /* Interface sections that appear as the player discovers each system. */
-  Z.REVEAL_KEYS = ['chaos', 'stability', 'policy', 'actions', 'upgrades', 'eras', 'auto', 'analytics', 'clout', 'bulk', 'style', 'os'];
+  Z.REVEAL_KEYS = ['chaos', 'stability', 'policy', 'actions', 'upgrades', 'eras', 'auto', 'analytics', 'clout', 'bulk', 'style', 'os', 'daily'];
 
   const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 

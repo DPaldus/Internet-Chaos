@@ -109,15 +109,16 @@
     const owned = id => s.buildings[id] || 0;
     if (s.meltdown > 0) return '🔥 Meltdown! Click the big button to reboot faster. Next time keep Chaos under the Tolerance notch.';
     if (s.run.clicks < 5 && s.stats.totalClicks < 20) return '👆 Click the big button to create content. Content earns Attention, and Attention earns Money.';
-    if (!owned('blog')) return s.res.money >= Z.B.blog.cost
-      ? '🛒 You can afford a Blog Post. Buy it in the shop. It makes Attention on its own.'
-      : '💵 Earn $5 for your first Blog Post. It works while you don\'t.';
+    const B = Z.B;
+    if (!owned('blog')) return s.res.money >= B.blog.cost
+      ? '🛒 You can afford a ' + B.blog.name + '. Buy it in the shop. It makes Attention on its own.'
+      : '💵 Earn $5 for your first ' + B.blog.name + '. It works while you don\'t.';
     if (s.events.pending) return '📨 Something happened! Answer the pop-up before it decides for you.';
     if (rev.stability && s.res.stability < 35) return '🚨 Stability is critical. Use Hotfix, buy Infrastructure or Moderation, or switch to a calmer Editorial Policy.';
     if (rev.chaos && s.res.chaos > c.tolerance + 1) return '⚠️ Chaos is above your Tolerance notch, so Stability is draining. Add servers (raise the notch) or moderators (lower Chaos).';
     if (rev.chaos && !rev.stability) return '🌀 Chaos multiplies Attention and Money. More Chaos means more growth, until it doesn\'t.';
     if (Z.prestige.canPrestige(s)) return '🌐 A new Internet Era is available. Open Eras to start over with permanent Clout.';
-    if (!owned('meme') && s.seen.meme) return '🖼️ Meme Pages make far more Attention than Blog Posts. They also add a little Chaos.';
+    if (!owned('meme') && s.seen.meme) return B.meme.icon + ' ' + B.meme.plural + ' make far more Attention than ' + B.blog.plural + '. They also add a little Chaos.';
     if (rev.upgrades && s.run.upgrades === 0) return '⬆️ Upgrades are one-time boosts. Keep an eye on the Upgrades panel.';
     return null;
   }

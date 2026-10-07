@@ -149,9 +149,24 @@
 
   /* ---------- Rendering ---------- */
 
+  let cardEra = 0;
+
+  /** Every era names the buildings its own way (Z.skinBuildings); relabel the cards when it changes. */
+  function relabel() {
+    if (cardEra === Z.skinBuildings.era()) return;
+    cardEra = Z.skinBuildings.era();
+    for (const b of Z.BUILDINGS) {
+      const c = cards[b.id];
+      c.icon.textContent = b.icon;
+      c.name.textContent = b.name;
+      c.flavor.textContent = b.flavor;
+    }
+  }
+
   function renderBuildings(g) {
     const s = g.s, f = Z.fmt, qtyMode = s.settings.buyQty;
     const anyVisible = Object.create(null), anyAffordable = Object.create(null);
+    relabel();
 
     for (const b of Z.BUILDINGS) {
       const c = cards[b.id];
@@ -264,5 +279,41 @@
     renderUpgrades(g);
   }
 
-  ui.shop = { init, render, selectTab, current() { return tab; }, reset() { upgradeKey = ''; } };
+  /* ---------- Keyboard shortcuts (js/ui/keys.js) ---------- */
+
+  /** B: buys the best-value building of the open tab that you can afford right now. */
+  function buyBest() {
+    const g = game, s = g.s;
+    g.refresh();
+    let best = null, bestScore = -1;
+    for (const b of Z.BUILDINGS) {
+      if (b.cat !== tab || !s.seen[b.id] || !Z.econ.isAvailable(s, b.id)) continue;
+      const q = Z.econ.quote(g, b.id, s.settings.buyQty);
+      if (q.cost > s.res.money) continue;
+      const p = Z.econ.preview(g, b.id, q.qty);
+      // Content and Monetization by what they add per dollar; servers and moderators by price.
+      const gain = b.cat === 'traffic' || b.cat === 'money' ? (p.mps || 0) : 1;
+      const score = gain / q.cost;
+      if (score > bestScore) { best = b; bestScore = score; }
+    }
+    if (!best) { Z.audio.play('deny'); return false; }
+    buy(best.id, cards[best.id].root);
+    return true;
+  }
+
+  /** U: buys the cheapest upgrade you can afford. */
+  function buyCheapestUpgrade() {
+    const g = game, s = g.s;
+    let pick = null;
+    for (const u of Z.UPGRADES) {
+      if (!Z.econ.upgradeVisible(s, u)) continue;
+      const cost = Z.econ.upgradeCost(g, u);
+      if (cost <= s.res.money && (!pick || cost < pick.cost)) pick = { u, cost };
+    }
+    if (!pick) { Z.audio.play('deny'); return false; }
+    buyUpgrade(pick.u.id, $('upgrade-grid'));
+    return true;
+  }
+
+  ui.shop = { init, render, selectTab, buyBest, buyCheapestUpgrade, current() { return tab; }, reset() { upgradeKey = ''; } };
 })(window.ICHAOS = window.ICHAOS || {});
