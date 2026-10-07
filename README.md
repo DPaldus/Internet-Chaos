@@ -17,10 +17,8 @@ No install, no account, no ads. Just open it and start posting.
 
 </div>
 
-<!-- SCREENSHOT: main banner. Replace docs/images/screenshot-mango-os.svg with a real
-     screenshot (PNG, JPG or GIF work too; update the file name here if it changes). -->
 <p align="center">
-  <img src="docs/images/screenshot-mango-os.svg" alt="Internet Chaos running on Mango OS" width="900">
+  <img src="docs/images/mango-os.png" alt="Internet Chaos in the Viral Era, running on Mango OS" width="900">
 </p>
 
 ---
@@ -108,21 +106,16 @@ system. Every era has its own shop, so nothing you buy repeats.
 
 ## Screenshots
 
-<!-- SCREENSHOTS: replace each file in docs/images/ with a real screenshot. Keep the file
-     names, or change the links below to match your new files. -->
-
-| Forum Era · ChaosOS 7 | Viral Era · ChaosOS 8 |
+| Forum Era · ChaosOS 7 Aero | Social Media Era · ChaosOS 8 Metro |
 | :---: | :---: |
-| ![Forum Era screenshot](docs/images/screenshot-forum-era.svg) | ![Viral Era screenshot](docs/images/screenshot-viral-era.svg) |
-| **Mango OS · Liquid Glass** | **Style Shop** |
-| ![Mango OS screenshot](docs/images/screenshot-mango-os.svg) | ![Style Shop screenshot](docs/images/screenshot-style-shop.svg) |
-| **Prism OS · Hologram** | **ChaosOS 95 · Retro CRT** |
-| ![Prism OS screenshot](docs/images/screenshot-prism-os.svg) | ![ChaosOS 95 screenshot](docs/images/screenshot-chaosos-95.svg) |
+| ![Forum Era with a flame war in progress, on ChaosOS 7 Aero](docs/images/forum-era.png) | ![Social Media Era with the friend network, on ChaosOS 8 Metro](docs/images/social-era.png) |
+| **AI Era · Prism OS Hologram** | **Post-Internet Era · ChaosOS 95 Retro CRT** |
+| ![AI Era with an AI claim to check, on Prism OS](docs/images/prism-os.png) | ![Post-Internet Era with a bot swarm, on ChaosOS 95](docs/images/chaosos-95.png) |
+| **Style Shop on Mango OS** | **Internet Eras: challenges and Clout perks** |
+| ![Style Shop with Mango OS wallpapers](docs/images/style-shop.png) | ![The Internet Eras window with era challenges and Clout perks](docs/images/eras.png) |
 
-<!-- GAMEPLAY CLIP: replace docs/images/gameplay.svg with a short GIF of the game. -->
-<p align="center">
-  <img src="docs/images/gameplay.svg" alt="Gameplay clip" width="720">
-</p>
+The picture at the top shows the Viral Era on Mango OS Liquid Glass, with a trend alert.
+All screenshots are taken from the real game by `python tools/screenshots.py`.
 
 ## Play locally
 

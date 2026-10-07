@@ -204,6 +204,8 @@ tools/css-audit.js       developer check that finds unused CSS and compares styl
 tools/build.py           production build: dist/ (minified, one script, no source maps)
                          and release/internet-chaos-web.zip
 tools/make-release.ps1   runs tools/build.py
+tools/screenshots.py     README screenshots, taken from the real game (drives
+                         tools/screenshot.html in headless Edge or Chrome)
 ```
 
 The rules in `js/systems` never touch the DOM, so the UI, offline progress and the
@@ -230,6 +232,19 @@ local names shortened, no source map); `css/game.css` and `index.html` are minif
 get cache-busting version stamps. esbuild is downloaded once from the npm registry into
 `tools/.esbuild/` and checked against the registry's SHA-512. The readable source stays in
 `js/` and `css/`. After changing `index.html`'s script list, nothing else needs updating.
+
+## README screenshots
+
+`python tools/screenshots.py` retakes every picture in `docs/images/`, and
+`python tools/screenshots.py prism-os` retakes just one. For each shot it serves the project
+locally, opens `tools/screenshot.html?shot=<name>` in headless Edge or Chrome with a
+throwaway profile and saves a 1600×900 PNG. The stage page plays a game with the balance
+simulator (seed 1) up to a set time, dresses it (operating system, site name, Live Feed),
+loads the real game in a frame and sets the scene, such as an open window or a running era
+mechanic. The shot list and the simulated play time for each era are at the top of the
+stage page; if balancing changes, adjust `stopAt` so each shot still lands in its era (the
+console warns when it does not). Your own browser and its saves are never touched. The
+`tools/` folder is not part of the build.
 
 ## Balancing
 

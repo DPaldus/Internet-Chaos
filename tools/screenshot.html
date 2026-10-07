@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Internet Chaos screenshot stage</title>
+<!-- Developer tool for the README screenshots (tools/screenshots.py drives it).
+     tools/screenshot.html?shot=<name> plays a game with the balance simulator up to a point,
+     dresses it for the picture (operating system, site name, a few feed entries), saves it to
+     this browser's storage and shows the real game full screen in a frame. The page title
+     turns to "ready" once the scene is set. Opening this page replaces the saved game in this
+     browser, so use it on a test profile only. -->
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
+  iframe { display: block; width: 100%; height: 100%; border: 0; }
+</style>
+</head>
+<body>
+<script src="../js/core.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/content/buildings.js"></script>
+<script src="../js/content/upgrades.js"></script>
+<script src="../js/content/events.js"></script>
+<script src="../js/content/perks.js"></script>
+<script src="../js/content/achievements.js"></script>
+<script src="../js/content/challenges.js"></script>
+<script src="../js/content/cosmetics.js"></script>
+<script src="../js/content/sponsors.js"></script>
+<script src="../js/state.js"></script>
+<script src="../js/systems/modifiers.js"></script>
+<script src="../js/systems/economy.js"></script>
+<script src="../js/systems/effects.js"></script>
+<script src="../js/systems/events.js"></script>
+<script src="../js/systems/actions.js"></script>
+<script src="../js/systems/progression.js"></script>
+<script src="../js/systems/bonus.js"></script>
+<script src="../js/systems/os.js"></script>
+<script src="../js/systems/meta.js"></script>
+<script src="../js/systems/eramech.js"></script>
+<script src="../js/systems/game.js"></script>
+<script src="../js/save.js"></script>
+<script src="sim.js"></script>
+<script>
+(function () {
+  'use strict';
+  const Z = window.ICHAOS;
+  const MIN = 60;
+
+  // stopAt: total simulated play time (seed 1 reaches each era at about these times).
+  const SHOTS = {
+    'forum-era': { stopAt: 21 * MIN, era: 1, os: 'aero', scene: 'flame' },
+    'social-era': { stopAt: 40 * MIN, era: 2, os: 'metro', scene: 'friends' },
+    'mango-os': { stopAt: 60 * MIN, era: 3, os: 'mango', scene: 'trend' },
+    'style-shop': { stopAt: 60 * MIN, era: 3, os: 'mango', scene: 'style' },
+    'prism-os': { stopAt: 104 * MIN, era: 5, os: 'holo', scene: 'claim' },
+    'chaosos-95': { stopAt: 186 * MIN, era: 7, os: 'retro', scene: 'bots' },
+    'eras': { stopAt: 104 * MIN, era: 5, os: 'holo', scene: 'eras' },
+  };
+
+  const params = new URLSearchParams(location.search);
+  const name = params.get('shot') || 'mango-os';
+  const shot = SHOTS[name];
+  const lang = params.get('lang') === 'cs' ? 'cs' : 'en';
+
+  function feedFor(s) {
+    const now = Date.now(), B = Z.B;
+    const items = [
+      ['🔥', 'A post went viral. People are sharing it, mostly to complain about it. (Attention ×3 for 25s)', 'good'],
+      ['🏆', 'Achievement unlocked: A Billion Eyeballs. Reach 1B total Attention.', 'achieve'],
+      ['#️⃣', B.meme.plural + ' are trending! Their output is ×3 for a while.', 'good'],
+      ['💬', 'Users are arguing about whether a hot dog is a sandwich. (Attention ×1.8 for 45s · Chaos target +10)', 'good'],
+      ['🚪', 'An advertiser left: "Issue a calm statement" (automatic). Money per Attention ×0.7 for 60s · Chaos −15.', 'bad'],
+      ['⭐', 'A celebrity mentioned you: "Send a polite thank-you". Stability +5.', 'good'],
+      [B.comments.icon, 'New in the shop: ' + B.comments.name + '. ' + B.comments.flavor, 'info'],
+      ['🎯', 'Era challenge complete: ' + Z.challengesFor(s.era)[0].name + '. ' + Z.challengesFor(s.era)[0].desc, 'achieve'],
+    ];
+    return items.map(([icon, text, kind], i) => ({ t: now - (items.length - i) * 37000, icon, text, kind }));
+  }
+
+  function prepare() {
+    const r = ICHAOS_SIM.run({ seed: 1, hours: 6, maxEras: 9, stopAt: shot.stopAt, returnGame: true });
+    const g = r.g, s = g.s;
+    Z.skinBuildings(s.era);
+    s.siteName = 'Bad Takes Daily';
+    s.flags.tutorial = true;
+    s.settings.music = false;
+    s.settings.sound = false;
+    for (const k of Z.REVEAL_KEYS) if (k !== 'os' || shot.era > 1) s.flags.reveal[k] = true;
+    s.os = { id: shot.os, installed: Date.now(), base: shot.os === 'aero' ? {} : Object.assign({}, s.stats) };
+    s.flags.osOffer = shot.os;
+    s.cosmetics = Object.assign({ unlocked: {} }, Z.COSMETICS.defaultsFor(shot.os));
+    s.events.next = 900;
+    s.events.pending = null;
+    s.meltdown = 0;
+    s.res.stability = Math.max(s.res.stability, 82);
+    s.feed = feedFor(s);
+    s.mech = {};
+    s.clout = Math.max(s.clout, Math.round(s.cloutLifetime * 0.08));
+    // Achievements the scene would earn on load (sound off, the new OS) are earned quietly now.
+    s.flags.muted = true;
+    g.dirty = true;
+    g.refresh();
+    Z.ach.check(g);
+    try { localStorage.setItem('internet-chaos:lang', lang); } catch (err) { /* English then */ }
+    Z.save.write(s);
+    return s.era;
+  }
+
+  function scene(frame) {
+    const w = frame.contentWindow, G = w.ICHAOS, g = G.game, s = g.s, ui = G.ui;
+    ui.holdToasts(true);
+    w.document.querySelectorAll('.toast').forEach(t => t.remove());
+    const start = () => { s.run.time = Math.max(s.run.time, 60); s.mech.t = 0; g.tick(0.5); };
+    if (shot.scene === 'flame') { start(); if (s.mech.active) s.mech.active.fire = 25; }
+    if (shot.scene === 'friends') { s.run.connections = 12; s.mech.cd = 7; g.dirty = true; }
+    if (shot.scene === 'trend' || shot.scene === 'claim' || shot.scene === 'bots') { start(); if (s.mech.active) s.mech.active.time = 14; }
+    if (shot.scene === 'style') ui.styleShop.open();
+    if (shot.scene === 'eras') ui.modals.openEras();
+    g.refresh();
+    ui.hud.render(g); ui.site.render(g, 0.1); ui.panels.renderFast(g, 0.1); ui.mech.render(g);
+    ui.shop.render(g); ui.panels.renderSlow(g); ui.os.render(g); ui.meta.render(g); ui.modal.refresh();
+    w.document.querySelectorAll('.toast').forEach(t => t.remove());
+    w.scrollTo(0, 0);
+    document.title = 'ready';
+  }
+
+  if (!shot) { document.title = 'unknown shot'; return; }
+  const era = prepare();
+  if (era !== shot.era) console.warn('Simulated game is in era ' + era + ', expected ' + shot.era);
+  const frame = document.createElement('iframe');
+  frame.src = '../index.html';
+  frame.addEventListener('load', () => setTimeout(() => scene(frame), 2500));
+  document.body.appendChild(frame);
+})();
+</script>
+</body>
+</html>
