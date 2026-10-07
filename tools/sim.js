@@ -97,6 +97,22 @@
     a.buyer = false; a.prOn = true; a.pr = 'bold'; a.policy = false; a.scheduler = false;
   }
 
+  /** After a reboot: spend Bandwidth, cheapest upgrade first. */
+  function buyBandwidth(g) {
+    for (let guard = 0; guard < 200; guard++) {
+      let pick = null;
+      for (const u of Z.REBOOT_UPGRADES) {
+        const lvl = Z.reboot.level(g.s, u.id);
+        if (lvl >= u.max) continue;
+        const cost = Z.reboot.upgradeCost(u, lvl);
+        if (!pick || cost < pick.cost) pick = { id: u.id, cost };
+      }
+      if (!pick || !Z.reboot.buy(g, pick.id)) break;
+    }
+  }
+
+  /* opts: seed, hours, maxEras, stopAt (seconds), returnGame, catchRate,
+     reboots (reboot this many times at the end of the Post-Internet Era), protocol. */
   function run(opts) {
     const s = Z.state.create(0);
     s.seed = opts.seed >>> 0;
@@ -159,8 +175,18 @@
         }
         const gain = Z.prestige.cloutGain(s);
         const waited = s.run.time - reqReachedAt;
+        if ((opts.reboots || 0) > s.reboot.count && Z.reboot.canReboot(s)) {
+          eraLog.push({ v: Z.reboot.version(s), era: s.era, time: s.run.time, gain, upgrades: s.run.upgrades, meltdowns: s.run.meltdowns, events: s.stats.events });
+          const bw = Z.reboot.reboot(g, opts.protocol || 'standard');
+          buyBandwidth(g);
+          out(tStr(t) + '  ' + s.era + '    >>> REBOOT into Internet v' + Z.reboot.version(s) + ' +' + bw + ' Bandwidth | upgrades '
+            + Object.keys(s.reboot.upgrades).map(k => k + ':' + s.reboot.upgrades[k]).join(' ') + ' | Clout ' + s.clout);
+          buyPerks(g);
+          eraStart = t; reqReachedAt = null;
+          continue;
+        }
         if (gain >= Math.max(10, s.cloutLifetime) || waited > Math.max(300, reqReachedAt * 0.3)) {
-          eraLog.push({ era: s.era, time: s.run.time, gain, upgrades: s.run.upgrades, meltdowns: s.run.meltdowns, events: s.stats.events });
+          eraLog.push({ v: Z.reboot.version(s), era: s.era, time: s.run.time, gain, upgrades: s.run.upgrades, meltdowns: s.run.meltdowns, events: s.stats.events });
           out(tStr(t) + '  ' + s.era + '    >>> PRESTIGE +' + gain + ' clout after ' + f.time(s.run.time) + ' (upgrades ' + s.run.upgrades + ', meltdowns ' + s.run.meltdowns + ')');
           Z.prestige.prestige(g);
           buyPerks(g);
@@ -176,7 +202,7 @@
     out('Total meltdowns ' + s.stats.meltdowns + ', events ' + s.stats.events + ', achievements ' + Object.keys(s.achievements).length + '/' + Z.ACHIEVEMENTS.length);
     out('Buildings: ' + Z.BUILDINGS.filter(b => s.buildings[b.id]).map(b => b.id + ' ' + s.buildings[b.id]).join(', '));
     out('');
-    out('Eras: ' + eraLog.map(e => 'E' + e.era + ' ' + f.time(e.time) + ' (+' + e.gain + ')').join(' | '));
+    out('Eras: ' + eraLog.map(e => (e.v > 1 ? 'v' + e.v + ' ' : '') + 'E' + e.era + ' ' + f.time(e.time) + ' (+' + e.gain + ')').join(' | '));
     if (opts.returnGame) return { text: lines.join('\n'), g };
     return lines.join('\n');
   }

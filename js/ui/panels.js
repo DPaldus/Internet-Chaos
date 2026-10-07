@@ -117,6 +117,14 @@
     }
     const daily = ui.meta.dailyChip(s);
     if (daily) items.push(daily);
+    const protocol = ui.reboot.protocolChip(s);
+    if (protocol) items.push(protocol);
+    if (s.flags.reveal.stability && s.meltdown <= 0 && Z.idle.uptimeMinutes(s) >= 1) {
+      const bonus = Z.idle.uptimeBonus(s), cap = Z.BAL.idle.uptimeCap;
+      items.push({ id: 'uptime', icon: '🟢', name: 'Uptime +' + Math.round(bonus * 100) + '%' + (bonus >= cap ? ' (max)' : ''), kind: 'good',
+        progress: bonus / cap, timeText: f.time(s.run.uptime),
+        title: 'Every minute without a meltdown adds +1% Attention, up to +' + Math.round(cap * 100) + '%. A meltdown starts it over.' });
+    }
     if (s.meltdown > 0) items.unshift({ id: 'meltdown', icon: '🔥', name: 'MELTDOWN · output ×' + Z.BAL.meltdown.productionMult, kind: 'bad', time: s.meltdown, duration: Z.BAL.meltdown.duration * g.m.meltdownMult });
     const root = $('effects');
     const key = items.map(x => x.id).join(',');
@@ -127,9 +135,11 @@
       for (const it of items) {
         const label = h('span', { class: 'chip-name' });
         const time = h('span', { class: 'chip-time' });
-        const chip = h(it.daily ? 'button' : 'span', { class: 'chip chip-' + it.kind + (it.daily ? ' chip-daily' : ''), type: it.daily ? 'button' : null, title: it.title || null },
+        const button = it.daily || it.protocol;
+        const chip = h(button ? 'button' : 'span', { class: 'chip chip-' + it.kind + (button ? ' chip-daily' : ''), type: button ? 'button' : null, title: it.title || null },
           [h('span', { 'aria-hidden': 'true', text: it.icon }), label, time]);
         if (it.daily) chip.addEventListener('click', () => ui.meta.openDaily());
+        if (it.protocol) chip.addEventListener('click', () => ui.reboot.open());
         root.appendChild(chip);
         effectEls.push({ chip, label, time });
       }
@@ -139,8 +149,8 @@
       if (!e) return;
       const name = it.mag && it.id === 'viral' ? it.name + ' ' + f.mult(it.mag) : it.name;
       setText(e.label, name);
-      setText(e.time, it.daily ? Z.fmt.time(it.time) : Math.ceil(it.time) + 's');
-      setStyle(e.chip, '--left', (it.time / it.duration * 100).toFixed(1) + '%');
+      setText(e.time, it.timeText !== undefined ? it.timeText : it.protocol ? '' : it.daily ? Z.fmt.time(it.time) : Math.ceil(it.time) + 's');
+      setStyle(e.chip, '--left', it.progress !== undefined ? (it.progress * 100).toFixed(1) + '%' : it.protocol ? '100%' : (it.time / it.duration * 100).toFixed(1) + '%');
     });
     setHidden(root, !items.length);
   }

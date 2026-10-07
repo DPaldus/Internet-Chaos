@@ -118,8 +118,11 @@
       body.append(
         card(cur, 'Your website runs'),
         h('p', { class: 'os-uptodate', text: '✅ You’re up to date. ' + cur.name + ' was installed on ' + new Date(s.os.installed || Date.now()).toLocaleDateString() + '.' }),
-        h('section', { class: 'os-section' }, [h('h3', { text: 'Active bonuses' }), h('p', { class: 'os-note', text: 'Permanent, through every Internet Era. Every system you installed keeps its bonuses.' })]
-          .concat(Z.OSES.slice(1, Z.OSES.indexOf(cur) + 1).reverse().map(os => h('div', { class: 'os-stack' }, [h('b', { class: 'os-stack-name', text: os.icon + ' ' + os.name + ' ' + os.edition }), features(os)])))),
+        h('section', { class: 'os-section' }, [h('h3', { text: 'Active bonuses' }), h('p', { class: 'os-note', text: 'Permanent, through every Internet Era. Every system you installed keeps its bonuses. After a reboot each one comes back when the new internet reaches its era.' })]
+          .concat(Z.OSES.slice(1, Z.OSES.indexOf(cur) + 1).reverse().map(os => h('div', { class: 'os-stack' + (s.era < os.era ? ' os-stack-off' : '') }, [
+            h('b', { class: 'os-stack-name', text: os.icon + ' ' + os.name + ' ' + os.edition }),
+            s.era < os.era ? h('span', { class: 'os-note', text: '⏳ Back in the ' + Z.era(os.era).name }) : null,
+            features(os)])))),
         h('section', { class: 'os-section' }, [h('h3', { text: 'Style Shop' }), styleLine,
           h('button', { type: 'button', class: 'btn', text: '🎨 Open the Style Shop', onclick: () => ui.styleShop.open() })]),
       );
@@ -320,7 +323,7 @@
     const start = $('tb-start'), menu = $('tb-menu');
     const items = [
       ['🌐', 'Internet Eras', 'btn-eras'], ['🎨', 'Style Shop', 'btn-style'], ['📅', 'Daily Challenge', 'btn-daily'],
-      ['🏆', 'Achievements', 'btn-ach'], ['📊', 'Statistics', 'btn-stats'], ['🏁', 'Era Records', 'btn-records'],
+      ['🏆', 'Achievements', 'btn-ach'], ['📊', 'Statistics', 'btn-stats'], ['🏁', 'Era Records', 'btn-records'], ['🔁', 'Reboot the Internet', 'btn-reboot'],
       ['📸', 'Share Website', 'btn-share'], ['⚙️', 'Settings', 'btn-settings'], ['❔', 'Help', 'btn-help'], ['📺', 'System', 'btn-system'],
     ];
     const setOpen = on => { setHidden(menu, !on); start.setAttribute('aria-expanded', on ? 'true' : 'false'); start.classList.toggle('is-down', on); };

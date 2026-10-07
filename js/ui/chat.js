@@ -38,8 +38,12 @@
 
   function chaos() { return game ? game.s.res.chaos : 0; }
 
-  /** Low Chaos is mostly civil with the odd weird comment; high Chaos is mostly unhinged. */
-  function tierFor(ch) {
+  /** Low Chaos is mostly civil with the odd weird comment; high Chaos is mostly unhinged.
+      What the admin just said nudges it for a while: "calm down" cools the page, insults
+      and shouting heat it up. */
+  function tierFor(ch, p) {
+    const pg = p || (view && view.p);
+    if (pg && pg.nudge && Date.now() < pg.nudge.until) ch = Math.max(0, Math.min(100, ch + pg.nudge.by));
     return weighted([
       ['low', Math.max(0.04, 1 - ch / 45)],
       ['mid', Math.max(ch < 15 ? 0.03 : 0.06, 1 - Math.abs(ch - 52) / 38)],
@@ -79,15 +83,32 @@
   function topicOf(p) { return p.def.topics[p.topic]; }
 
   function makePage(def) {
+    const topic = nextTopic(null, def);
     return {
-      def, topic: Math.floor(rand() * def.topics.length), topicAge: rand() * TOPIC_SECONDS * 0.5,
+      def, topic, topicAge: rand() * topicSeconds(def) * 0.5, shown: [topic],
       msgs: [], seq: 0, next: 0.5 + rand() * 2, threads: [], played: Object.create(null), cast: Object.create(null),
-      recent: [], total: 0, viewers: 0, stamps: [], latest: null,
+      recent: [], total: 0, viewers: 0, stamps: [], latest: null, typing: [], said: null, nudge: null, lastSaid: '',
     };
+  }
+
+  function topicSeconds(def) { return def.topicSeconds || TOPIC_SECONDS; }
+
+  /** The next post: a random one this era allows, and not one shown lately. */
+  function nextTopic(p, def) {
+    def = def || p.def;
+    const era = game ? Math.min(game.s.era, Z.ERAS.length) : 1;
+    const ok = [];
+    def.topics.forEach((t, i) => { if (!t.eras || t.eras.indexOf(era) >= 0) ok.push(i); });
+    const shown = p ? p.shown : [];
+    const unseen = ok.filter(i => shown.indexOf(i) < 0);
+    const list = unseen.length ? unseen : ok.filter(i => !p || i !== p.topic);
+    return list.length ? pick(list) : 0;
   }
 
   function resetTopic(p, index) {
     p.topic = index;
+    p.shown.push(index);
+    if (p.shown.length > Math.max(2, Math.floor(p.def.topics.length * 0.6))) p.shown.shift();
     p.topicAge = 0;
     p.msgs = [];
     p.threads = [];
@@ -138,6 +159,16 @@
   function fill(p, text, ctx) {
     return text.replace(/\{(@|\w+)\}/g, (all, k) => {
       if (k === 'site') return Z.siteName(game.s);
+      if (k === 'me') return Z.siteName(game.s);
+      if (ctx && ctx.said) {
+        const said = ctx.said;
+        if (k === 'echo') return said.echo;
+        if (k === 'ECHO') return said.echo.toUpperCase();
+        if (k === 'word') return said.word;
+        if (k === 'Word') return said.word.charAt(0).toUpperCase() + said.word.slice(1);
+        if (k === 'WORD') return said.word.toUpperCase();
+        if (k === 'num') return said.num || String(between(2, 99));
+      }
       if (k === '@') return ctx && ctx.to ? '@' + ctx.to : 'everyone';
       if (k === 'u') return '@' + otherUser(p, ctx && ctx.user);
       if (k === 'n') return String(between(2, 99));
@@ -213,8 +244,8 @@
     const { pers, text } = parseLine(line);
     remember(p, line);
     const user = ctx.user || userFor(p, pers, ctx.parent ? ctx.parent.user : null);
-    const tier = ctx.tier || tierFor(ch);
-    let body = fill(p, text, { to: ctx.parent ? ctx.parent.user : null, user, before: ctx.before });
+    const tier = ctx.tier || tierFor(ch, p);
+    let body = fill(p, text, { to: ctx.parent ? ctx.parent.user : null, user, before: ctx.before, said: ctx.said });
     if (!ctx.noMutate) body = mutate(body, pers, ch);
     const msg = post(p, { user, pers, text: body, parent: ctx.parent, tier, kind: pers === 'mod' ? 'mod' : pers === 'spam' ? 'spam' : 'user', bot: ctx.bot, quiet: ctx.quiet });
     if (!ctx.quiet) aftermath(p, msg, ch);
@@ -306,11 +337,15 @@
 
   /** One new comment on a page. `quiet` writes history without touching the DOM. */
   function generate(p, quiet) {
-    const g = game, ch = chaos(), tier = tierFor(ch);
+    const g = game, ch = chaos(), tier = tierFor(ch, p);
     const ctxQuiet = quiet ? { quiet: true } : {};
 
     if (!quiet && p.threads.length && rand() < 0.72) return advanceThread(p, pick(p.threads));
 
+    // For a couple of minutes, people keep bringing up what the admin said.
+    if (!quiet && p.said && Date.now() < p.said.until && rand() < 0.09) {
+      return say(p, fresh(p, C.PLAYER.AFTER), { said: p.said, noMutate: true });
+    }
     if (!quiet) {
       for (const sit of C.SITUATIONS) {
         if (rand() < sit.chance && sit.when(g)) return say(p, fresh(p, sit.lines), { bot: sit.bot });
@@ -375,14 +410,14 @@
     for (const def of C.PAGES) {
       const p = pages[def.id];
       p.topicAge += dt;
-      if (p.topicAge > TOPIC_SECONDS && !(view && view.p === p)) {
-        resetTopic(p, (p.topic + 1) % def.topics.length);
+      if (p.topicAge > topicSeconds(def) && !(view && view.p === p)) {
+        resetTopic(p, nextTopic(p));
         updateTile(p);
         continue;
       }
       p.next -= dt;
       if (p.next <= 0) {
-        generate(p, false);
+        if (!(p.hush > Date.now())) generate(p, false);     // quiet while the admin gets answers
         p.next = interval(p);
       }
       while (p.stamps.length && now - p.stamps[0] > 60000) p.stamps.shift();
@@ -404,12 +439,12 @@
     const n = p.msgs.length;
     if (!n || rand() > 0.5) return;
     const m = p.msgs[n - 1 - Math.floor(Math.pow(rand(), 2) * Math.min(n, 20))];
-    if (!m || m.removed || m.kind === 'player') return;
+    if (!m || m.removed) return;
     const swing = ch > 70 ? between(-6, 7) : ch > 40 ? between(-2, 4) : between(0, 2);
-    m.votes += swing;
+    m.votes += m.kind === 'player' ? (m.drift || 0) * between(0, 3) : swing;
     if (view && view.p === p) {
       const node = view.nodes[m.id];
-      if (node) setText(node.querySelector('.cm-votes'), String(m.votes + m.myVote));
+      if (node) setText(node._votes || (node._votes = node.querySelector('.cm-votes')), String(m.votes + m.myVote));
     }
   }
 
@@ -420,7 +455,7 @@
     if (!box) return;
     box.textContent = '';
     for (const def of C.PAGES) {
-      const snippet = h('span', { class: 'fp-snippet' });
+      const snippet = h('span', { class: 'fp-snippet', 'data-no-i18n': true });
       const stats = h('span', { class: 'fp-stats' });
       const node = h('button', { type: 'button', class: 'fp-tile fp-' + def.id, title: 'Open the ' + def.name }, [
         h('span', { class: 'fp-icon', 'aria-hidden': 'true', text: def.icon }),
@@ -442,9 +477,7 @@
     const m = p.latest;
     setText(t.snippet, m ? m.user + ': ' + m.text.split('\n')[0] : p.def.blurb);
     renderTileStats(p);
-    t.node.classList.remove('ping');
-    void t.node.offsetWidth;
-    t.node.classList.add('ping');
+    ui.replay(t.node, 'ping');
   }
 
   function renderTileStats(p) {
@@ -502,10 +535,11 @@
 
     view.count = h('span', { class: 'cp-count' });
     view.rate = h('span', { class: 'cp-rate' });
-    const nextBtn = h('button', { type: 'button', class: 'link-btn', text: 'Next post ›', onclick: () => { resetTopic(p, (p.topic + 1) % def.topics.length); updateTile(p); renderView(); } });
+    const nextBtn = h('button', { type: 'button', class: 'link-btn', text: 'Next post ›', onclick: () => { resetTopic(p, nextTopic(p)); updateTile(p); renderView(); } });
     const meta = h('div', { class: 'cp-meta' }, [view.count, view.rate, nextBtn]);
 
-    view.stream = h('ol', { class: 'cp-stream', 'aria-live': 'polite', 'aria-label': 'Comments' });
+    view.stream = h('ol', { class: 'cp-stream', 'aria-live': 'polite', 'aria-label': 'Comments', 'data-no-i18n': true });
+    view.typing = h('div', { class: 'cp-typing', hidden: true });
     view.jump = h('button', { type: 'button', class: 'cp-jump', hidden: true, onclick: () => { scrollBottom(); view.unseen = 0; setJump(); } });
 
     view.replyNote = h('div', { class: 'cp-replying', hidden: true });
@@ -514,20 +548,21 @@
     const form = h('form', { class: 'cp-compose' }, [view.input, h('button', { type: 'submit', class: 'btn btn-primary', text: 'Post' })]);
     form.addEventListener('submit', e => { e.preventDefault(); playerPost(); });
 
-    view.scroller = h('div', { class: 'cp-scroll' }, [renderContent(p, topic), meta, view.stream, view.jump]);
+    view.scroller = h('div', { class: 'cp-scroll' }, [renderContent(p, topic), meta, view.stream, view.typing, view.jump]);
     view.scroller.addEventListener('scroll', () => {
       if (view && view.unseen && nearBottom()) { view.unseen = 0; setJump(); }
     });
     root.append(tabs, addr, view.scroller, view.replyNote, form);
     for (const m of p.msgs) view.stream.appendChild(renderMsg(m, false));
     refreshView();
+    renderTyping(p);
     requestAnimationFrame(scrollBottom);
   }
 
   function renderContent(p, topic) {
     const s = game.s, def = p.def, site = Z.siteName(s);
     if (def.id === 'blog') {
-      return h('article', { class: 'cp-post cp-article' }, [
+      return h('article', { class: 'cp-post cp-article', 'data-no-i18n': true }, [
         h('div', { class: 'cp-kicker', text: site + ' · Blog' }),
         h('h3', { class: 'cp-title', text: topic.title }),
         h('div', { class: 'cp-byline', text: 'by the ' + site + ' editorial team · ' + topic.read + ' min read' }),
@@ -535,20 +570,83 @@
       ]);
     }
     if (def.id === 'meme') {
-      return h('figure', { class: 'cp-post cp-meme' }, [
-        h('div', { class: 'meme', style: '--meme-bg:' + topic.bg }, [
-          h('span', { class: 'meme-top', text: topic.top }),
-          h('span', { class: 'meme-pic', 'aria-hidden': 'true' }, [topic.hat ? h('span', { class: 'meme-hat', text: topic.hat }) : null, topic.emoji]),
-          h('span', { class: 'meme-bottom', text: topic.bottom }),
-        ]),
+      return h('figure', { class: 'cp-post cp-meme', 'data-no-i18n': true }, [
+        renderMeme(topic),
         h('figcaption', { class: 'cp-byline', text: 'posted by ' + Z.siteSlug(s) + '_official · "' + topic.title + '" · 🔁 ' + Z.fmt.int(400 + p.total * 37) + ' reposts' }),
       ]);
     }
-    return h('div', { class: 'cp-post cp-thread' }, [
+    return h('div', { class: 'cp-post cp-thread', 'data-no-i18n': true }, [
       h('div', { class: 'cp-kicker', text: site + ' Forum · posted by ' + topic.op }),
       h('h3', { class: 'cp-title', text: topic.title }),
       h('p', { class: 'cp-body', text: topic.body }),
     ]);
+  }
+
+  /** Draws a meme from emoji and text, in its format (js/content/memes.js). The words are
+      part of the picture, so they stay in English like the rest of the jokes. */
+  function renderMeme(t) {
+    const kind = t.kind || 'classic', at = (x, y) => 'left:' + x + '%;top:' + y + '%';
+    let art;
+    if (kind === 'drake' || kind === 'brain' || kind === 'panik' || kind === 'gru') {
+      art = h('div', { class: 'meme-art meme-rows meme-' + kind }, t.rows.map(r => h('div', { class: 'mr' }, [
+        h('span', { class: 'mr-pic', 'aria-hidden': 'true' }, [r[0], kind === 'panik' ? h('b', { class: 'mr-tag', text: r[1] }) : null]),
+        h('span', { class: 'mr-txt', text: kind === 'panik' ? r[2] : r[1] }),
+      ])));
+    } else if (kind === 'scene') {
+      const sc = t.scene, parts = [];
+      for (const it of sc.items) {
+        if (it.sign) parts.push(h('span', { class: 'ms-sign', style: at(it.x, it.y), text: it.sign }));
+        else parts.push(h('span', { class: 'ms-e' + (it.flip ? ' is-flip' : ''), 'aria-hidden': 'true', style: at(it.x, it.y) + ';--s:' + it.s, text: it.e }));
+        if (it.label) parts.push(h('span', { class: 'ms-label', style: at(it.lx, it.ly) + (it.w ? ';max-width:' + it.w + '%' : ''), text: it.label }));
+      }
+      art = h('div', { class: 'meme-art meme-scene', style: '--meme-bg:' + sc.bg }, [
+        sc.top ? h('span', { class: 'meme-top ms-top', text: sc.top }) : null,
+        ...parts,
+        sc.bottom ? h('span', { class: 'meme-bottom ms-bottom', text: sc.bottom }) : null,
+      ]);
+    } else if (kind === 'buttons') {
+      art = h('div', { class: 'meme-art meme-buttons' }, [
+        h('div', { class: 'mb-btns' }, t.buttons.map(b => h('span', { class: 'mb-btn', text: b }))),
+        h('div', { class: 'mb-who', 'aria-hidden': 'true' }, [t.who, h('span', { class: 'mb-sweat', text: '💦' })]),
+        h('span', { class: 'meme-bottom', text: t.caption }),
+      ]);
+    } else if (kind === 'trade') {
+      art = h('div', { class: 'meme-art meme-trade' }, [
+        h('div', { class: 'mt-head', text: 'TRADE OFFER' }),
+        h('div', { class: 'mt-body' }, [
+          h('div', { class: 'mt-col' }, [h('b', { text: 'i receive:' }), h('span', { text: t.give })]),
+          h('span', { class: 'mt-hand', 'aria-hidden': 'true', text: '🤝' }),
+          h('div', { class: 'mt-col' }, [h('b', { text: 'you receive:' }), h('span', { text: t.get })]),
+        ]),
+      ]);
+    } else if (kind === 'nobody') {
+      art = h('div', { class: 'meme-art meme-nobody' }, [
+        h('p', { text: 'Nobody:' }), h('p', { text: 'Absolutely nobody:' }), h('p', { text: t.who + ':' }),
+        h('div', { class: 'mn-punch' }, [h('span', { class: 'mn-emoji', 'aria-hidden': 'true', text: t.emoji }), h('b', { text: t.punch })]),
+      ]);
+    } else if (kind === 'tweet') {
+      art = h('div', { class: 'meme-art meme-tweet' }, [
+        h('div', { class: 'mw-head' }, [
+          h('span', { class: 'mw-ava', 'aria-hidden': 'true', text: t.avatar }),
+          h('span', { class: 'mw-who' }, [h('b', { text: t.name + ' ✓' }), h('span', { text: t.handle })]),
+        ]),
+        h('p', { class: 'mw-text', text: t.text }),
+        h('div', { class: 'mw-foot', text: '💬 ' + t.replies + '   🔁 ' + t.reposts + '   ❤️ ' + t.likes }),
+      ]);
+    } else if (kind === 'texts') {
+      art = h('div', { class: 'meme-art meme-texts' }, [
+        h('div', { class: 'mx-head', text: t.with }),
+        ...t.bubbles.map(([who, text]) => h('span', { class: 'mx-bubble mx-' + who, text })),
+      ]);
+    } else {
+      art = h('div', { class: 'meme', style: '--meme-bg:' + t.bg }, [
+        h('span', { class: 'meme-top', text: t.top }),
+        h('span', { class: 'meme-pic', 'aria-hidden': 'true' }, [t.hat ? h('span', { class: 'meme-hat', text: t.hat }) : null, t.emoji]),
+        h('span', { class: 'meme-bottom', text: t.bottom }),
+      ]);
+    }
+    art.setAttribute('data-no-i18n', '');
+    return art;
   }
 
   function badge(text, cls) { return h('span', { class: 'cm-badge ' + cls, text }); }
@@ -617,9 +715,7 @@
     if (stick) scrollBottom();
     else { view.unseen++; setJump(); }
     if (m.hot && !game.s.settings.reduceMotion && chaos() >= 85) {
-      view.root.classList.remove('jolt');
-      void view.root.offsetWidth;
-      view.root.classList.add('jolt');
+      ui.replay(view.root, 'jolt');
     }
   }
 
@@ -634,7 +730,7 @@
     setText(view.rate, p.stamps.length + ' in the last minute');
     for (const m of p.msgs) {
       const node = view.nodes[m.id];
-      if (node) setText(node.querySelector('.cm-time'), ago(m.t));
+      if (node) setText(node._time || (node._time = node.querySelector('.cm-time')), ago(m.t));
     }
   }
 
@@ -649,6 +745,152 @@
     view.input.focus();
   }
 
+  /* Which kind of comment leads the replies, most telling first. */
+  const PRIORITY = ['repeat', 'link', 'ban', 'czech', 'insult', 'calm', 'meme', 'caps', 'yesno', 'question', 'topic', 'hype', 'thanks',
+    'sorry', 'praise', 'greet', 'bye', 'announce', 'money', 'chaos', 'laugh', 'agree', 'disagree', 'opinion', 'emoji', 'long',
+    'short', 'number', 'mention'];
+  const NUDGE = { calm: -25, praise: -10, thanks: -10, sorry: -15, insult: 20, ban: 15, caps: 20, meme: 10 };
+
+  /** Reads the admin's comment: what kind it is, a short quote, its most telling word. */
+  function analyze(p, text) {
+    const pl = C.PLAYER, lower = text.toLowerCase();
+    const letters = text.replace(/[^A-Za-zÀ-ž]/g, '');
+    const words = lower.match(/[a-zà-ž][a-zà-ž']*/g) || [];
+    const said = { text, intents: [], echo: '', word: '', num: null, mentions: [] };
+    const add = id => { if (said.intents.indexOf(id) < 0) said.intents.push(id); };
+    if (p.lastSaid && p.lastSaid === lower) add('repeat');
+    for (const [id, re] of pl.INTENTS) {
+      if (id === 'question') {
+        if (/\?\s*$/.test(text) || /^(what|why|how|who|when|where|which|is|are|do|does|did|can|could|should|would|will|am|was|were|has|have|proč|proc|jak|kdo|kdy|kde)\b/i.test(lower)) add('question');
+      } else if (re && re.test(text)) add(id);
+    }
+    if (said.intents.indexOf('question') >= 0 && /^(is|are|do|does|did|can|could|should|would|will|am|was|were|has|have)\b/.test(lower)) add('yesno');
+    if (letters.length >= 6 && letters.replace(/[^A-Z]/g, '').length / letters.length > 0.7) add('caps');
+    if (pl.CZECH.test(text)) add('czech');
+    if (!letters.length && /\p{Extended_Pictographic}/u.test(text)) add('emoji');
+    if (text.length >= 120) add('long');
+    else if (words.length <= 1 && text.length <= 6) add('short');
+    const num = /\d[\d,.]*/.exec(text);
+    if (num) { said.num = num[0].replace(/[.,]$/, ''); add('number'); }
+    for (const tag of text.match(/@[\w.-]+/g) || []) {
+      const name = tag.slice(1).toLowerCase();
+      const m = p.msgs.slice().reverse().find(x => x.kind === 'user' && x.user.toLowerCase() === name);
+      if (m && said.mentions.indexOf(m) < 0) said.mentions.push(m);
+    }
+    if (said.mentions.length) add('mention');
+    const tw = topicWords(topicOf(p));
+    if (words.some(w => tw.indexOf(w.replace(/s$/, '')) >= 0)) add('topic');
+    said.intents.sort((a, b) => PRIORITY.indexOf(a) - PRIORITY.indexOf(b));
+    said.word = keyword(words) || (words.length ? words[words.length - 1] : text.slice(0, 20));
+    said.echo = echoOf(text, said.word);
+    said.mood = C.PLAYER.MOOD[said.intents[0]] || 'any';
+    return said;
+  }
+
+  /** Words that tie a comment to the post it is under (cereal, umbrellas, the wifi cat…). */
+  function topicWords(topic) {
+    if (!topic._words) {
+      const text = [topic.title, topic.slug, topic.top, topic.bottom].concat(topic.keys || []).join(' ').toLowerCase();
+      topic._words = (text.match(/[a-z]{4,}/g) || []).filter(w => C.PLAYER.STOP.indexOf(w) < 0).map(w => w.replace(/s$/, ''));
+    }
+    return topic._words;
+  }
+
+  /** The most telling word: the longest one that is not filler. */
+  function keyword(words) {
+    let best = '';
+    for (const w of words) {
+      const clean = w.replace(/^'+|'+$/g, '');
+      if (clean.length < 3 || C.PLAYER.STOP.indexOf(clean) >= 0) continue;
+      if (clean.length >= best.length) best = clean;
+    }
+    return best;
+  }
+
+  /** A short quote of the comment: all of it if short, else the part around the key word. */
+  function echoOf(text, word) {
+    const trim = s => s.replace(/[\s.!?…,;:]+$/, '');
+    const t = trim(text);
+    if (t.length <= 50) return t;
+    const parts = t.split(/(?<=[.!?;,])\s+/);
+    let c = trim(parts.find(x => word && x.toLowerCase().indexOf(word) >= 0) || parts[0]);
+    if (c.length <= 50) return c;
+    const ws = c.split(' ');
+    let i = ws.findIndex(w => word && w.toLowerCase().indexOf(word) >= 0);
+    if (i < 0) i = 0;
+    const from = Math.max(0, i - 3);
+    return (from > 0 ? '…' : '') + ws.slice(from, from + 7).join(' ') + (from + 7 < ws.length ? '…' : '');
+  }
+
+  /** A real mistake in the comment for the pedant to correct, if there is one. */
+  function pedantryFor(said) {
+    if (said.intents.indexOf('czech') >= 0) return null;
+    const cap = s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+    for (const [re, line] of C.PLAYER.PEDANTRY) {
+      const m = re.exec(said.text);
+      if (m) return 'pedant|' + line.replace(/\{1\}/g, m[1] ? cap(m[1]) : '');
+    }
+    if (said.text.length > 18 && rand() < 0.3) {
+      for (const [re, line] of C.PLAYER.STYLE_NITS) if (re.test(said.text)) return 'pedant|' + line;
+    }
+    return null;
+  }
+
+  function linesFor(id, tier, p) {
+    if (id === 'topic') { const t = topicOf(p); return t[tier] || t.mid; }   // opinions on the post itself
+    const L = C.PLAYER.LINES[id];
+    if (!L) return null;
+    return Array.isArray(L) ? L : (L[tier] || L.mid || L.low);
+  }
+
+  /** Who answers the admin, and with what: the person addressed first, then one reply per
+      kind of comment (the pedant chiming in with a real correction), then quotes. */
+  function planReplies(p, said, parent) {
+    const ch = chaos(), tier = tierFor(ch, p), out = [];
+    const strong = said.intents.some(i => i === 'insult' || i === 'ban' || i === 'caps' || i === 'meme' || i === 'czech');
+    const want = (ch > 70 ? between(2, 4) : ch > 35 ? between(2, 3) : between(1, 2)) + (strong ? 1 : 0);
+    const direct = [];
+    if (parent && parent.kind === 'user') direct.push(parent);
+    for (const m of said.mentions) if (direct.indexOf(m) < 0) direct.push(m);
+    for (const m of direct.slice(0, 2)) {
+      const bp = C.PLAYER.BY_PERS[m.pers] || C.PLAYER.BY_PERS.reg;
+      const cls = said.intents.indexOf('question') >= 0 ? 'q' : said.mood;
+      out.push({ line: m.pers + '|' + pick(bp[cls] || bp.any), user: m.user, to: m });
+    }
+    const total = want + out.length;
+    const nit = rand() < 0.75 ? pedantryFor(said) : null;
+    for (const id of said.intents) {
+      if (out.length >= total) break;
+      const list = linesFor(id, tier, p);
+      if (!list) continue;
+      const line = fresh(p, list);
+      remember(p, line);
+      out.push({ line });
+    }
+    if (nit) out.splice(Math.min(out.length, direct.length + 1), 0, { line: nit });
+    while (out.length < total) {
+      const line = fresh(p, linesFor('generic', tier));
+      remember(p, line);
+      out.push({ line });
+    }
+    return { tier, replies: out.slice(0, total + (nit ? 1 : 0)) };
+  }
+
+  /** "So-and-so is typing…" under the comments while replies are on their way. */
+  function typing(p, user, from, until) {
+    setTimeout(() => { p.typing.push(user); renderTyping(p); }, from);
+    setTimeout(() => { const i = p.typing.indexOf(user); if (i >= 0) p.typing.splice(i, 1); renderTyping(p); }, until);
+  }
+
+  function renderTyping(p) {
+    if (!view || view.p !== p || !view.typing) return;
+    const list = p.typing;
+    view.typing.hidden = !list.length;
+    setText(view.typing, list.length === 1 ? list[0] + ' is typing…'
+      : list.length === 2 ? list[0] + ' and ' + list[1] + ' are typing…'
+        : list.length ? list[0] + ' and ' + (list.length - 1) + ' others are typing…' : '');
+  }
+
   function playerPost() {
     if (!view) return;
     const text = view.input.value.replace(/\s+/g, ' ').trim().slice(0, 200);
@@ -659,22 +901,33 @@
     view.replyTo = null;
     view.replyNote.hidden = true;
     const me = Z.siteName(game.s);
+    const said = analyze(p, text);
+    p.lastSaid = text.toLowerCase();
+    const small = ['greet', 'bye', 'thanks', 'short', 'emoji', 'laugh', 'agree', 'disagree', 'repeat'].indexOf(said.intents[0]) >= 0;
+    if (!small) p.said = { echo: said.echo, word: said.word, num: said.num, until: Date.now() + 150000 };
+    const by = said.intents.reduce((sum, id) => sum + (NUDGE[id] || 0), 0);
+    if (by) p.nudge = { by: Math.max(-30, Math.min(30, by)), until: Date.now() + 60000 };
     const msg = post(p, { user: me, pers: 'player', text, parent, kind: 'player', votes: 1 });
+    // Kind words get upvoted; harsh ones get downvoted, unless the crowd is out for drama.
+    msg.drift = said.mood === 'pos' ? 1 : said.mood === 'neg' ? (chaos() > 55 ? 1 : -1) : (rand() < 0.7 ? 1 : -1);
     scrollBottom();
     Z.audio.play('buy');
-    const ch = chaos();
-    const count = ch > 70 ? between(2, 4) : ch > 35 ? between(1, 3) : between(1, 2);
-    for (let i = 0; i < count; i++) {
-      setTimeout(() => {
-        const tier = tierFor(ch);
-        const line = fresh(p, C.ADMIN_REPLIES[tier]);
-        say(p, line, { parent: msg, tier, noMutate: i === 0 });
-      }, 1200 + i * between(900, 2200) + rand() * 1500);
+
+    const plan = planReplies(p, said, parent);
+    const chosen = [me];
+    let at = 900 + rand() * 900;
+    for (const r of plan.replies) {
+      const { pers, text: body } = parseLine(r.line);
+      const user = r.user || userFor(p, pers, chosen);
+      chosen.push(user);
+      const when = at;
+      typing(p, user, Math.max(0, when - between(1300, 2600)), when);
+      setTimeout(() => say(p, r.line, { parent: msg, user, tier: plan.tier, said, noMutate: !!r.user }), when);
+      at += between(900, 2000) + Math.min(2200, body.length * 15);
     }
-    if (parent && parent.kind === 'user') {
-      setTimeout(() => say(p, pick(['defensive|The ADMIN is replying to me now? I\'m framing this.', 'reg|ok admin, fair', 'drama|I have been personally addressed by {site}. I need to lie down.'])
-        , { parent: msg, user: parent.user, noMutate: true }), 2500 + rand() * 2000);
-    }
+    p.hush = Date.now() + at;            // the rest of the page mostly waits for the answers
+    // Sometimes the thread takes off without the admin.
+    if (rand() < 0.35 + chaos() / 200) setTimeout(() => reply(p, tierFor(chaos(), p)), at + between(1200, 3000));
   }
 
   /* ---------- Boot ---------- */
@@ -708,5 +961,14 @@
     return null;
   }
 
-  ui.chat = { init, open, pageForText, isOpen: () => !!view };
+  /** Opens a page on one particular post (the DEV menu uses it to flip through the memes). */
+  function showTopic(id, index) {
+    const p = pages[id];
+    if (!p || !p.def.topics[index]) return;
+    resetTopic(p, index);
+    updateTile(p);
+    if (view && view.p === p) renderView(); else open(id);
+  }
+
+  ui.chat = { init, open, showTopic, pageForText, isOpen: () => !!view, topicCount: id => (pages[id] ? pages[id].def.topics.length : 0) };
 })(window.ICHAOS = window.ICHAOS || {});

@@ -36,6 +36,10 @@
     A('carpal', '🤕', 'Carpal Tunnel Speedrun', 'Click 1,000 times.', g => g.s.stats.totalClicks >= 1000),
     A('steelthumb', '🦾', 'Thumb of Steel', 'Click 10,000 times.', g => g.s.stats.totalClicks >= 1e4),
     A('rage', '😡', 'Rage Clicking', 'Click 12 times within one second.', g => g.s.flags.cpsPeak >= 12),
+    A('combo', '🎰', 'Combo Starter', 'Reach a 25× click combo.', g => g.s.stats.bestCombo >= 25),
+    A('combomax', '⚡', 'C-C-C-Combo', 'Reach a 100× click combo.', g => g.s.stats.bestCombo >= 100),
+    A('crit', '💥', 'Lightning in a Bottle', 'Land a viral click.', g => g.s.stats.crits >= 1),
+    A('crit100', '🌩️', 'Viral by Design', 'Land 100 viral clicks.', g => g.s.stats.crits >= 100),
 
     // Chaos and stability
     A('maxchaos', '🌀', 'Maximum Chaos', 'Push Chaos to 99% or higher.', g => g.s.res.chaos >= 99),
@@ -47,6 +51,7 @@
     A('storm', '⛈️', 'Calm Before the Storm', 'Go from under 10% Chaos to over 90% within 30 seconds.', g => g.s.res.chaos > 90 && g.s.run.time - g.s.flags.lowChaosAt <= 30),
     A('wholesome', '🌸', 'Wholesome Empire', 'Earn $1K/s on the Wholesome policy.', g => g.s.policy === 'wholesome' && g.c.mps >= 1e3),
     A('unhinged', '🦝', 'Unhinged', 'Spend 5 minutes in total on the Unhinged policy.', g => g.s.stats.unhingedTime >= 300),
+    A('uptime', '🟢', 'Five Nines', 'Keep your site up for 60 minutes in a row.', g => g.s.stats.longestUptime >= 3600),
 
     // Events
     A('firstviral', '🔥', 'First Viral Post', 'Have a post go viral.', g => ev(g.s, 'viral') >= 1),
@@ -58,6 +63,7 @@
     A('trending', '#️⃣', 'For You Page', 'Have one of your buildings trend.', g => ev(g.s, 'trend') >= 1),
     A('gotmail', '🔔', 'You’ve Got Mail', 'Catch a floating notification.', g => g.s.stats.bonuses >= 1),
     A('notifninja', '🥷', 'Notification Ninja', 'Catch 10 floating notifications.', g => g.s.stats.bonuses >= 10),
+    A('welcome', '🎁', 'Welcome Back', 'Come back after 10 minutes away and get a Welcome Back boost.', g => ev(g.s, 'welcome') >= 1),
     A('inboxzero', '📭', 'Inbox Zero', 'Catch 50 floating notifications.', g => g.s.stats.bonuses >= 50),
 
     // Actions
@@ -98,6 +104,16 @@
     A('mango', '🥭', 'Liquid Assets', 'Upgrade your website to Mango OS.', g => Z.OSES.indexOf(Z.opsys.current(g.s)) >= 2),
     A('glassy', '🫧', 'Every Corner Rounded', 'Unlock every Mango OS theme in the Style Shop.',
       g => g.s.os.id === 'mango' && Z.COSMETICS.setFor('mango').every(c => c.items.every(i => !i.req || g.s.cosmetics.unlocked[c.id + ':' + i.id]))),
+
+    // Reboot the Internet
+    A('reboot', '🔁', 'Ctrl+Alt+Del', 'Reboot the internet.', g => g.s.reboot.count >= 1),
+    A('reboot5', '🔂', 'Version 6.0', 'Reboot the internet 5 times.', g => g.s.reboot.count >= 5),
+    A('protocol', '🧪', 'Hard Mode', 'Reboot from an internet that ran on a special protocol.', g => g.s.reboot.hard >= 1),
+    A('bwmax', '📶', 'Full Bandwidth', 'Max out a Bandwidth upgrade.',
+      g => Z.REBOOT_UPGRADES.some(u => (g.s.reboot.upgrades[u.id] || 0) >= u.max)),
+    A('speedforum', '⚡', 'Speedrunner', 'Finish the Forum Era in under 10 minutes.', g => g.s.history.some(x => x.era === 1 && x.time < 600)),
+    A('fastnet', '🏎️', 'Fast Internet', 'Finish all seven eras of one internet in under 2 hours.',
+      g => Z.reboot.internets(g.s).some(x => x.time < 7200)),
 
     // Time and meta
     A('nightshift', '🌙', 'Night Shift', 'Play for 1 hour.', g => g.s.stats.playTime >= 3600),

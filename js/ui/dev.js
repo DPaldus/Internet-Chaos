@@ -203,6 +203,24 @@
         btn('Next era now', () => { nextEra(false); done('Welcome to the ' + Z.era(g().s.era).name + '.'); syncSelects(); }, 'Starts the next era the normal way, with Clout'),
         h('span', { class: 'dev-inline' }, [eraSelect, btn('Set era', () => setEra(parseInt(eraSelect.value, 10)), 'Switch to the chosen era (forwards or backwards), starting it fresh')]),
       ]),
+      group('🔁 Reboot', [
+        btn('Reboot now', () => {
+          const game = g(), s = game.s;
+          if (s.era < Z.reboot.FIRST_ERA) { s.era = Z.reboot.FIRST_ERA; Z.prestige.resetRun(game); }
+          const need = Z.prestige.requirement(s);
+          if (s.run.attention < need) addAttention(need - s.run.attention);
+          const got = Z.reboot.reboot(game, 'standard');
+          ui.resetAll();
+          syncSelects();
+          done('Internet v' + Z.reboot.version(s) + ', +' + got + ' Bandwidth.');
+        }, 'Reboots the internet right away (jumps to the Post-Internet Era goal first if needed)'),
+        btn('+10 Bandwidth', () => { const r = g().s.reboot; r.bandwidth += 10; r.lifetime += 10; done('+10 Bandwidth'); }),
+        btn('+100 Bandwidth', () => { const r = g().s.reboot; r.bandwidth += 100; r.lifetime += 100; done('+100 Bandwidth'); }),
+        btn('Clear reboots', () => {
+          g().s.reboot = { count: 0, bandwidth: 0, lifetime: 0, upgrades: {}, protocol: 'standard', hard: 0 };
+          done('Back to Internet v1 with no Bandwidth.');
+        }, 'Removes reboots, Bandwidth and its upgrades (the era stays)'),
+      ]),
       group('💻 Operating system', [
         h('span', { class: 'dev-inline' }, [osSelect, btn('Set OS', () => setOS(osSelect.value), 'Switch to the chosen operating system, newer or older')]),
       ]),
@@ -258,7 +276,7 @@
     const game = g(), s = game.s, f = Z.fmt;
     info.textContent = Z.era(s.era).name + ' · ' + f.money(s.res.money) + ' (' + f.money(game.c.mps) + '/s) · '
       + f.num(s.run.attention) + ' / ' + f.num(Z.prestige.requirement(s)) + ' Attention · ' + Z.fmt.int(s.clout) + ' Clout · '
-      + Z.opsys.current(s).name;
+      + Z.opsys.current(s).name + ' · v' + Z.reboot.version(s) + ' · ' + f.int(s.reboot.bandwidth) + ' Bandwidth';
   }
 
   function toggle() {

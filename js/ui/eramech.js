@@ -21,7 +21,7 @@
       el.addEventListener('click', () => {
         if (Z.mech.act(game, b.id)) {
           Z.audio.play(b.id === 'douse' ? 'click' : 'action');
-          if (b.id === 'douse') { el.classList.remove('bought'); void el.offsetWidth; el.classList.add('bought'); }
+          if (b.id === 'douse') ui.replay(el, 'bought');
           ui.requestRender(true);
         } else Z.audio.play('deny');
         renderNow();

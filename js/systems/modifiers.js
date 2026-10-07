@@ -54,9 +54,11 @@
       if (p.effects) for (const e of p.effects) applyEffect(m, e, lvl);
       if (p.apply) p.apply(m, lvl);
     }
-    // Operating systems stack: every system up to the installed one keeps its bonuses.
+    // Operating systems stack: every system up to the installed one keeps its bonuses, each
+    // from its own era on (after a reboot they come back as the new internet reaches them).
     const osIndex = s.os ? Z.OSES.findIndex(o => o.id === s.os.id) : 0;
-    for (let k = 1; k <= osIndex; k++) for (const e of Z.OSES[k].effects) applyEffect(m, e, 1);
+    for (let k = 1; k <= osIndex; k++) if (s.era >= Z.OSES[k].era) for (const e of Z.OSES[k].effects) applyEffect(m, e, 1);
+    if (Z.reboot) Z.reboot.applyMods(m, s, applyEffect);
     if (Z.meta && Z.meta.dailyActive(s)) for (const e of Z.DAILY_MOD[s.daily.mod].effects) applyEffect(m, e, 1);
     if (Z.mech) for (const e of Z.mech.modEffects(s)) applyEffect(m, e, 1);
     m.achCount = Object.keys(s.achievements).length;

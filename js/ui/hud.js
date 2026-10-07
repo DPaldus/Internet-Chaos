@@ -20,9 +20,15 @@
   }
 
   function bump(node, cls) {
-    node.classList.remove('bump-up', 'bump-down');
-    void node.offsetWidth; // restart the animation
-    node.classList.add(cls);
+    node.classList.remove(cls === 'bump-up' ? 'bump-down' : 'bump-up');
+    ui.replay(node, cls);
+  }
+
+  /** Attention and Money, `ahead` seconds past the last tick (smooth counting). */
+  function renderCounters(g, ahead) {
+    const s = g.s, c = g.c, f = Z.fmt;
+    setText(el.vAtt, f.int(s.res.attention + c.aps * ahead));
+    setText(el.vMoney, f.money(s.res.money + c.mps * ahead));
   }
 
   function react(node, key, value, passive) {
@@ -47,9 +53,8 @@
   function render(g) {
     const s = g.s, c = g.c, f = Z.fmt, rev = s.flags.reveal;
 
-    setText(el.vAtt, f.int(s.res.attention));
+    renderCounters(g, 0);
     setText(el.rAtt, '+' + f.rate(c.aps) + '/s');
-    setText(el.vMoney, f.money(s.res.money));
     setText(el.rMoney, '+' + f.money(c.mps) + '/s');
     react(el.vAtt, 'att', s.res.attention, c.aps * 0.5);
     react(el.vMoney, 'money', s.res.money, c.mps * 0.5);
@@ -87,12 +92,12 @@
       setText(el.rClout, f.mult(g.m.cloutMult) + ' Attention');
     }
 
-    setText(el.eraChip, Z.era(s.era).name);
+    setText(el.eraChip, Z.era(s.era).name + (s.reboot.count ? ' · v' + Z.reboot.version(s) : ''));
     setText(el.achCount, String(g.m.achCount) + '/' + Z.ACHIEVEMENTS.length);
     setHidden(el.btnEras, !rev.eras);
     setHidden(el.btnStyle, !rev.style);
     setHidden(el.erasDot, !Z.prestige.canPrestige(s));
   }
 
-  ui.hud = { init, render };
+  ui.hud = { init, render, renderCounters };
 })(window.ICHAOS = window.ICHAOS || {});

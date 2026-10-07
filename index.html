@@ -57,12 +57,12 @@
     <div class="hud" id="hud">
       <div class="stat stat-att" id="hud-att">
         <div class="stat-label"><span aria-hidden="true">👁</span> Attention</div>
-        <div class="stat-value" id="v-att">0</div>
+        <div class="stat-value" id="v-att" data-no-i18n>0</div>
         <div class="stat-sub" id="r-att">+0/s</div>
       </div>
       <div class="stat stat-money" id="hud-money">
         <div class="stat-label"><span aria-hidden="true">💵</span> Money</div>
-        <div class="stat-value" id="v-money">$0</div>
+        <div class="stat-value" id="v-money" data-no-i18n>$0</div>
         <div class="stat-sub" id="r-money">+$0/s</div>
       </div>
       <div class="stat stat-meter stat-chaos" id="hud-chaos" hidden>
@@ -101,6 +101,7 @@
           <button type="button" class="menu-item" id="btn-daily" hidden><span aria-hidden="true">📅</span> Daily challenge</button>
           <button type="button" class="menu-item" id="btn-stats"><span aria-hidden="true">📊</span> Statistics</button>
           <button type="button" class="menu-item" id="btn-records" hidden><span aria-hidden="true">🏁</span> Era records</button>
+          <button type="button" class="menu-item" id="btn-reboot" hidden><span aria-hidden="true">🔁</span> Reboot the Internet</button>
           <button type="button" class="menu-item" id="btn-share"><span aria-hidden="true">📸</span> Share your website</button>
           <button type="button" class="menu-item" id="btn-system" hidden><span aria-hidden="true" id="system-icon">🪟</span> System <span class="menu-count" id="os-name">ChaosOS 7</span></button>
           <button type="button" class="menu-item" id="btn-settings"><span aria-hidden="true">⚙️</span> Settings &amp; saves</button>
@@ -140,10 +141,12 @@
               <span class="create-label" id="create-label">CREATE CONTENT</span>
               <span class="create-sub" id="create-sub">+1 Attention</span>
             </button>
-            <div class="floaters" id="floaters" aria-hidden="true"></div>
+            <div class="combo" id="combo" aria-hidden="true" hidden><span class="combo-label">COMBO</span><b class="combo-n" id="combo-n" data-no-i18n>0</b><span class="combo-x" id="combo-x" data-no-i18n>×1</span><i class="combo-time" id="combo-time"></i></div>
+            <div class="floaters" id="floaters" aria-hidden="true" data-no-i18n></div>
             <div class="sponsor-can" id="sponsor-can" aria-hidden="true" hidden><span class="can-brand">BLU VOLT</span></div>
           </div>
-          <div class="site-counter">Visitors: <span class="counter" id="hit-counter">0000000</span></div>
+          <div class="site-counter">Visitors: <span class="counter" id="hit-counter" data-no-i18n>0000000</span></div>
+          <div class="site-milestone" id="site-milestone" aria-hidden="true" hidden></div>
           <div class="sponsor-bar" id="sponsor-bar" hidden><span class="sponsor-label">Sponsored by</span><span class="sponsor-list" id="sponsor-list"></span></div>
           <div class="ad-slot" id="ad-bottom" hidden></div>
           <div class="meltdown-screen" id="meltdown-screen" hidden>
@@ -257,7 +260,10 @@
 <script src="js/content/perks.js"></script>
 <script src="js/content/achievements.js"></script>
 <script src="js/content/challenges.js"></script>
+<script src="js/content/reboot.js"></script>
 <script src="js/content/chatter.js"></script>
+<script src="js/content/replies.js"></script>
+<script src="js/content/memes.js"></script>
 <script src="js/content/cosmetics.js"></script>
 <script src="js/content/sponsors.js"></script>
 <script src="js/state.js"></script>
@@ -267,7 +273,9 @@
 <script src="js/systems/events.js"></script>
 <script src="js/systems/actions.js"></script>
 <script src="js/systems/progression.js"></script>
+<script src="js/systems/reboot.js"></script>
 <script src="js/systems/bonus.js"></script>
+<script src="js/systems/idle.js"></script>
 <script src="js/systems/os.js"></script>
 <script src="js/systems/meta.js"></script>
 <script src="js/systems/eramech.js"></script>
@@ -290,6 +298,7 @@
 <script src="js/ui/backup.js"></script>
 <script src="js/ui/os.js"></script>
 <script src="js/ui/meta.js"></script>
+<script src="js/ui/reboot.js"></script>
 <script src="js/ui/eramech.js"></script>
 <script src="js/ui/share.js"></script>
 <script src="js/ui/keys.js"></script>

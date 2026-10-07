@@ -27,14 +27,14 @@
   /* ---------- Internet Eras ---------- */
 
   function requirement(s) {
-    return BAL.prestige.requirement * Math.pow(BAL.prestige.requirementGrowth, s.era - 1);
+    return BAL.prestige.requirement * Math.pow(BAL.prestige.requirementGrowth, s.era - 1) * Z.reboot.requirementMult(s);
   }
 
-  /** Clout for starting the next era now, including this era's challenge bonus. */
+  /** Clout for starting the next era now, including this era's challenge bonus and Edge Cache. */
   function cloutGain(s) {
     const p = BAL.prestige;
     const base = p.cloutScale * Math.pow(Math.max(0, s.run.attention) / p.requirement, p.cloutExponent);
-    return Math.floor(base * (1 + Z.meta.challengeBonus(s)));
+    return Math.floor(base * (1 + Z.meta.challengeBonus(s)) * Z.reboot.cloutMult(s));
   }
 
   function canPrestige(s) { return s.run.attention >= requirement(s); }

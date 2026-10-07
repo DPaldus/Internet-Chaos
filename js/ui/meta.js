@@ -24,7 +24,7 @@
       const row = h('li', { class: 'chal' }, [
         h('span', { class: 'chal-icon', 'aria-hidden': 'true', text: c.icon }),
         h('div', { class: 'chal-main' }, [
-          h('div', { class: 'chal-line' }, [h('b', { class: 'chal-name', text: c.name }), h('span', { class: 'chal-bonus', text: '+' + Math.round(c.bonus * 100) + '% Clout' })]),
+          h('div', { class: 'chal-line' }, [h('b', { class: 'chal-name', text: c.name }), h('span', { class: 'chal-bonus', text: '+' + Math.round(Z.meta.challengeValue(s, c) * 100) + '% Clout' })]),
           h('span', { class: 'chal-desc', text: c.desc }),
           bar,
           h('div', { class: 'chal-line' }, [status, mark]),
@@ -77,9 +77,10 @@
         h('h3', { text: 'All finished eras' }),
       );
       const table = h('table', { class: 'rec-table' }, [
-        h('thead', {}, [h('tr', {}, ['#', 'Era', 'Time', 'Clout', 'Attention', 'Meltdowns', 'Challenges', 'System', 'Date'].map(t => h('th', { text: t })))]),
+        h('thead', {}, [h('tr', {}, ['#', 'Internet', 'Era', 'Time', 'Clout', 'Attention', 'Meltdowns', 'Challenges', 'System', 'Date'].map(t => h('th', { text: t })))]),
         h('tbody', {}, s.history.slice().reverse().map((x, i) => h('tr', { class: best[x.era] === x ? 'rec-pb' : '' }, [
           h('td', { text: String(s.history.length - i) }),
+          h('td', { text: 'v' + (x.v || 1) }),
           h('td', { text: Z.era(x.era).name }),
           h('td', { text: f.time(x.time) + (best[x.era] === x ? ' 🏅' : '') }),
           h('td', { text: '+' + f.int(x.clout) }),
@@ -93,6 +94,8 @@
       body.append(h('div', { class: 'rec-scroll' }, [table]));
     }
     const done = Object.keys(s.challenges.done).length;
+    const fast = Z.reboot.fastestInternet(s);
+    if (fast) body.append(h('p', { class: 'rec-foot', text: '🏎️ Fastest full internet (all seven eras): ' + f.time(fast.time) + ' on v' + fast.v + '.' }));
     body.append(h('p', { class: 'muted rec-foot', text: 'Era challenges completed: ' + done + ' of ' + Z.CHALLENGES.length + '. 🏅 marks your fastest run of each era.' }));
     ui.modal.open({ id: 'records', title: '🏁 Era Records', body, wide: true });
   }
@@ -187,7 +190,7 @@
   function init(g) {
     game = g;
     Z.bus.on('challenge', ({ c }) => {
-      ui.toast({ icon: c.icon, title: 'Challenge complete: ' + c.name, text: '+' + Math.round(c.bonus * 100) + '% Clout when you start the next era.', kind: 'achieve' });
+      ui.toast({ icon: c.icon, title: 'Challenge complete: ' + c.name, text: '+' + Math.round(Z.meta.challengeValue(game.s, c) * 100) + '% Clout when you start the next era.', kind: 'achieve' });
       ui.feed.add(game, c.icon, 'Era challenge complete: ' + c.name + '. ' + c.desc, 'achieve');
       Z.audio.play('achievement');
     });

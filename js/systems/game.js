@@ -43,6 +43,7 @@
       Z.auto.tick(g, dt);
       Z.bonus.tick(g, dt);
       Z.mech.tick(g, dt);
+      Z.idle.tick(g, dt);
       g.refresh();
       track(g, dt);
       g.clock += dt;

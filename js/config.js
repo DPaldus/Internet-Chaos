@@ -38,7 +38,23 @@
     viralChainChance: 0.3,
     bonus: { firstDelay: 75, minInterval: 150, maxInterval: 330, lifetime: 12, minAttention: 30 },   // catchable notification
 
-    offline: { minSeconds: 30, capHours: 8, efficiency: 0.6, step: 10, maxSteps: 5000 },
+    offline: { minSeconds: 30, capHours: 8, efficiency: 0.7, step: 10, maxSteps: 5000 },
+
+    // Streaks and rewards for both ways of playing (js/systems/idle.js).
+    idle: {
+      uptimePerMinute: 0.01,           // +1% Attention per full minute without a meltdown…
+      uptimeCap: 0.25,                 // …up to +25%
+      comboGap: 1.2,                   // seconds between clicks before a combo breaks
+      comboMax: 100,                   // combo where clicks reach their best multiplier
+      comboMult: 2,                    // click Attention at a full combo
+      critBase: 0.03,                  // chance that a click goes viral…
+      critPerCombo: 0.0003,            // …plus this per combo click (6% at a full combo)
+      critMult: 5,                     // a viral click is worth this many clicks
+      welcomeAfter: 600,               // seconds away before the Welcome Back boost
+      welcomeBase: 60,                 // boost length in seconds…
+      welcomePerHour: 30,              // …plus this per hour away…
+      welcomeMax: 240,                 // …up to this
+    },
 
     prestige: {
       requirement: 1e10,               // Attention needed this era to reach the next era (era 1)

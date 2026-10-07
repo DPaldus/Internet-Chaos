@@ -48,11 +48,14 @@
     for (const c of Z.challengesFor(s.era)) if (c.end && !s.challenges.run[c.id] && c.ok(s)) complete(g, c);
   }
 
+  /** One challenge's Clout share, with Challenge Memory (a Bandwidth upgrade). */
+  function challengeValue(s, c) { return c.bonus * Z.reboot.challengeMult(s); }
+
   /** Extra Clout share for the next era: completed challenges plus era-long ones still on track. */
   function challengeBonus(s) {
     let bonus = 0;
     for (const c of Z.challengesFor(s.era)) {
-      if (s.challenges.run[c.id] || (c.end && c.ok(s))) bonus += c.bonus;
+      if (s.challenges.run[c.id] || (c.end && c.ok(s))) bonus += challengeValue(s, c);
     }
     return bonus;
   }
@@ -65,6 +68,7 @@
       era: s.era, time: s.run.time, clout: gain, attention: s.run.attention, money: s.run.money,
       meltdowns: s.run.meltdowns, clicks: s.run.clicks, upgrades: s.run.upgrades, os: s.os.id,
       challenges: Z.challengesFor(s.era).filter(c => s.challenges.run[c.id]).length, at: Date.now(),
+      v: Z.reboot.version(s),   // which internet (reboot) it happened on
     });
     if (s.history.length > HISTORY_MAX) s.history.splice(0, s.history.length - HISTORY_MAX);
   }
@@ -146,7 +150,7 @@
   }
 
   Z.meta = {
-    snapshotRun, challengeState, checkChallenges, sealEnd, challengeBonus,
+    snapshotRun, challengeState, checkChallenges, sealEnd, challengeValue, challengeBonus,
     recordEra, bestTimes, dayKey, ensureDaily, dailyActive, dailyProgress, dailyReward, checkDaily, tick,
   };
 })(window.ICHAOS = window.ICHAOS || {});

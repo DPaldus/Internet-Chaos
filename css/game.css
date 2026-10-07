@@ -15,6 +15,8 @@
     13. Era mechanics, challenges, records, daily challenge, sharing, welcome back
     14. Prism OS holographic skin and its themes
     15. ChaosOS 95 retro CRT skin and its themes
+    16. Reboot the Internet
+    17. Streaks: click combo, viral clicks, Attention milestones, Welcome Back
    Colors are tokens (custom properties) on body[data-era]; the Style Shop swaps them
    through body[data-bg|data-color|data-site-style|data-fx]. Sections 4 to 6 are the
    ChaosOS 7 Aero look; sections 8 and 9 restyle the same markup for ChaosOS 8, and
@@ -420,7 +422,7 @@ body[data-level="5"] .site-name::after { content: " ✔"; font-size: .7em; verti
 .create-label { text-wrap: balance; }
 .create-sub { font: 700 12.5px/1.2 var(--font-ui); opacity: .92; font-variant-numeric: tabular-nums; }
 
-.floaters { position: absolute; inset: 0; pointer-events: none; }
+.floaters { position: absolute; inset: 0; pointer-events: none; contain: layout style; }   /* floating numbers never move the page */
 .floater {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -977,6 +979,7 @@ select { border: var(--card-border); border-radius: var(--radius-sm); }
 .offline-lead { font-size: 16px; margin: 0 0 10px; }
 .offline-quip { margin: 12px 0 6px; font-style: italic; }
 .offline-ach { margin: 10px 0 0; color: var(--clout); font-weight: 700; }
+.offline-boost { margin: 10px 0 0; padding: 8px 12px; border-radius: 8px; background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good); font-weight: 700; }
 
 /* ---------- Era transition ---------- */
 
@@ -1311,13 +1314,106 @@ body[data-level="5"] .create-btn:not(:active) { box-shadow: 0 7px 0 var(--create
 }
 .meme-pic { position: relative; font-size: clamp(84px, 26vw, 130px); line-height: 1; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .4)); }
 .meme-hat { position: absolute; left: 50%; top: -.16em; font-size: .36em; transform: translateX(-20%) rotate(14deg); }
+
+/* Meme formats (js/content/memes.js), drawn from emoji and text. Sizes follow the meme's
+   own width (container query units), so they look the same in a phone and a wide window. */
+.meme-art {
+  position: relative; width: min(360px, 100%); max-width: 100%; overflow: hidden;
+  border: 3px solid #000; background: #fff; color: #111; text-align: center;
+  font: 400 15px/1.25 Arial, Helvetica, sans-serif; container-type: inline-size;
+}
+.meme-rows { display: grid; }
+.meme-rows .mr { display: grid; grid-template-columns: 42% 1fr; min-height: 92px; border-top: 2px solid #000; }
+.meme-rows .mr:first-child { border-top: 0; }
+.mr-pic { display: grid; place-items: center; font-size: 46px; line-height: 1; background: #f4c27a; border-right: 2px solid #000; }
+.mr-txt { display: flex; align-items: center; justify-content: center; padding: 10px; background: #ffffff; color: #111; font: 700 16px/1.2 Arial, Helvetica, sans-serif; text-wrap: balance; }
+.meme-drake .mr-pic { background: linear-gradient(135deg, #f5a142, #e27d1c); }
+.meme-brain .mr-pic { background: #111; }
+.meme-brain .mr:nth-child(2) .mr-pic { background: radial-gradient(circle, rgba(76, 110, 245, .45), #111 70%); }
+.meme-brain .mr:nth-child(3) .mr-pic { background: radial-gradient(circle, rgba(151, 117, 250, .75), #111 72%); }
+.meme-brain .mr:nth-child(4) .mr-pic { background: radial-gradient(circle, #fff 0 8%, #a5d8ff 22%, #5f3dc4 55%, #120c2e 82%); }
+.meme-brain .mr:nth-child(4) .mr-txt { font-weight: 800; }
+.meme-panik .mr-pic { grid-auto-flow: row; align-content: center; gap: 4px; background: #fff3d6; }
+.meme-panik .mr:nth-child(2) .mr-pic { background: #dff5e5; }
+.mr-tag { font: 400 18px/1 Impact, "Arial Black", sans-serif; letter-spacing: .05em; }
+.meme-gru { grid-template-columns: 1fr 1fr; background: #000; gap: 2px; }
+.meme-gru .mr { grid-template-columns: 1fr; grid-template-rows: 1fr auto; gap: 4px; min-height: 0; padding: 6px; border: 0; background: #cfe3f2; }
+.meme-gru .mr-pic { order: 2; justify-self: start; font-size: 30px; background: none; border: 0; }
+.meme-gru .mr-txt { min-height: 66px; padding: 6px; border: 2px solid #555; font-size: 14px; }
+.meme-scene { aspect-ratio: 4 / 3; background: var(--meme-bg, #333); }
+.ms-e { position: absolute; transform: translate(-50%, -50%); font-size: calc(var(--s) * 3.4px); line-height: 1; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .35)); }
+.ms-e.is-flip { transform: translate(-50%, -50%) scaleX(-1); }
+.ms-label {
+  position: absolute; transform: translate(-50%, -50%); width: max-content; max-width: 40%;
+  font: 400 15px/1.05 Impact, "Arial Black", sans-serif; color: #fff; text-transform: uppercase;
+  -webkit-text-stroke: 1px #000; paint-order: stroke fill; text-shadow: 1.5px 1.5px 0 #000; overflow-wrap: break-word;
+}
+.ms-top, .ms-bottom { position: absolute; left: 4%; right: 4%; }
+.ms-top { top: 3%; }
+.ms-bottom { bottom: 3%; }
+.ms-sign {
+  position: absolute; width: 52%; padding: 5% 4%; transform: translate(-50%, -50%) rotate(-2deg);
+  background: #ffffff; border: 2px solid #333; box-shadow: 0 5px 0 #7a5a2f; color: #111; font: 700 15px/1.15 Arial, sans-serif;
+}
+.meme-buttons { display: flex; flex-direction: column; align-items: center; gap: 8px; aspect-ratio: 4 / 3; padding: 14px 10px 10px; background: linear-gradient(#eef2f7, #c9d3df); }
+.mb-btns { display: flex; justify-content: center; gap: 10px; transform: rotate(-4deg); }
+.mb-btn {
+  display: grid; place-items: center; width: 44%; min-height: 64px; padding: 8px; border-radius: 50% / 40%;
+  background: radial-gradient(circle at 40% 35%, #ff8a8a, #d61f1f 70%); border: 3px solid #7a1010; box-shadow: 0 5px 0 #7a1010;
+  color: #fff; font: 700 14px/1.15 Arial, sans-serif; text-shadow: 0 1px 2px rgba(0, 0, 0, .6);
+}
+.mb-who { position: relative; font-size: 64px; line-height: 1; }
+.mb-sweat { position: absolute; right: -12px; top: -2px; font-size: .4em; }
+.meme-buttons .meme-bottom { margin-top: auto; }
+.meme-trade { padding: 12px; background: linear-gradient(#fdf6e3, #f2e6c9); }
+.mt-head { font: 400 28px/1 Impact, "Arial Black", sans-serif; letter-spacing: .03em; }
+.mt-body { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-top: 10px; }
+.mt-col { display: flex; flex-direction: column; gap: 4px; font-size: 15px; }
+.mt-hand { font-size: 52px; line-height: 1; }
+.meme-nobody { padding: 14px 16px; color: #0f1419; font-size: 16px; line-height: 1.35; text-align: left; }
+.meme-nobody p { margin: 0 0 4px; }
+.mn-punch { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 10px; padding: 12px; border-radius: 10px; background: #fff3dc; text-align: center; }
+.mn-emoji { font-size: 60px; line-height: 1; }
+.mn-punch b { font: 400 22px/1.1 Impact, "Arial Black", sans-serif; letter-spacing: .02em; }
+.meme-tweet { padding: 12px 14px; color: #0f1419; text-align: left; font-family: -apple-system, "Segoe UI", Arial, sans-serif; }
+.mw-head { display: flex; align-items: center; gap: 10px; }
+.mw-ava { display: grid; place-items: center; flex: none; width: 42px; height: 42px; border-radius: 50%; background: #e7f0ff; font-size: 26px; }
+.mw-who { display: flex; flex-direction: column; min-width: 0; font-size: 14px; line-height: 1.25; }
+.mw-who span { color: #536471; }
+.mw-text { margin: 10px 0; font-size: 16px; line-height: 1.35; white-space: pre-line; }
+.mw-foot { color: #536471; font-size: 13px; white-space: pre-wrap; }
+.meme-texts { display: flex; flex-direction: column; gap: 6px; padding: 0 12px 14px; font: 15px/1.3 -apple-system, "Segoe UI", Arial, sans-serif; text-align: left; }
+.mx-head { margin: 0 -12px 4px; padding: 10px; background: #f2f2f7; border-bottom: 1px solid #dddddd; font-weight: 700; text-align: center; }
+.mx-bubble { max-width: 78%; padding: 7px 12px; border-radius: 18px; }
+.mx-them { align-self: flex-start; background: #e9e9eb; border-bottom-left-radius: 5px; }
+.mx-me { align-self: flex-end; background: #0a84ff; color: #ffffff; border-bottom-right-radius: 5px; }
+@supports (width: 1cqw) {
+  .mr-pic { font-size: clamp(34px, 13cqw, 56px); }
+  .mr-txt { font-size: clamp(13px, 4.6cqw, 19px); }
+  .meme-gru .mr-pic { font-size: clamp(22px, 9cqw, 38px); }
+  .meme-gru .mr-txt { font-size: clamp(11px, 3.9cqw, 16px); }
+  .ms-e { font-size: calc(var(--s) * 1cqw); }
+  .ms-label { font-size: clamp(11px, 5cqw, 20px); }
+  .ms-sign { font-size: clamp(11px, 4.4cqw, 18px); }
+  .meme-scene .meme-top, .meme-scene .meme-bottom, .meme-buttons .meme-bottom { font-size: clamp(14px, 6.4cqw, 26px); }
+  .mb-btn { font-size: clamp(11px, 4.2cqw, 16px); }
+  .mb-who { font-size: clamp(44px, 18cqw, 72px); }
+  .mt-head { font-size: clamp(20px, 8cqw, 32px); }
+  .mt-col { font-size: clamp(12px, 4.4cqw, 17px); }
+  .meme-nobody { font-size: clamp(13px, 4.6cqw, 18px); }
+  .mn-punch b { font-size: clamp(16px, 6cqw, 24px); }
+  .mw-text { font-size: clamp(14px, 4.8cqw, 18px); }
+}
+
+.cp-typing { padding: 2px 4px 8px; font-size: 12px; font-style: italic; opacity: .75; }
+.cp-typing::before { content: "✍️ "; font-style: normal; }
 .cp-meta {
   display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 6px 0; margin-bottom: 6px;
   border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 700;
 }
 .cp-rate { opacity: .7; font-weight: 400; font-variant-numeric: tabular-nums; }
 .cp-meta .link-btn { margin-left: auto; }
-.cp-stream { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.cp-stream { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; contain: content; }
 .cp-jump {
   position: sticky; bottom: 8px; margin: 6px auto 0; padding: 5px 12px; border: 0; border-radius: 999px;
   font-weight: 700; font-size: 12px; 
@@ -2321,7 +2417,7 @@ body[data-fx="float"]::before {
     radial-gradient(circle at 70% 30%, transparent 0 8px, rgba(255, 255, 255, .55) 9px, transparent 11px),
     radial-gradient(circle at 50% 50%, transparent 0 22px, rgba(255, 255, 255, .45) 23px, rgba(255, 255, 255, .06) 27px, transparent 28px);
   background-size: 360px 520px, 240px 380px, 560px 760px;
-  animation: fxRise 40s linear infinite;
+  animation: fxRise 40s steps(640) infinite;              /* whole-pixel steps: repaints only when the bubbles move */
 }
 @keyframes fxRise {
   from { background-position: 0 0, 90px 30px, 200px 120px; }
@@ -3065,7 +3161,7 @@ body[data-os="metro"]::before {
     conic-gradient(from 270deg at 44px 44px, rgba(255, 255, 255, .075) 0 90deg, transparent 0) 230px 140px / 380px 330px,
     conic-gradient(from 270deg at 150px 150px, rgba(255, 255, 255, .04) 0 90deg, transparent 0) 120px 300px / 820px 700px,
     conic-gradient(from 270deg at 22px 22px, rgba(255, 255, 255, .09) 0 90deg, transparent 0) 60px 40px / 290px 360px;
-  animation: metroDrift 120s linear infinite;
+  animation: metroDrift 120s steps(940) infinite;        /* whole-pixel steps: ~8 repaints a second, not 60 */
 }
 @keyframes metroDrift {
   from { background-position: 0 0, 230px 140px, 120px 300px, 60px 40px; }
@@ -4180,7 +4276,7 @@ body[data-os="metro"][data-fx="pixels"]::before {
     conic-gradient(from 270deg at 4px 4px, rgba(255, 255, 255, .55) 0 90deg, transparent 0) 30px 0 / 170px 210px,
     conic-gradient(from 270deg at 3px 3px, rgba(255, 255, 255, .4) 0 90deg, transparent 0) 110px 60px / 230px 270px,
     conic-gradient(from 270deg at 5px 5px, rgba(255, 255, 255, .3) 0 90deg, transparent 0) 70px 130px / 310px 390px;
-  animation: metroRain 14s linear infinite;
+  animation: metroRain 14s steps(520) infinite;
 }
 @keyframes metroRain {
   from { background-position: 30px 0, 110px 60px, 70px 130px; }
@@ -6173,7 +6269,7 @@ body[data-os="holo"][data-fx="particles"]::before {
     radial-gradient(circle, rgba(94, 231, 255, .9) 0 1.5px, transparent 2.5px) 0 0 / 140px 170px,
     radial-gradient(circle, rgba(255, 94, 200, .8) 0 1.5px, transparent 2.5px) 60px 90px / 210px 230px,
     radial-gradient(circle, rgba(255, 255, 255, .7) 0 1px, transparent 2px) 30px 40px / 90px 120px;
-  animation: holoParticles 22s linear infinite;
+  animation: holoParticles 22s steps(440) infinite;
 }
 @keyframes holoParticles {
   from { background-position: 0 0, 60px 90px, 30px 40px; }
@@ -6919,7 +7015,150 @@ body[data-os="retro"][data-fx="glitch"]::before {
 
 .os-stack { display: grid; gap: 6px; margin-top: 10px; }
 .os-stack-name { font-size: 13px; }
+.os-stack-off { opacity: .55; }
 @media (max-width: 760px) {
   body[data-os="holo"][data-site-style="holo"] .site-name,
   body[data-os="holo"][data-site-style="neural"] .site-name { font-size: 23px; overflow-wrap: anywhere; }
 }
+
+/* ======================================================================
+   16. Reboot the Internet: the window, its card in the Eras window and the reboot screen
+   Built from the shared tokens and the perk / prestige-box components, so every
+   operating system skin styles it without its own rules.
+   ====================================================================== */
+
+.reboot-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  background: var(--card-bg);
+  border: var(--card-border);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+}
+.reboot-card.ready { box-shadow: inset 0 0 0 2px var(--accent); }
+.reboot-card-icon { font-size: 26px; line-height: 1; }
+.reboot-card-text { flex: 1; min-width: 0; font-size: 13px; }
+.reboot-card .btn { flex: none; }
+
+.reboot-hero { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; }
+.reboot-hero-icon { font-size: 34px; line-height: 1; }
+.reboot-hero > div { display: grid; gap: 2px; min-width: 0; }
+.reboot-version { font-size: 20px; font-family: var(--font-head); }
+.reboot-summary { font-size: 12.5px; color: var(--muted); }
+.reboot-status { font-weight: 600; }
+.reboot-status.ready { color: var(--good); }
+.reboot-current { font-size: 12.5px; color: var(--warn); }
+.reboot-box h4 { margin: 12px 0 4px; font-size: 13.5px; }
+.reboot-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 4px 16px; }
+.reboot-cols ul { margin: 0; padding-left: 18px; font-size: 12.5px; }
+.reboot-cols li { margin: 2px 0; }
+.proto-grid { margin-bottom: 4px; }
+.proto.on { outline: 3px solid var(--accent); outline-offset: -3px; }
+.proto.on .perk-name::before { content: "✓ "; color: var(--good); }
+.proto-reward { color: var(--clout) !important; }
+.bw-balance { color: var(--att); }
+.reboot-best { margin: 12px 0 0; font-size: 12.5px; }
+.menu-item.ready::after { content: "●"; margin-left: 6px; color: var(--good); }
+
+/* The reboot screen: a BIOS boot text, then back to the game. */
+.reboot-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px max(24px, 10vw);
+  background: #000;
+  color: #c8c8c8;
+  font: 16px/1.6 "VT323", "Courier New", monospace;
+  pointer-events: none;
+  transition: opacity .45s ease;
+}
+.reboot-screen p { margin: 0; opacity: 0; animation: bootLine .01s linear forwards; animation-delay: calc(var(--i) * .38s + .15s); }
+.reboot-screen p:first-child { color: #fff; font-size: 20px; }
+.reboot-screen.quiet p { animation: none; opacity: 1; }
+.reboot-screen.out { opacity: 0; }
+@keyframes bootLine { to { opacity: 1; } }
+
+/* ======================================================================
+   17. Streaks: click combo, viral clicks, Attention milestones, Welcome Back
+   ====================================================================== */
+
+/* The combo badge sits on the corner of the big button and heats up from the accent
+   color to hot orange (--heat 0…1). The strip at the bottom empties until it breaks. */
+.combo {
+  position: absolute;
+  top: 4px;
+  right: max(4px, calc(50% - 168px));
+  z-index: 3;
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  column-gap: 5px;
+  padding: 4px 9px 7px;
+  border-radius: 10px;
+  background: var(--accent);
+  background: color-mix(in srgb, #ff4d1a calc(var(--heat, 0) * 100%), var(--accent));
+  color: #ffffff;
+  font: 700 11px/1 var(--font-num);
+  letter-spacing: .06em;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .28);
+  transform: rotate(5deg) scale(calc(1 + var(--heat, 0) * .18));
+  pointer-events: none;
+  overflow: hidden;
+}
+.combo-label { grid-column: 1 / -1; font-size: 9.5px; opacity: .85; }
+.combo-n { font-size: 22px; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.combo-x { font-size: 12px; font-variant-numeric: tabular-nums; }
+.combo-time { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255, 255, 255, .8); transform-origin: left center; }
+.combo.is-max { animation: comboMax .45s ease-in-out infinite alternate; }
+@keyframes comboMax { from { transform: rotate(5deg) scale(1.18); } to { transform: rotate(-3deg) scale(1.26); } }
+
+.floater.is-hot { color: #ff6a00; }
+.floater.is-crit {
+  z-index: 2;
+  font-size: 21px;
+  color: #ff2d55;
+  text-shadow: 0 0 10px rgba(255, 214, 0, .95), 0 1px 0 var(--site-bg);
+  animation: critUp 1.15s cubic-bezier(.2, .9, .3, 1) forwards;
+}
+@keyframes critUp {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(.5); }
+  15% { transform: translate(-50%, -85%) scale(1.35); }
+  100% { opacity: 0; transform: translate(-50%, -170%) translateY(-60px) scale(1); }
+}
+
+/* A power of ten of Attention: a big number pops over the website for two seconds. */
+.site-milestone {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 16px;
+  pointer-events: none;
+  text-align: center;
+}
+.ms-burst { font-size: 34px; line-height: 1; }
+.ms-num { font: 800 clamp(22px, 5vw, 34px)/1.05 var(--font-num); color: var(--att); text-shadow: 0 2px 0 var(--site-bg), 0 0 16px var(--site-bg), 0 0 4px var(--site-bg); }
+.ms-quip { font: 600 13px/1.25 var(--font-ui); color: var(--site-ink); text-shadow: 0 0 8px var(--site-bg), 0 0 3px var(--site-bg); }
+.site-milestone.is-on { animation: msPop 2.6s ease-out forwards; }
+@keyframes msPop {
+  0% { opacity: 0; transform: scale(.6); }
+  12% { opacity: 1; transform: scale(1.08); }
+  20% { transform: none; }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-14px); }
+}
+.reduce-motion .site-milestone.is-on, .reduce-motion .combo.is-max { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .site-milestone.is-on, .combo.is-max { animation: none; }
+}
+

@@ -75,10 +75,12 @@
     }
 
     const challenges = ui.meta.challengeSection(g);
+    const rebootCard = ui.reboot.erasCard(g);
     const records = h('button', { type: 'button', class: 'btn', text: '🏁 Era records', onclick: () => ui.meta.openRecords() });
     const body = h('div', { class: 'eras' }, [
       timeline,
       prestigeBox,
+      rebootCard.el,
       challenges.el,
       h('div', { class: 'btn-row' }, [records]),
       h('section', { class: 'perk-section' }, [
@@ -90,6 +92,7 @@
 
     function refresh() {
       challenges.refresh();
+      rebootCard.refresh();
       const req = Z.prestige.requirement(s);
       const pv = Z.prestige.previewBonus(s);
       const can = Z.prestige.canPrestige(s);
@@ -132,7 +135,7 @@
     const got = Z.prestige.prestige(g);
     Z.audio.play('prestige');
     ui.resetAll();
-    document.body.classList.remove('era-flash'); void document.body.offsetWidth; document.body.classList.add('era-flash');
+    ui.replay(document.body, 'era-flash');
     ui.feed.add(g, '🌐', 'Welcome to the ' + next.name + '. You brought ' + Z.fmt.int(got) + ' Clout with you.', 'era');
     ui.toast({ icon: '🌐', title: next.name, text: '+' + Z.fmt.int(got) + ' Clout. ' + next.unlocks, kind: 'era', duration: 7000 });
     Z.save.write(g.s);
@@ -187,6 +190,7 @@
         ['Clicks this era', () => f.int(s.run.clicks)],
         ['Highest Chaos this era', () => s.run.maxChaos.toFixed(1) + '%'],
         ['Meltdowns this era', () => f.int(s.run.meltdowns)],
+        ['Uptime', () => f.time(s.run.uptime) + ' (+' + Math.round(Z.idle.uptimeBonus(s) * 100) + '% Attention)'],
         ['Upgrades this era', () => f.int(s.run.upgrades)],
         ['Attention/s now', () => f.rate(g.c.aps)],
         ['Money/s now', () => f.money(g.c.mps)],
@@ -195,6 +199,9 @@
         ['Total Attention', () => f.int(st().totalAttention)],
         ['Total Money', () => f.money(st().totalMoney)],
         ['Total clicks', () => f.int(st().totalClicks) + ' (+' + f.int(st().autoClicks) + ' automatic)'],
+        ['Best click combo', () => f.int(st().bestCombo)],
+        ['Viral clicks', () => f.int(st().crits)],
+        ['Longest uptime', () => f.time(st().longestUptime)],
         ['Total Chaos created', () => f.num(st().totalChaos) + ' pts'],
         ['Highest Chaos', () => st().highestChaos.toFixed(1) + '%'],
         ['Highest Stability', () => st().highestStability.toFixed(1) + '%'],
@@ -207,6 +214,9 @@
         ['Fastest era', () => st().fastestEra ? f.time(st().fastestEra) : '—'],
         ['Era challenges completed', () => Object.keys(s.challenges.done).length + ' / ' + Z.CHALLENGES.length],
         ['Daily challenge streak', () => s.daily.streak + ' day' + (s.daily.streak === 1 ? '' : 's')],
+        ['Internet version', () => 'v' + Z.reboot.version(s) + ' (' + f.int(s.reboot.count) + ' reboot' + (s.reboot.count === 1 ? '' : 's') + ')'],
+        ['Bandwidth earned', () => '📡 ' + f.int(s.reboot.lifetime)],
+        ['Fastest full internet', () => { const b = Z.reboot.fastestInternet(s); return b ? f.time(b.time) + ' (v' + b.v + ')' : '—'; }],
         ['Clout earned', () => f.int(st().cloutEarned)],
         ['Buildings bought', () => f.int(st().buildingsBought)],
         ['Upgrades bought', () => f.int(st().upgradesBought)],
@@ -519,11 +529,16 @@
       h('div', { class: 'off-tiles' }, tileEls),
       h('dl', { class: 'stat-table' }, lines.map(([k, v]) => h('div', { class: 'stat-row' }, [h('dt', { text: k }), h('dd', { text: v })]))),
       sum.achievements.length ? h('p', { class: 'offline-ach', text: '🏆 Unlocked: ' + sum.achievements.join(', ') }) : null,
+      sum.boost ? h('p', { class: 'offline-boost', text: '🎁 Welcome back! ×' + sum.boost.mult + ' Attention for ' + f.time(sum.boost.seconds) + '. Make it count.' }) : null,
       h('p', { class: 'offline-quip', text: quip }),
       h('p', { class: 'muted', text: 'Offline progress runs at ' + Math.round(sum.efficiency * 100) + '% efficiency for up to ' + sum.capHours + ' hours' + (sum.capped ? ' (you hit the cap; the Night Shift perk raises it)' : '') + '. Chaos, Stability and events keep running while you are away.' }),
       h('button', { type: 'button', class: 'btn btn-primary btn-big', 'data-autofocus': true, text: 'Back to work', onclick: () => ui.modal.close() }),
     ]);
     ui.modal.open({ id: 'offline', title: '👋 While you were away…', body });
+    if (sum.boost) {
+      ui.feed.add(game, '🎁', 'Welcome back! ×' + sum.boost.mult + ' Attention for ' + f.time(sum.boost.seconds) + '.', 'good');
+      Z.audio.play('bonus');
+    }
   }
 
   ui.modals = {

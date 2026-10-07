@@ -40,6 +40,9 @@
         ['✖️', 'Buy amount', '×1, ×10, ×25 and Max above the building list buy several at once.', 'bulk'],
         ['🤝', 'Sponsors', 'Some upgrades and buildings bring sponsors. Their logos and ads appear on your website.', null],
         ['🏗️', 'Site level', 'Your site grows from Homepage to Empire as it earns Attention, and looks busier at every level.', null],
+        ['🎰', 'Click combo', 'Click quickly and the combo grows: up to ×2 Attention per click at 100. It breaks after a second without a click.', null],
+        ['💥', 'Viral clicks', 'Any click can go viral and count five times. A combo makes it a little likelier.', null],
+        ['🎉', 'Milestones', 'Every 1K, 10K, 100K and so on of Attention in an era gets a little celebration.', null],
       ] },
       { group: 'Chaos and Stability', items: [
         ['🌀', 'Chaos', 'Messy content creates Chaos. Chaos multiplies Attention and Money, but too much of it is dangerous.', 'chaos'],
@@ -47,6 +50,7 @@
         ['📏', 'Tolerance', 'The TOL notch on the Chaos bar. Above it, Stability drains. Infrastructure moves the notch up.', 'chaos'],
         ['🛠️', 'Stability', 'How healthy your servers are. Below 60% production slows down. At 0% the site melts down.', 'stability'],
         ['🔥', 'Meltdown', 'The site goes offline for a while and Chaos resets. Click the big button to reboot faster.', 'stability'],
+        ['🟢', 'Uptime', 'Every full minute without a meltdown adds +1% Attention, up to +25%, even while you are away. A meltdown starts it over.', 'stability'],
         ['📰', 'Editorial Policy', 'How wild your site may be. Wilder policies mean more Attention and more Chaos.', 'policy'],
         ['⚡', 'Actions', 'One-click abilities with cooldowns, like Hotfix, which repairs Stability.', 'actions'],
       ] },
@@ -61,6 +65,9 @@
         ['✦', 'Clout and Perks', 'Clout permanently boosts Attention. Spend it on Perks that survive every reset.', 'eras'],
         ['🎯', 'Era challenges', 'Three optional goals per era, in the Eras window. Each one you complete adds extra Clout when you start the next era.', 'eras'],
         ['🏁', 'Era records', 'Every finished era with its time and Clout, and your fastest run of each one. In the ☰ Menu.', 'eras'],
+        ['🔁', 'Reboot the Internet', 'After the Post-Internet Era you can start the whole internet over in the Forum Era. You lose Clout and perks but earn Bandwidth. In the ☰ Menu.', 'eras'],
+        ['📡', 'Bandwidth', 'Earned by rebooting the internet. Buys upgrades that survive every reboot. The further you get before rebooting, the more you earn.', 'eras'],
+        ['🧪', 'Protocols', 'An optional handicap you can pick for the next internet. A harder internet pays more Bandwidth when you reboot it.', 'eras'],
         ['📅', 'Daily challenge', 'A new modifier and goal every day, the same for everyone. The goal pays Clout; days in a row build a streak.', 'daily'],
         ['🏆', 'Achievements', 'Milestones in the ☰ Menu. Each one adds +' + ach + '% Attention forever.', null],
         ['🤖', 'Automation', 'Upgrades that click, buy or repair for you. Switch them on and off in the Automation tab.', 'auto'],
@@ -69,6 +76,7 @@
         ['🪟', 'Operating System', 'One-time upgrades for your website: ChaosOS 8 (Social Media Era), Mango OS (Viral Era), Prism OS (AI Era) and ChaosOS 95 (Post-Internet Era). Each brings permanent bonuses, a new look and new music. Its Style Shop themes unlock from scratch.', 'os'],
         ['📸', 'Share your website', 'Makes a picture of your website and its numbers to download or copy. In the ☰ Menu.', null],
         ['💤', 'Offline progress', 'Your site keeps earning, a bit slower, while the game is closed.', null],
+        ['🎁', 'Welcome Back boost', 'Come back after 10 minutes or more away and your site gets ×2 Attention for a minute or more.', null],
       ] },
     ];
   }

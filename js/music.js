@@ -12,20 +12,47 @@
              filter, a saw arpeggio, pulsing bass, a roomy snare and a gliding lead.
      retro · ChaosOS 95: sound-card chiptune in C major. Square-wave arpeggios, a triangle
              bass, a little looping lead melody and noise drums.
-   All share one reverb and one echo. Randomness keeps them from looping audibly. Music
-   starts on the first click or key press (browsers require a gesture) and pauses while
-   the tab is hidden. */
+   All share one reverb and one echo. Randomness keeps them from looping audibly, while
+   short melodic motifs come back with small changes, so each tune is something to hum.
+
+   The music follows the game: Chaos is "energy" that opens the filter and adds drums
+   (calm at 0%, busy near 100%), a meltdown muffles everything as if behind a wall, every
+   Internet Era plays in its own key, and big moments (achievements, milestones) duck the
+   music for a second. Clicks are tuned to the same key (noteFor, used by js/audio.js).
+   Music starts on the first click or key press (browsers require a gesture) and pauses
+   while the tab is hidden. */
 (function (Z) {
   'use strict';
 
   const LOOKAHEAD = 0.3;               // seconds scheduled ahead of the audio clock
-  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+  const ERA_KEYS = [0, 2, -2, 3, -3, 5, -4];    // semitones per Internet Era
+  let transpose = 0;
+  const mtof = m => 440 * Math.pow(2, (m + transpose - 69) / 12);
   const pick = list => list[Math.floor(Math.random() * list.length)];
 
   let ctx = null, bus = null, warm = null, dry = null, verbIn = null, echoIn = null, noise = null;
   let enabled = true, volume = 0.5, playing = false, gestured = false, held = false, timer = 0, restartTimer = 0;
   let step = 0, nextTime = 0;
   let style = null;
+  let energy = 0, energyTarget = 0, broken = false;   // Chaos as 0–1; true during a meltdown
+
+  /** A motif: one rhythm and one set of melodic moves, replayed with variations. */
+  function makeMotif(rhythms, moves) {
+    const rhythm = pick(rhythms);
+    return { rhythm, moves: rhythm.map(() => pick(moves)), start: Math.floor(Math.random() * 3) + 1 };
+  }
+
+  /** Plays a motif through `note(index, time, length)`. Variation 1 starts a step higher,
+      variation 2 turns the last move around, so the phrase answers itself. */
+  function playMotif(m, t, unit, maxLen, notes, variation, note) {
+    let idx = Math.min(notes.length - 1, m.start + (variation === 1 ? 1 : 0));
+    m.rhythm.forEach((p, k) => {
+      const len = ((m.rhythm[k + 1] || 16) - p) * unit;
+      note(notes[idx], t + p * unit, Math.min(len, maxLen));
+      const move = variation === 2 && k === m.rhythm.length - 2 ? -m.moves[k] : m.moves[k];
+      idx = Math.max(0, Math.min(notes.length - 1, idx + move));
+    });
+  }
 
   /* ---------- Shared graph ---------- */
 
@@ -44,7 +71,7 @@
     if (!ctx || bus) return !!ctx;
     bus = ctx.createGain();
     bus.gain.value = 0;
-    bus.connect(ctx.destination);
+    bus.connect(Z.audio.output() || ctx.destination);
 
     warm = ctx.createBiquadFilter();             // takes the edge off everything
     warm.type = 'lowpass';
@@ -137,11 +164,27 @@
       Em: { root: 40, pad: [55, 59, 62, 66], bells: [67, 71, 74, 76, 78] },       // Em9
       Fm: { root: 42, pad: [57, 61, 64, 68], bells: [69, 73, 76, 78, 80] },       // F#m7(add11)
     };
-    const PROGRESSIONS = [['D', 'Bm', 'G', 'A'], ['G', 'A', 'Fm', 'Bm'], ['D', 'Em', 'G', 'A'], ['Bm', 'G', 'D', 'A']];
+    const PROGRESSIONS = [['D', 'Bm', 'G', 'A'], ['G', 'A', 'Fm', 'Bm'], ['D', 'Em', 'G', 'A'], ['Bm', 'G', 'D', 'A'],
+      ['D', 'A', 'Bm', 'G'], ['Em', 'A', 'D', 'Bm']];
     const MELODY = [74, 76, 78, 81, 83, 86];          // D major pentatonic, high and airy
     const DENSITY = [0.22, 0.42, 0.58, 0.34];          // bell density per 8-bar section
+    const RHYTHMS = [[2, 5, 8, 12], [0, 4, 6, 10], [2, 6, 10, 12, 14], [0, 3, 8, 11]];
 
-    let prog = PROGRESSIONS[0], chord = CHORDS.D, lastBell = 0, nextDrop = 0;
+    let prog = PROGRESSIONS[0], chord = CHORDS.D, lastBell = 0, nextDrop = 0, motif = null;
+
+    /** At higher Chaos a soft heartbeat and a shaker creep in under the bells. */
+    function pulse(t) {
+      const o = ctx.createOscillator();
+      o.frequency.setValueAtTime(90, t);
+      o.frequency.exponentialRampToValueAtTime(48, t + 0.18);
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.0001, t);
+      env.gain.linearRampToValueAtTime(0.09 * energy, t + 0.01);
+      env.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+      o.connect(env);
+      route(env, 0.2, 0, 0);
+      o.start(t); o.stop(t + 0.45);
+    }
 
     function pad(notes, t, dur) {
       const lp = ctx.createBiquadFilter();
@@ -251,18 +294,16 @@
         chord = CHORDS[prog[chordNo % prog.length]];
         pad(chord.pad, t, STEPS_PER_CHORD * EIGHTH);
         bass(chord.root, t);
-        if (section === 2 && Math.random() < 0.6) {
-          let at = t + EIGHTH * 2, n = MELODY[Math.floor(Math.random() * 3) + 1];
-          for (let k = 0; k < 3 + Math.floor(Math.random() * 2); k++) {
-            const len = EIGHTH * (2 + Math.floor(Math.random() * 3));
-            glass(n, at, len);
-            at += len;
-            n = MELODY[Math.max(0, Math.min(MELODY.length - 1, MELODY.indexOf(n) + (Math.random() < 0.5 ? -1 : 1)))];
-          }
+        if (section === 2) {
+          // A little airy tune: a motif, its answer, the motif again and a closing turn.
+          if (!motif || chordNo % 4 === 0) motif = makeMotif(RHYTHMS, [-1, 1, 1, 2, -2]);
+          if (chordNo % 4 !== 2 || Math.random() < 0.5) playMotif(motif, t, EIGHTH, EIGHTH * 4, MELODY, [0, 1, 0, 2][chordNo % 4], glass);
         }
       }
       if (pos === 8) bass(chord.root + (Math.random() < 0.3 ? 7 : 0), t);
-      const chance = DENSITY[section] * (pos % 2 ? 0.55 : 1);
+      if (energy > 0.45 && pos % 4 === 0) pulse(t);
+      if (energy > 0.7 && pos % 2 === 1) noiseHit(t, 'highpass', 7500, 0.6, 0.02 * energy, 0.05, 0.3, 0.3);
+      const chance = DENSITY[section] * (pos % 2 ? 0.55 : 1) * (0.85 + 0.4 * energy);
       if (Math.random() < chance) {
         let n = pick(chord.bells);
         if (n === lastBell) n = chord.bells[(chord.bells.indexOf(n) + 1) % chord.bells.length];
@@ -277,7 +318,8 @@
 
     return {
       step: EIGHTH, lowpass: 6500, echo: EIGHTH * 1.5, level: 0.55,
-      begin() { prog = PROGRESSIONS[0]; nextDrop = 0; },
+      scale: [69, 71, 74, 76, 78],                   // clicks: D major pentatonic
+      begin() { prog = PROGRESSIONS[0]; nextDrop = 0; motif = null; },
       end() {},
       schedule,
     };
@@ -361,6 +403,7 @@
       src.start();
       crackle = src;
       prog = PROGRESSIONS[0];
+      motif = null;
     }
 
     function end(at) {
@@ -472,15 +515,17 @@
       route(env, 0.35, 0.45, Math.random() * 0.8 - 0.4);
     }
 
-    function melody(t) {
-      // A short phrase on swung eighths, mostly stepping through the chord's tones.
-      let idx = Math.floor(Math.random() * chord.tones.length);
-      const starts = pick([[2, 4, 6, 10], [0, 3, 6, 8, 12], [4, 6, 10, 14], [2, 6, 8]]);
-      for (const p of starts) {
-        if (Math.random() < 0.18) continue;
-        pluck(chord.tones[idx], t + p * SIXTEENTH + swung(p), 0.7 + Math.random() * 0.3);
-        idx = Math.max(0, Math.min(chord.tones.length - 1, idx + pick([-2, -1, -1, 1, 1, 2])));
-      }
+    const RHYTHMS = [[2, 4, 6, 10], [0, 3, 6, 8, 12], [4, 6, 10, 14], [2, 6, 8], [0, 2, 6, 10, 12]];
+    let motif = null;
+
+    function melody(t, variation) {
+      // A short phrase on swung eighths through the chord's tones. The same motif comes
+      // back every other bar, so it fits each chord and still sounds like one tune.
+      playMotif(motif, t, SIXTEENTH, SIXTEENTH * 6, chord.tones, variation, (n, at) => {
+        const p = Math.round((at - t) / SIXTEENTH);
+        if (variation && Math.random() < 0.12) return;
+        pluck(n, at + swung(p), 0.7 + Math.random() * 0.3);
+      });
     }
 
     function schedule(i, t) {
@@ -494,7 +539,8 @@
         chord = CHORDS[prog[bar % prog.length]];
         comp = pick(COMPS);
         kicks = pick(KICKS);
-        if (section === 2 && inBar % 2 === 0) melody(t);
+        if (section === 2 && inBar === 0) motif = makeMotif(RHYTHMS, [-2, -1, -1, 1, 1, 2]);
+        if (section === 2 && inBar % 2 === 0 && motif) melody(t, [0, 1, 0, 2][inBar / 2]);
       }
       for (const [s, len, vel] of comp) {
         if (s === pos) keys(chord.keys, at, len * SIXTEENTH, vel * (0.85 + Math.random() * 0.15));
@@ -511,10 +557,12 @@
       if (pos % 2 === 0) {
         const open = drums && pos === 14 && Math.random() < 0.3;
         if (section !== 0 || pos % 4 === 0) hat(at, (pos % 4 ? 0.55 : 0.95) * (0.8 + Math.random() * 0.2) * (section ? 1 : 0.6), open);
-      } else if (drums && Math.random() < 0.12) hat(at, 0.3, false);
+      } else if (drums && Math.random() < 0.12 + Math.max(0, energy - 0.45)) hat(at, 0.3 + 0.2 * energy, false);
+      // Near the top of the Chaos bar the drummer gets restless.
+      if (drums && energy > 0.8 && (pos === 7 || pos === 13) && Math.random() < 0.5) kick(at, 0.6);
     }
 
-    return { step: SIXTEENTH, lowpass: 4200, echo: SIXTEENTH * 6, level: 0.42, begin, end, schedule };
+    return { step: SIXTEENTH, lowpass: 4200, echo: SIXTEENTH * 6, level: 0.42, scale: [67, 69, 72, 74, 76], begin, end, schedule };
   })();
 
   /* ======================================================================
@@ -549,6 +597,7 @@
       pumpBass = ctx.createGain();
       route(pumpBass, 0.04, 0, 0);
       prog = PROGRESSIONS[0];
+      motif = null;
     }
 
     function end() { pump = pumpBass = null; }
@@ -687,15 +736,8 @@
       route(env, 0.55, 0.4, 0.15);
     }
 
-    function melody(t) {
-      let idx = Math.floor(Math.random() * 3) + 1;
-      const rhythm = pick([[0, 4, 6, 10], [2, 6, 8, 12, 14], [0, 3, 6, 12], [4, 8, 10]]);
-      rhythm.forEach((p, k) => {
-        const len = ((rhythm[k + 1] || 16) - p) * SIXTEENTH;
-        lead(LEAD[idx], t + p * SIXTEENTH, Math.min(len, SIXTEENTH * 6));
-        idx = Math.max(0, Math.min(LEAD.length - 1, idx + pick([-1, -1, 1, 1, 2, -2])));
-      });
-    }
+    const RHYTHMS = [[0, 4, 6, 10], [2, 6, 8, 12, 14], [0, 3, 6, 12], [4, 8, 10], [0, 2, 4, 8, 12]];
+    let motif = null;
 
     function schedule(i, t) {
       const pos = i % BAR;
@@ -707,10 +749,13 @@
         chord = CHORDS[prog[bar % prog.length]];
         if (bar % 2 === 0) arp = pick(ARPS);
         pad(chord.pad, t, BAR * SIXTEENTH);
-        if (section === 2 && inBar % 2 === 0) melody(t);
+        if (section === 2 && inBar === 0) motif = makeMotif(RHYTHMS, [-1, -1, 1, 1, 2, -2]);
+        if (section === 2 && inBar % 2 === 0 && motif) playMotif(motif, t, SIXTEENTH, SIXTEENTH * 6, LEAD, [0, 1, 0, 2][inBar / 2], lead);
       }
       const beat = pos % 4 === 0;
       const drums = section === 1 || section === 2;
+      // With Chaos high, the groove turns into four-on-the-floor.
+      if (drums && energy > 0.65 && beat && pos !== 0 && !(section === 2) && Math.random() < energy) kick(t, 0.7);
       if (beat && section !== 0) duck(t);
 
       // The arpeggio runs in eighths everywhere; the intro thins it out.
@@ -732,7 +777,7 @@
       if (pos === 15 && Math.random() < 0.18) sparkle(t);
     }
 
-    return { step: SIXTEENTH, lowpass: 9000, echo: SIXTEENTH * 3, level: 0.42, begin, end, schedule };
+    return { step: SIXTEENTH, lowpass: 9000, echo: SIXTEENTH * 3, level: 0.42, scale: [68, 71, 73, 76, 78], begin, end, schedule };
   })();
 
   /* ======================================================================
@@ -771,6 +816,7 @@
       lfo.start();
       route(padBus, 0.7, 0.12, 0);
       prog = PROGRESSIONS[0];
+      motif = null;
     }
 
     function end(at) {
@@ -884,15 +930,8 @@
       route(env, 0.6, 0.4, 0.1);
     }
 
-    function melody(t) {
-      let idx = Math.floor(Math.random() * 3) + 2;
-      const rhythm = pick([[0, 6, 8, 12], [0, 4, 10], [2, 6, 8, 14], [0, 8, 12]]);
-      rhythm.forEach((p, k) => {
-        const len = ((rhythm[k + 1] || 16) - p) * SIXTEENTH;
-        lead(LEAD[idx], t + p * SIXTEENTH, Math.min(len, SIXTEENTH * 8));
-        idx = Math.max(0, Math.min(LEAD.length - 1, idx + pick([-2, -1, 1, 1, 2])));
-      });
-    }
+    const RHYTHMS = [[0, 6, 8, 12], [0, 4, 10], [2, 6, 8, 14], [0, 8, 12], [0, 3, 6, 10, 12]];
+    let motif = null;
 
     function schedule(i, t) {
       const pos = i % BAR;
@@ -903,7 +942,13 @@
         if (inBar === 0 && (section === 0 || Math.random() < 0.6)) prog = pick(PROGRESSIONS);
         chord = CHORDS[prog[bar % prog.length]];
         pad(chord.pad, t, BAR * SIXTEENTH);
-        if (section === 2 && inBar % 2 === 0) melody(t);
+        if (section === 2 && inBar === 0) motif = makeMotif(RHYTHMS, [-2, -1, 1, 1, 2]);
+        if (section === 2 && inBar % 2 === 0 && motif) playMotif(motif, t, SIXTEENTH, SIXTEENTH * 8, LEAD, [0, 1, 0, 2][inBar / 2], lead);
+      }
+      // High Chaos: sixteenth hats and a snare fill into every other bar.
+      if ((section === 1 || section === 2) && energy > 0.6) {
+        if (pos % 2 === 1) hat(t, 0.4 + 0.4 * energy);
+        if (energy > 0.85 && bar % 2 === 1 && pos >= 13) snare(t);
       }
       // Up-and-down arpeggio over two octaves.
       const notes = chord.arp, span = notes.length * 2 - 2;
@@ -918,7 +963,7 @@
       if (section !== 0 && pos % 2 === 0) bass(chord.root - 12 + (pos === 14 ? 12 : 0), t, SIXTEENTH * 1.6);
     }
 
-    return { step: SIXTEENTH, lowpass: 7500, echo: SIXTEENTH * 3, level: 0.48, begin, end, schedule };
+    return { step: SIXTEENTH, lowpass: 7500, echo: SIXTEENTH * 3, level: 0.48, scale: [69, 72, 74, 76, 79], begin, end, schedule };
   })();
 
   /* ======================================================================
@@ -1024,13 +1069,13 @@
         });
       }
       if (section !== 0) {
-        if (pos === 0 || pos === 8 || (pos === 10 && section === 3)) kick(t);
+        if (pos === 0 || pos === 8 || (pos === 10 && section === 3) || (energy > 0.75 && pos === 4 && Math.random() < 0.6)) kick(t);
         if (pos === 4 || pos === 12) noiseHit(t, 'bandpass', 2400, 0.9, 0.07, 0.09, 0.08, 0);
-        if (pos % 2 === 0) noiseHit(t, 'highpass', 8000, 0.7, 0.018, 0.025, 0.02, 0.2);
+        if (pos % 2 === 0 || energy > 0.6) noiseHit(t, 'highpass', 8000, 0.7, pos % 2 ? 0.01 : 0.018, 0.025, 0.02, 0.2);
       }
     }
 
-    return { step: SIXTEENTH, lowpass: 5200, echo: SIXTEENTH * 3, level: 0.78, begin, end, schedule };
+    return { step: SIXTEENTH, lowpass: 5200, echo: SIXTEENTH * 3, level: 0.78, scale: [72, 74, 76, 79, 81], begin, end, schedule };
   })();
 
   const STYLES = { aero: AERO, metro: METRO, mango: MANGO, holo: HOLO, retro: RETRO };
@@ -1040,6 +1085,7 @@
 
   function pump() {
     if (!ctx || !playing) return;
+    energy += (energyTarget - energy) * 0.02;            // follows Chaos over a few seconds
     while (nextTime < ctx.currentTime + LOOKAHEAD) {
       style.schedule(step, nextTime);
       nextTime += style.step;
@@ -1048,6 +1094,27 @@
   }
 
   function level() { return volume * style.level; }
+
+  /** The master filter: darker when calm, open when chaotic, muffled during a meltdown. */
+  function applyTone() {
+    if (!ctx || !warm || !playing) return;
+    const now = ctx.currentTime;
+    const f = broken ? 420 : Math.min(14000, style.lowpass * (0.72 + 0.4 * energyTarget));
+    warm.frequency.cancelScheduledValues(now);
+    warm.frequency.setTargetAtTime(f, now, broken ? 0.25 : 0.9);
+    warm.Q.setTargetAtTime(broken ? 5 : 0.7, now, 0.3);
+  }
+
+  /** Big sound effects push the music down to `depth` for a moment. */
+  function duck(depth, seconds) {
+    if (!playing || !bus) return;
+    const g = bus.gain, now = ctx.currentTime, lv = level();
+    g.cancelScheduledValues(now);
+    g.setValueAtTime(Math.max(0.0001, g.value), now);
+    g.linearRampToValueAtTime(lv * depth, now + 0.06);
+    g.setValueAtTime(lv * depth, now + seconds * 0.35);
+    g.linearRampToValueAtTime(lv, now + seconds);
+  }
 
   function start() {
     if (!enabled || held || playing || !gestured || document.hidden) return;
@@ -1059,6 +1126,7 @@
     warm.frequency.setValueAtTime(style.lowpass, ctx.currentTime);
     echoIn.delayTime.setValueAtTime(style.echo, ctx.currentTime);
     style.begin();
+    energy = energyTarget;
     const g = bus.gain;
     g.cancelScheduledValues(ctx.currentTime);
     g.setValueAtTime(Math.max(0.0001, g.value), ctx.currentTime);
@@ -1066,6 +1134,7 @@
     clearInterval(timer);
     timer = setInterval(pump, 60);
     pump();
+    applyTone();
   }
 
   function stop(fade) {
@@ -1111,6 +1180,25 @@
       if (held) stop(fade || 1.2);
       else start();
     },
+    /** The game's mood, a few times a second: Chaos 0–100, a meltdown, a hype moment. */
+    setMood(chaos, meltdown, hype) {
+      const next = Math.max(0, Math.min(1, chaos / 100 + (hype ? 0.25 : 0)));
+      const moved = Math.abs(next - energyTarget) > 0.04;
+      energyTarget = next;
+      if (!!meltdown !== broken || moved) { broken = !!meltdown; applyTone(); }
+    },
+    /** Every Internet Era plays in its own key. */
+    setEra(era) {
+      const k = ERA_KEYS[(Math.max(1, era) - 1) % ERA_KEYS.length];
+      if (k !== transpose) transpose = k;
+    },
+    /** The frequency of click number `n` of a combo: up the current scale, in key. */
+    noteFor(n) {
+      const sc = style.scale || AERO.scale;
+      return mtof(sc[n % sc.length] + 12 * Math.floor(n / sc.length));
+    },
+    duck,
+    get energy() { return energy; },
     get style() { for (const id in STYLES) if (STYLES[id] === style) return id; return 'aero'; },
     get enabled() { return enabled; },
     get playing() { return playing; },

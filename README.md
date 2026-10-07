@@ -45,6 +45,9 @@ whole game is a balancing act between growth and keeping the lights on.
   meltdown
 - 🎲 **A signature mechanic in every era**: flame wars, a friend network, trend alerts, a feed
   switch, AI claims to fact-check, quarterly targets and bot swarms
+- 🔁 **Reboot the Internet**: after the Post-Internet Era, start the whole internet over on
+  v2, v3 and beyond for Bandwidth, permanent upgrades that make every new internet faster,
+  plus optional hard-mode protocols and a record for your fastest full internet
 - 🎯 **Era challenges**: three optional goals per era that pay extra Clout
 - 📅 **Daily challenge**: a new modifier and goal every day, the same for everyone, with streaks
 - 🏁 **Era records**: every finished era with its time and Clout, plus your personal bests
@@ -80,6 +83,7 @@ whole game is a balancing act between growth and keeping the lights on.
 | 🌀 **Chaos** | Boosts Attention and Money. Content raises it, Moderation pulls it down. |
 | 🛠️ **Stability** | Drains while Chaos is above your Tolerance, repairs below it. 0% means meltdown. |
 | ✦ **Clout** | Earned when you move to a new era. Permanent bonuses and perks. |
+| 📡 **Bandwidth** | Earned when you reboot the whole internet. Upgrades that survive everything. |
 
 ### The Internet Eras
 
@@ -95,6 +99,10 @@ system. Every era has its own shop, so nothing you buy repeats.
 | 5 · AI Era | everything generated | AI-Generated Image, Deepfake Studio, GPU Rack, Prompt Guardrail | AI claims |
 | 6 · Corporate Internet Era | brands, bundles and lobbying | Thought Leadership Post, Cookie Consent Wall, Lobbying Office | Quarterly targets |
 | 7 · Post-Internet Era | bots talking to bots | Echo Post, Ghost Influencer, Haunted Rack, Last Moderator | Bot swarms |
+
+After the Post-Internet Era you can **reboot the internet**: back to the Forum Era on a new
+version, without Clout and perks but with Bandwidth for upgrades that survive every reboot.
+Pick a harder protocol, like Dial-up Only, for more Bandwidth next time.
 
 ### Tips
 

@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Internet Chaos self-test</title>
+<!-- Developer tool: automatic checks of the game rules (era challenges, era mechanics,
+     records, daily challenge, operating systems, saves, offline progress, Czech texts and a
+     full simulated playthrough). Open it through a local web server, for example
+     `python -m http.server`, then http://localhost:8000/tools/selftest.html.
+     It runs on fresh in-memory games and never touches your saved game. The page title
+     turns to "passed N/N" or "FAILED k/N" when it is done. -->
+<style>
+  body { margin: 0; padding: 16px; font: 14px/1.45 system-ui, sans-serif; background: #f4f6fa; color: #1a2233; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  #sum { margin: 0 0 14px; font-weight: 600; }
+  section { background: #fff; border: 1px solid #d9dfea; border-radius: 8px; padding: 10px 14px; margin: 0 0 10px; }
+  h2 { font-size: 15px; margin: 0 0 6px; }
+  .ok { color: #137a3a; } .bad { color: #b3261e; font-weight: 600; } .info { color: #4a5568; }
+  li { margin: 1px 0; } ul { margin: 0; padding-left: 20px; }
+  pre { white-space: pre-wrap; font-size: 12px; background: #f7f8fb; padding: 8px; border-radius: 6px; max-height: 260px; overflow: auto; }
+</style>
+<script>
+  // Czech texts are checked too: the language is read from storage while js/i18n.js loads,
+  // so it is set for that moment only and put back right after.
+  window.__langBefore = (function () { try { return localStorage.getItem('internet-chaos:lang'); } catch (e) { return null; } })();
+  try { localStorage.setItem('internet-chaos:lang', 'cs'); } catch (e) { /* Czech checks are skipped */ }
+</script>
+</head>
+<body>
+<h1>Internet Chaos self-test</h1>
+<p id="sum">Running…</p>
+<div id="out"></div>
+<script src="../js/core.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/i18n.js"></script>
+<script src="../js/lang/cs.js"></script>
+<script>
+  try {
+    if (window.__langBefore === null) localStorage.removeItem('internet-chaos:lang');
+    else localStorage.setItem('internet-chaos:lang', window.__langBefore);
+  } catch (e) { /* nothing to restore */ }
+</script>
+<script src="../js/content/buildings.js"></script>
+<script src="../js/content/upgrades.js"></script>
+<script src="../js/content/events.js"></script>
+<script src="../js/content/perks.js"></script>
+<script src="../js/content/achievements.js"></script>
+<script src="../js/content/challenges.js"></script>
+<script src="../js/content/reboot.js"></script>
+<script src="../js/content/cosmetics.js"></script>
+<script src="../js/content/sponsors.js"></script>
+<script src="../js/state.js"></script>
+<script src="../js/systems/modifiers.js"></script>
+<script src="../js/systems/economy.js"></script>
+<script src="../js/systems/effects.js"></script>
+<script src="../js/systems/events.js"></script>
+<script src="../js/systems/actions.js"></script>
+<script src="../js/systems/progression.js"></script>
+<script src="../js/systems/reboot.js"></script>
+<script src="../js/systems/bonus.js"></script>
+<script src="../js/systems/idle.js"></script>
+<script src="../js/systems/os.js"></script>
+<script src="../js/systems/meta.js"></script>
+<script src="../js/systems/eramech.js"></script>
+<script src="../js/systems/game.js"></script>
+<script src="../js/save.js"></script>
+<script src="sim.js"></script>
+<script>
+(function () {
+  'use strict';
+  const Z = window.ICHAOS;
+  const results = [];
+  let current = null;
+
+  function group(name, fn) {
+    current = { name, checks: [], notes: [], error: null };
+    results.push(current);
+    try { fn(); } catch (err) { current.error = err && err.stack ? err.stack : String(err); }
+  }
+  function ok(cond, text) { current.checks.push({ pass: !!cond, text }); return !!cond; }
+  function eq(a, b, text) { return ok(a === b, text + (a === b ? '' : ' (got ' + JSON.stringify(a) + ', expected ' + JSON.stringify(b) + ')')); }
+  function note(text) { current.notes.push(text); }
+  const near = (a, b, eps) => Math.abs(a - b) <= (eps || 1e-9) * Math.max(1, Math.abs(b));
+
+  /** A fresh in-memory game in `era` on operating system `os`. Notifications are collected. */
+  function game(era, os, seed) {
+    const s = Z.state.create(Date.now());
+    s.seed = seed === undefined ? 7 : seed;
+    const g = Z.createGame(s);
+    g.log = [];
+    g.notify = (type, data) => g.log.push({ type, data });
+    if (os) s.os = { id: os, installed: Date.now(), base: {} };
+    if (era && era > 1) { s.era = era; Z.prestige.resetRun(g); }
+    s.flags.reveal.chaos = true;
+    s.flags.reveal.stability = true;
+    g.dirty = true;
+    g.refresh();
+    return g;
+  }
+  function run(g, seconds, dt, until) {
+    const step = dt || 0.5;
+    for (let t = 0; t < seconds; t += step) { g.tick(step); if (until && until(g)) return true; }
+    return false;
+  }
+  const mechLog = g => g.log.filter(n => n.type === 'mech').map(n => n.data);
+
+  /* ================= 1. Era challenges ================= */
+  group('1 · Era challenges', () => {
+    eq(Z.CHALLENGES.length, 21, '21 challenges');
+    const ids = new Set(Z.CHALLENGES.map(c => c.id));
+    eq(ids.size, 21, 'challenge ids are unique');
+    for (let era = 1; era <= 7; era++) eq(Z.challengesFor(era).length, 3, 'era ' + era + ' has 3 challenges');
+    ok(Z.challengesFor(9).every(c => c.era === 7), 'eras past 7 reuse the Post-Internet set');
+    for (const c of Z.CHALLENGES) {
+      ok(c.bonus >= 0.05 && c.bonus <= 0.2, c.id + ': bonus ' + c.bonus + ' in range');
+      ok(c.end ? typeof c.ok === 'function' && typeof c.status === 'function' : typeof c.have === 'function' && c.need > 0, c.id + ': complete definition');
+    }
+    // challengeState for every challenge on a fresh game of its era
+    for (let era = 1; era <= 7; era++) {
+      const g = game(era);
+      for (const c of Z.challengesFor(era)) {
+        const st = Z.meta.challengeState(g.s, c);
+        ok(['done', 'track', 'failed', 'progress'].includes(st.status) && typeof st.text === 'string', c.id + ': state "' + st.status + '" · ' + st.text);
+      }
+    }
+
+    // Counting "this era" only, completion, bonus, prestige
+    const g = game(3);
+    const s = g.s;
+    s.flags.ev['act:leak'] = 9;          // used before this era: must not count
+    Z.meta.snapshotRun(s);
+    eq(Z.meta.challengeState(s, Z.CHALLENGE['v-leak']).have, 0, 'uses from before the era do not count');
+    s.flags.ev['act:leak'] = 12;         // 3 this era
+    Z.meta.checkChallenges(g);
+    ok(!s.challenges.run['v-leak'], 'Serial Leaker not done at 3 / 4');
+    s.flags.ev['act:leak'] = 13;
+    Z.meta.checkChallenges(g);
+    ok(s.challenges.run['v-leak'] && s.challenges.done['v-leak'] > 0, 'Serial Leaker completes at 4 / 4');
+    ok(g.log.some(n => n.type === 'challenge' && n.data.c.id === 'v-leak'), 'completion is announced');
+    // real action use counts
+    const g2 = game(3);
+    g2.s.res.money = 1e30; g2.s.cooldowns = {};
+    let used = 0;
+    for (let i = 0; i < 4; i++) { g2.s.cooldowns = {}; if (Z.actions.use(g2, 'leak')) used++; }
+    Z.meta.checkChallenges(g2);
+    note('Fake Leak used ' + used + '× by the real action code');
+    ok(used < 4 || g2.s.challenges.run['v-leak'], 'using the real Fake Leak action 4× completes the challenge');
+
+    s.run.minStab = 100;
+    const bonus = Z.meta.challengeBonus(s);
+    ok(near(bonus, 0.1 + 0.15), 'bonus = Serial Leaker 10% + Never Below 50 on track 15% (got ' + bonus + ')');
+    s.run.attention = Z.prestige.requirement(s) * 4;
+    const raw = Math.floor(Z.prestige.cloutGain(s) / (1 + bonus));
+    ok(Z.prestige.cloutGain(s) >= raw && Z.prestige.cloutGain(s) > 0, 'Clout gain includes the bonus (' + Z.prestige.cloutGain(s) + ')');
+    s.run.time = 900;
+    const gain = Z.prestige.prestige(g);
+    ok(gain > 0, 'next era started, +' + gain + ' Clout');
+    eq(s.era, 4, 'now era 4');
+    ok(s.challenges.done['v-stable'] > 0, 'era-long Never Below 50 sealed as done at the era end');
+    eq(Object.keys(s.challenges.run).length, 0, 'this-era challenge list cleared');
+    ok(s.challenges.done['v-leak'] > 0, 'completed challenges stay in the lifetime list');
+    eq(s.history.length, 1, 'era record written');
+    eq(s.history[0].challenges, 2, 'record counts the 2 challenges done');
+
+    // A failed era-long challenge
+    const g3 = game(1);
+    g3.s.run.time = 1801;
+    eq(Z.meta.challengeState(g3.s, Z.CHALLENGE['f-speed']).status, 'failed', 'Dial-up Speedrun fails after 30 minutes');
+    g3.s.run.meltdowns = 1;
+    eq(Z.meta.challengeState(g3.s, Z.CHALLENGE['f-calm']).status, 'failed', 'Netiquette fails after a meltdown');
+    Z.meta.sealEnd(g3);
+    ok(!g3.s.challenges.run['f-speed'] && !g3.s.challenges.run['f-calm'], 'failed challenges are not sealed');
+  });
+
+  /* ================= 2. Era mechanics ================= */
+  group('2 · One mechanic per era', () => {
+    const kinds = ['flame', 'friends', 'trend', 'feed', 'claim', 'quarter', 'bots', 'bots'];
+    for (let era = 1; era <= 8; era++) eq(Z.mech.kind(game(era).s), kinds[era - 1], 'era ' + era + ' → ' + kinds[era - 1]);
+    for (const b of ['flameWar', 'trendWave', 'aiHype', 'stockSurge', 'botHelp', 'botWall']) ok(Z.BUFFS[b], 'buff ' + b + ' exists');
+
+    // Not before the player knows Chaos
+    const g0 = game(1);
+    g0.s.flags.reveal.chaos = false;
+    run(g0, 200);
+    ok(!g0.s.mech.active, 'no flame war before Chaos is introduced');
+
+    // 1 Flame wars: put out
+    let g = game(1);
+    g.s.run.time = 60;
+    ok(run(g, 200, 0.5, x => !!x.s.mech.active), 'flame war breaks out within ~2 minutes');
+    ok(g.s.buffs.some(b => b.key === 'flameWar'), 'flame war buff is active');
+    ok(Z.mech.view(g).buttons[0].id === 'douse', 'window shows the Douse button');
+    let clicks = 0;
+    while (g.s.mech.active && clicks < 40) { Z.mech.act(g, 'douse'); clicks++; }
+    ok(!g.s.mech.active, 'doused after ' + clicks + ' clicks');
+    eq(g.s.flags.ev['mech:flameWin'], 1, 'flame win counted');
+    ok(!g.s.buffs.some(b => b.key === 'flameWar'), 'flame war buff removed');
+    // 1 Flame wars: burn out
+    g = game(1);
+    g.s.run.time = 60;
+    run(g, 200, 0.5, x => !!x.s.mech.active);
+    const stab = g.s.res.stability;
+    run(g, 60, 0.5, x => !x.s.mech.active);
+    ok(!g.s.mech.active && mechLog(g).some(n => n.title === 'The flame war burned out'), 'ignored flame war burns out');
+    note('Stability ' + stab.toFixed(1) + ' → ' + g.s.res.stability.toFixed(1) + ' after burning out');
+
+    // 2 Friend network
+    g = game(2);
+    g.s.run.time = 60;
+    const att0 = g.m.attMult;
+    ok(Z.mech.act(g, 'connect'), 'friend request sent');
+    ok(!Z.mech.act(g, 'connect'), 'second request waits for the cooldown');
+    run(g, 13);
+    ok(Z.mech.act(g, 'connect'), 'request possible again after 12 s');
+    g.refresh();
+    ok(near(g.m.attMult, att0 * (1 + 0.015 * 2), 1e-6), '2 connections → Attention +3% (×' + (g.m.attMult / att0).toFixed(3) + ')');
+    g.s.run.connections = 20; g.s.mech.cd = 0;
+    ok(!Z.mech.act(g, 'connect'), 'no more than 20 connections');
+
+    // 3 Trend alerts
+    g = game(3);
+    g.s.run.time = 60;
+    ok(run(g, 80, 0.5, x => !!x.s.mech.active), 'trend alert within ~1 minute');
+    ok(Z.mech.act(g, 'ride'), 'jumped on the trend');
+    ok(g.s.buffs.some(b => b.key === 'trendWave'), 'trend wave buff');
+    eq(g.s.flags.ev['mech:trend'], 1, 'trend counted (Viral Streak)');
+    ok(run(g, 200, 0.5, x => !!x.s.mech.active), 'next trend arrives');
+    run(g, 25, 0.5, x => !x.s.mech.active);
+    ok(!g.s.mech.active, 'ignored trend expires');
+
+    // 4 Feed mode
+    g = game(4);
+    g.s.run.time = 60;
+    const base = g.m.attMult;
+    ok(Z.mech.act(g, 'feed2'), 'switched to Max engagement');
+    g.refresh();
+    ok(near(g.m.attMult, base * 1.35, 1e-6) && g.m.drainMult > 1, 'Max engagement: Attention ×1.35, faster drain');
+    Z.mech.act(g, 'feed0'); g.refresh();
+    ok(near(g.m.attMult, base * 0.85, 1e-6) && g.m.regenMult > 1, 'Calm: Attention ×0.85, faster repair');
+    ok(!Z.mech.act(g, 'feed0'), 'same mode twice does nothing');
+    ok(Z.mech.view(g).buttons.find(b => b.id === 'feed0').on, 'window marks the chosen mode');
+
+    // 5 AI claims
+    g = game(5);
+    g.s.run.time = 60;
+    ok(run(g, 80, 0.5, x => !!x.s.mech.active), 'AI claim within ~1 minute');
+    ok(Z.mech.act(g, 'check'), 'fact-checked');
+    let trusts = 0, trueCount = 0;
+    for (let i = 0; i < 40; i++) {
+      run(g, 200, 0.5, x => !!x.s.mech.active);
+      if (!g.s.mech.active) break;
+      if (g.s.mech.active.real) trueCount++;
+      Z.mech.act(g, 'trust'); trusts++;
+    }
+    eq(g.s.flags.ev['mech:ai'], trusts + 1, 'every answer counts (Fact-Checker)');
+    note(trueCount + ' of ' + trusts + ' claims were true (60% expected)');
+
+    // 6 Quarterly targets
+    g = game(6);
+    g.s.run.time = 60;
+    run(g, 1);
+    ok(g.s.mech.q && g.s.mech.q.time > 0, 'first quarter started');
+    // A quarter is judged on its average Money/s: money earned since it started ÷ 180 s
+    const q = g.s.mech.q;
+    q.target = 1000; q.time = 0.5; q.from = g.s.run.money - 1000 * 179.5 * 1.05;
+    run(g, 0.5);
+    eq(g.s.flags.ev['mech:quarterWin'], 1, 'average 5% above the target hits it');
+    ok(near(g.s.mech.q.target, 1000 * 1.05 * 1.2, 0.01), 'next target = this quarter’s average × 1.2 (' + Z.fmt.money(g.s.mech.q.target) + '/s)');
+    g.s.mech.q.time = 0.5; g.s.mech.q.from = g.s.run.money - g.s.mech.q.target * 179.5 * 0.9;
+    run(g, 0.5);
+    ok(mechLog(g).some(n => n.title === 'Quarterly target missed'), 'average 10% below the target misses it');
+    g.s.mech.q.time = 90; g.s.mech.q.from = g.s.run.money - 500 * 90;
+    ok(/so far \$500/.test(Z.mech.view(g).text), 'window shows the average so far: ' + Z.mech.view(g).text);
+
+    // 7 Bot swarms
+    g = game(7);
+    g.s.run.time = 60;
+    let friendly = 0, hostile = 0, kept = 0;
+    for (let i = 0; i < 30; i++) {
+      if (!run(g, 200, 0.5, x => !!x.s.mech.active)) break;
+      if (i % 3 === 2) { Z.mech.act(g, 'keepout'); kept++; continue; }
+      if (g.s.mech.active.friendly) friendly++; else hostile++;
+      Z.mech.act(g, 'letin');
+    }
+    eq(g.s.flags.ev['mech:botsGood'] || 0, friendly, 'friendly swarms counted (Bot Whisperer)');
+    note(friendly + ' friendly, ' + hostile + ' hostile, ' + kept + ' kept out');
+
+    // Window content for every era once started
+    for (let era = 1; era <= 7; era++) {
+      const gx = game(era);
+      gx.s.run.time = 60;
+      run(gx, 2);
+      const v = Z.mech.view(gx);
+      ok(v && v.title && v.text, 'era ' + era + ' window: ' + (v ? v.title : 'nothing'));
+    }
+  });
+
+  /* ================= 3. Era records ================= */
+  group('3 · Era records', () => {
+    const g = game(1), s = g.s;
+    for (const time of [1500, 1100, 1300]) {
+      s.run.time = time;
+      s.run.attention = Z.prestige.requirement(s);
+      Z.prestige.prestige(g);
+      s.era = 1; Z.prestige.resetRun(g);
+    }
+    eq(s.history.length, 3, 'three finished eras recorded');
+    eq(Z.meta.bestTimes(s)[1].time, 1100, 'best time picks the fastest run');
+    const h = s.history[0];
+    ok(['era', 'time', 'clout', 'attention', 'money', 'meltdowns', 'clicks', 'upgrades', 'os', 'challenges', 'at'].every(k => k in h), 'record has every field');
+    for (let i = 0; i < 230; i++) { s.run.attention = Z.prestige.requirement(s); Z.prestige.prestige(g); s.era = 1; Z.prestige.resetRun(g); }
+    eq(s.history.length, 200, 'history is capped at 200');
+  });
+
+  /* ================= 4. Daily challenge ================= */
+  group('4 · Daily challenge', () => {
+    const a = game(1).s, b = game(1).s;
+    Z.meta.ensureDaily(a, '2026-10-07');
+    Z.meta.ensureDaily(b, '2026-10-07');
+    ok(a.daily.mod === b.daily.mod && a.daily.goal === b.daily.goal, 'same day → same challenge for everyone (' + a.daily.mod + ' / ' + a.daily.goal + ')');
+    const mods = new Set(), goals = new Set();
+    for (let d = 1; d <= 60; d++) {
+      const x = game(1).s;
+      Z.meta.ensureDaily(x, Z.meta.dayKey(new Date(2026, 9, d)));
+      mods.add(x.daily.mod); goals.add(x.daily.goal);
+    }
+    ok(mods.size >= 7 && goals.size >= 6, '60 days use ' + mods.size + '/9 modifiers and ' + goals.size + '/7 goals');
+    ok(!Z.meta.ensureDaily(a, '2026-10-07'), 'same day does not restart');
+
+    // Every modifier changes the game
+    for (const mod of Z.DAILY_MODS) {
+      const g = game(1);
+      g.s.daily.mod = ''; g.dirty = true; g.refresh();
+      const before = JSON.stringify(g.m);
+      g.s.daily.mod = mod.id; g.s.flags.reveal.daily = true; g.dirty = true; g.refresh();
+      ok(JSON.stringify(g.m) !== before, 'modifier ' + mod.id + ' changes the game');
+    }
+    // Only while the daily feature is shown
+    const g0 = game(1);
+    g0.s.daily.mod = 'clickday'; g0.s.flags.reveal.daily = false;
+    ok(!Z.meta.dailyActive(g0.s), 'modifier inactive until the daily challenge is introduced');
+
+    // Goal progress, reward, streak
+    const g = game(1), s = g.s;
+    s.flags.reveal.daily = true;
+    s.cloutLifetime = 1000;
+    const day = k => Z.meta.dayKey(new Date(2026, 9, k));
+    const finish = () => { const goal = Z.DAILY_GOAL[s.daily.goal]; s.stats[goal.stat] = s.daily.base + goal.need; Z.meta.checkDaily(g); };
+    Z.meta.ensureDaily(s, day(1));
+    s.daily.goal = 'clicks'; s.daily.base = s.stats.totalClicks;
+    for (let i = 0; i < 10; i++) Z.econ.click(g);
+    eq(Z.meta.dailyProgress(s).have, 10, 'real clicks count toward the goal');
+    const clout0 = s.clout;
+    finish();
+    ok(s.daily.done && s.clout > clout0, 'goal done, +' + (s.clout - clout0) + ' Clout');
+    eq(s.daily.streak, 1, 'streak 1');
+    const c1 = s.clout; Z.meta.checkDaily(g);
+    eq(s.clout, c1, 'reward paid only once');
+    // Reward = 2% of lifetime Clout × (1 + 25% per streak day, up to day 7)
+    const factors = [];
+    for (let k = 2; k <= 9; k++) {
+      Z.meta.ensureDaily(s, day(k));
+      const life = s.cloutLifetime, r0 = s.clout;
+      finish();
+      factors.push(((s.clout - r0) / (life * 0.02)).toFixed(2));
+    }
+    eq(s.daily.streak, 9, '9 days in a row → streak 9');
+    const want = [1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.5, 2.5];
+    ok(factors.every((x, i) => Math.abs(x - want[i]) < 0.05), 'streak bonus grows to day 7, then stays: ×' + factors.join(' ×'));
+    Z.meta.ensureDaily(s, day(12));
+    eq(s.daily.streak, 0, 'a missed day resets the streak');
+    finish();
+    eq(s.daily.streak, 1, 'new streak starts at 1');
+    Z.meta.ensureDaily(s, day(13));
+    eq(s.daily.streak, 1, 'streak kept overnight before today is done');
+  });
+
+  /* ================= 5. Operating systems ================= */
+  group('5 · Operating systems (incl. Prism OS and ChaosOS 95)', () => {
+    eq(Z.OSES.map(o => o.id).join(','), 'aero,metro,mango,holo,retro', 'five systems in order');
+    const known = ['clickMult', 'attMult', 'yieldMult', 'pressureMult', 'controlMult', 'capacityMult', 'regenMult', 'drainMult', 'meltdownMult', 'modPenalty', 'goodEvents', 'badSeverity', 'buffDuration', 'hotfixCooldown', 'costMult', 'crashGuard',
+      'attBonus', 'clickFlat', 'clickAps', 'chaosAtt', 'chaosYield', 'tolerance', 'hotfixPower', 'autoClick', 'offlineCap', 'offlineEff', 'trendMult', 'meltdownStability', 'autobuySpeed', 'stabilityBonus',
+      'autoHotfix', 'autobuy', 'riskManager', 'prAutopilot', 'scheduler', 'bMult', 'synergy', 'policy', 'action'];
+    const unknown = [];
+    const scan = (where, list) => { for (const e of list || []) if (known.indexOf(e.t) < 0) unknown.push(where + ':' + e.t); };
+    for (const o of Z.OSES) scan('os ' + o.id, o.effects);
+    for (const m of Z.DAILY_MODS) scan('daily ' + m.id, m.effects);
+    for (const u of Z.UPGRADES) scan('upgrade ' + u.id, u.effects);
+    for (const p of Z.PERKS) scan('perk ' + p.id, p.effects);
+    for (const u of Z.REBOOT_UPGRADES) scan('bandwidth ' + u.id, u.effects);
+    for (const p of Z.PROTOCOLS) scan('protocol ' + p.id, p.effects);
+    eq(unknown.join(' '), '', 'every effect type is one the game understands');
+
+    let prev = null;
+    for (let k = 0; k < Z.OSES.length; k++) {
+      const o = Z.OSES[k];
+      const g = game(7, o.id);
+      if (k > 0) {
+        ok(o.name && o.edition && o.cost > 0 && o.era >= 1 && o.effects.length > 0, o.name + ' ' + o.edition + ': era ' + o.era + ', cost ' + Z.fmt.money(o.cost));
+        ok(JSON.stringify(g.m) !== prev, o.name + ' adds its own bonuses');
+      }
+      prev = JSON.stringify(g.m);
+      const set = Z.COSMETICS.setFor(o.id), def = Z.COSMETICS.defaultsFor(o.id);
+      const items = set.reduce((n, c) => n + c.items.length, 0);
+      ok(Object.keys(def).every(cat => Z.COSMETICS.ITEM[cat + ':' + def[cat]]), o.id + ': default theme exists (' + items + ' Style Shop items)');
+    }
+    // Stacking: the retro system keeps Prism OS's auto-clicks
+    const holo = Z.OSES.find(o => o.id === 'holo');
+    const auto = holo.effects.filter(e => e.t === 'autoClick').reduce((n, e) => n + e.v, 0);
+    ok(game(7, 'retro').m.autoClick >= auto && auto > 0, 'ChaosOS 95 keeps Prism OS bonuses (auto-click ' + game(7, 'retro').m.autoClick + ')');
+    ok(game(7, 'aero').m.autoClick === 0, 'ChaosOS 7 has none of them');
+    // Installing works
+    const g = game(5, 'mango');
+    g.s.res.money = 1e40;
+    ok(Z.opsys.available(g.s, Z.opsys.next(g.s)) && Z.opsys.canInstall(g.s), 'Prism OS can be installed in the AI Era');
+    Z.opsys.install(g);
+    eq(g.s.os.id, 'holo', 'Prism OS installed');
+    const g7 = game(7, 'holo');
+    g7.s.res.money = 1e40;
+    Z.opsys.install(g7);
+    eq(g7.s.os.id, 'retro', 'ChaosOS 95 installed in the Post-Internet Era');
+    const g4 = game(4, 'mango');
+    g4.s.res.money = 1e40;
+    ok(!Z.opsys.available(g4.s, Z.opsys.next(g4.s)), 'Prism OS is not offered before the AI Era');
+  });
+
+  /* ================= 6. Saves ================= */
+  group('6 · Saves keep everything new', () => {
+    const g = game(3, 'mango'), s = g.s;
+    s.flags.ev['act:leak'] = 2; s.flags.ev['mech:trend'] = 1; s.flags.ev['mechIntro:trend'] = 1;
+    s.challenges.run['v-viral'] = true; s.challenges.done['v-viral'] = 123;
+    s.history.push({ era: 2, time: 1000, clout: 5, attention: 1e12, money: 1e10, meltdowns: 0, clicks: 99, upgrades: 4, os: 'metro', challenges: 2, at: 1 });
+    Z.meta.ensureDaily(s, '2026-10-07'); s.daily.streak = 4; s.daily.last = '2026-10-06';
+    s.run.wildTime = 5; s.run.safeTime = 7; s.run.edgeTime = 9; s.run.minStab = 44; s.run.connections = 3; s.run.feedMode = 2;
+    s.mech = { active: { kind: 'trend', tag: '#DanceBreak', time: 9, total: 20 }, t: 3 };
+    const back = Z.save.importString(Z.save.exportString(s));
+    eq(JSON.stringify(back.history), JSON.stringify(s.history.map(x => Object.assign({}, x, { v: 1 }))), 'era records');
+    eq(JSON.stringify(back.challenges), JSON.stringify(s.challenges), 'challenges');
+    eq(JSON.stringify(back.daily), JSON.stringify(s.daily), 'daily challenge and streak');
+    eq(JSON.stringify(back.mech.active), JSON.stringify(s.mech.active), 'running era mechanic');
+    eq(back.mech.t, 3, 'time to the next alert');
+    ok(['wildTime', 'safeTime', 'edgeTime', 'minStab', 'connections', 'feedMode'].every(k => back.run[k] === s.run[k]), 'new era counters');
+    eq(back.flags.ev['act:leak'], 2, 'action counters');
+    eq(back.flags.ev['mech:trend'], 1, 'mechanic counters');
+    eq(back.os.id, 'mango', 'operating system');
+
+    // Reloading during a flame war keeps the fire (and its bonus); no fire, no bonus
+    const gf = game(1);
+    gf.s.run.time = 60;
+    run(gf, 200, 0.5, x => !!x.s.mech.active);
+    gf.s.mech.active.fire = 70;
+    let re = Z.save.importString(Z.save.exportString(gf.s));
+    ok(re.mech.active && re.mech.active.fire === 70 && re.buffs.some(x => x.key === 'flameWar'), 'flame war carries on after loading');
+    const cheat = JSON.parse(JSON.stringify(gf.s));
+    cheat.mech = {};
+    re = Z.save.importString(JSON.stringify(cheat));
+    ok(!re.buffs.some(x => x.key === 'flameWar'), 'flame war bonus is dropped without the fire');
+    const g6 = game(6);
+    g6.s.run.money = 9e12;
+    g6.s.mech = { q: { time: 12, target: 5e9, from: 8e12 } };
+    eq(JSON.stringify(Z.save.importString(Z.save.exportString(g6.s)).mech.q), '{"time":12,"target":5000000000,"from":8000000000000}', 'quarter target, time and start carry on');
+    const g3x = game(3);
+    g3x.s.mech = { active: { kind: 'trend', tag: '<b>hi</b>', time: 9 }, cd: 1e9 };
+    const m3 = Z.save.importString(Z.save.exportString(g3x.s)).mech;
+    ok(!m3.active && m3.cd <= 12, 'unknown trend text and wild values are dropped');
+    const g1x = game(1);
+    g1x.s.mech = { active: { kind: 'bots', time: 5 } };
+    ok(!Z.save.importString(Z.save.exportString(g1x.s)).mech.active, 'mechanic of another era is dropped');
+
+    // An old save without the new fields
+    const old = JSON.parse(JSON.stringify(s));
+    delete old.history; delete old.challenges; delete old.daily; delete old.mech; delete old.runBase;
+    for (const k of ['wildTime', 'safeTime', 'edgeTime', 'minStab', 'connections', 'feedMode']) delete old.run[k];
+    const o = Z.save.importString(JSON.stringify(old));
+    ok(Array.isArray(o.history) && o.challenges && o.challenges.run && o.daily && typeof o.daily.streak === 'number' && o.mech && o.runBase, 'old save gets the new fields');
+    eq(o.run.minStab, 100, 'old save: lowest Stability starts at 100');
+    ok(!!Z.createGame(o), 'old save starts');
+    // Damaged values
+    const bad = JSON.parse(JSON.stringify(s));
+    bad.history = [{ era: 'x', time: 'y' }, null, 5]; bad.challenges = 'nope'; bad.daily = { streak: -5, date: 7 }; bad.mech = 42; bad.run.feedMode = 9;
+    bad.flags.ev['<img>'] = 3;
+    let fixed = null;
+    try { fixed = Z.save.importString(JSON.stringify(bad)); } catch (e) { fixed = null; }
+    ok(fixed, 'damaged values do not break loading');
+    if (fixed) {
+      ok(fixed.history.every(h => h && typeof h.era === 'number' && isFinite(h.time)), 'broken records dropped or fixed (' + fixed.history.length + ' left)');
+      ok(fixed.daily.streak >= 0 && typeof fixed.daily.date === 'string', 'daily values fixed');
+      ok(fixed.run.feedMode >= 0 && fixed.run.feedMode <= 2, 'feed mode kept in range');
+      ok(!('<img>' in fixed.flags.ev), 'unknown counter keys dropped');
+      const gf = Z.createGame(fixed);
+      try { gf.notify = () => {}; for (let i = 0; i < 20; i++) gf.tick(0.5); ok(true, 'repaired save plays'); } catch (e) { ok(false, 'repaired save plays: ' + e.message); }
+    }
+  });
+
+  /* ================= 7. Offline progress ================= */
+  group('7 · Offline progress and the era mechanics', () => {
+    // Alerts wait while you are away; the quarter starts over when you are back
+    const gf = game(1);
+    gf.s.run.time = 60;
+    run(gf, 200, 0.5, x => !!x.s.mech.active);
+    gf.s.mech.active.fire = 40;
+    const sum0 = Z.offline.simulate(gf, 3600);
+    ok(gf.s.mech.active && gf.s.mech.active.fire === 40, 'flame war waits while you are away (still 40%)');
+    ok(sum0 && isFinite(sum0.att), 'offline summary: ' + Z.fmt.num(sum0.att) + ' Attention in 1 h');
+    const gq = game(6);
+    gq.s.run.time = 60;
+    run(gq, 1);
+    Z.offline.simulate(gq, 3600);
+    ok(!gq.s.mech.q, 'quarter cleared while away');
+    run(gq, 1);
+    ok(gq.s.mech.q && gq.s.mech.q.time > 170, 'a new quarter starts on return');
+
+    for (const era of [1, 6, 7]) {
+      const results2 = [];
+      for (const withMech of [true, false]) {
+        const r = ICHAOS_SIM.run({ seed: 3, hours: 6, maxEras: 9, stopAt: [0, 21, 0, 0, 0, 0, 150, 186][era] * 60, returnGame: true });
+        const g = r.g;
+        g.notify = () => {};
+        if (g.s.era !== era) { note('simulated game is in era ' + g.s.era + ', not ' + era); }
+        g.s.mech = {};
+        g.s.run.time = Math.max(g.s.run.time, 60);
+        const real = Z.mech.tick;
+        if (!withMech) Z.mech.tick = () => {};
+        let sum;
+        try { sum = Z.offline.simulate(g, 8 * 3600); } finally { Z.mech.tick = real; }
+        results2.push(sum);
+        ok(sum && sum.simulated > 0 && isFinite(sum.att) && isFinite(sum.money), 'era ' + g.s.era + (withMech ? ' with' : ' without') + ' the mechanic: 8 h away → ' + Z.fmt.num(sum.att) + ' Attention, ' + sum.meltdowns + ' meltdowns, Stability ' + sum.stabilityStart.toFixed(0) + ' → ' + sum.stabilityEnd.toFixed(0));
+      }
+      const [w, wo] = results2;
+      ok(w.meltdowns <= wo.meltdowns + 1, 'era ' + era + ': the mechanic does not add meltdowns while away (' + w.meltdowns + ' vs ' + wo.meltdowns + ')');
+      ok(w.att >= wo.att * 0.85, 'era ' + era + ': the mechanic costs at most 15% of offline Attention (' + (w.att / Math.max(1, wo.att) * 100).toFixed(0) + '%)');
+    }
+  });
+
+  /* ================= 8. Czech texts ================= */
+  group('8 · Czech translation of the new content', () => {
+    const tr = Z.i18n && Z.i18n.tr;
+    if (!tr || Z.i18n.lang !== 'cs') { note('Czech could not be switched on in this browser; skipped'); return; }
+    const missing = [];
+    const SAME = /^(Black Friday|Wayback Machine|\d+ min \/ \d+ min)$/;   // the same words in Czech
+    const check = text => { if (text && tr(text) === text && /[A-Za-z]{3}/.test(text) && !SAME.test(text)) missing.push(text); };
+    for (const c of Z.CHALLENGES) { check(c.name); check(c.desc); }
+    for (const m of Z.DAILY_MODS) { check(m.name); check(m.desc); }
+    for (const goal of Z.DAILY_GOALS) check(goal.text.replace('{n}', goal.need));
+    for (const o of Z.OSES) { check(o.look); for (const k of ['newLook', 'newMusic']) check(o[k]); for (const l of o.feed || []) check(typeof l === 'string' ? l : l.text); for (const l of o.setup || []) check(l); }
+    // Mechanic windows and announcements
+    for (let era = 1; era <= 7; era++) {
+      const g = game(era); g.s.run.time = 60;
+      run(g, 300, 0.5, x => !!x.s.mech.active || (x.s.mech.q && era === 6));
+      const v = Z.mech.view(g);
+      if (v) { check(v.title); check(v.text); if (v.bar) check(v.bar.label); for (const b of v.buttons || []) check(b.label); }
+      for (const id of ['douse', 'connect', 'ride', 'check', 'trust', 'letin', 'keepout', 'feed2']) { for (let i = 0; i < 12; i++) Z.mech.act(g, id); }
+      const v2 = Z.mech.view(g);
+      if (v2) { check(v2.title); check(v2.text); if (v2.bar) check(v2.bar.label); }
+      for (const n of mechLog(g)) { check(n.title); check(n.text); }
+    }
+    for (const c of Z.CHALLENGES) { const st = Z.meta.challengeState(game(c.era).s, c); check(st.text); }
+    // Reboot the Internet
+    for (const u of Z.REBOOT_UPGRADES) { check(u.name); check(u.desc); }
+    for (const p of Z.PROTOCOLS) { check(p.name); check(p.desc); }
+    for (const t of ['🔁 Reboot the Internet', 'Reboot the Internet', '🔁 Open Reboot', 'Bandwidth Upgrades', 'Protocol for the next internet', '✅ You keep', '♻️ You lose',
+      '3 reboots so far · 📡 42 Bandwidth earned in total', 'Rebooting now earns 📡 10 Bandwidth and starts Internet v2 in the Forum Era.',
+      'Reach the goal of the Post-Internet Era to reboot the internet. You are in the AI Era.', 'Reach this era’s goal first: 1.00K / 2.00K Attention.',
+      'This internet runs on 📞 Dial-up Only (All Attention ×0.6). Rebooting from it pays Bandwidth ×1.4.', '📡 12 Bandwidth to spend',
+      'You can reboot the internet now for 📡 10 Bandwidth, or keep going for more.',
+      'After the Post-Internet Era you can reboot the whole internet for Bandwidth: permanent upgrades that survive everything.',
+      'Reach this era’s goal to reboot the internet. 📡 3 Bandwidth to spend.',
+      'You go back to the Forum Era on Internet v3 (Glass Servers) with 📡 14 Bandwidth. Clout, lifetime Clout and Clout perks reset. Your Bandwidth upgrades, operating system, achievements and records stay.',
+      'Internet v3 is online', 'Internet v3 is online. You brought 📡 14 Bandwidth with you.', '+14 Bandwidth. Spend it on upgrades in 🔁 Reboot.',
+      'v3 (2 reboots)', '🏎️ Fastest full internet (all seven eras): 2h 10m on v2.', 'Protocol: Glass Servers', '⏳ Back in the AI Era',
+      'Tolerance −12, Stability drain ×1.3', 'Moderation Control ×0.5, Chaos pressure ×1.25', 'Money per Attention ×0.5']) check(t);
+    const uniq = Array.from(new Set(missing));
+    ok(uniq.length === 0, uniq.length ? uniq.length + ' texts stay in English' : 'every checked text has a Czech version');
+    if (uniq.length) note('Untranslated: ' + uniq.join(' | '));
+  });
+
+  /* ================= 9. Full playthrough ================= */
+  group('9 · Simulated playthrough through all eras', () => {
+    for (const seed of [1, 2]) {
+      let text = '';
+      const t0 = performance.now();
+      try { text = ICHAOS_SIM.run({ seed, hours: 8, maxEras: 7 }); } catch (e) { ok(false, 'seed ' + seed + ' crashed: ' + e.message); continue; }
+      const eras = (text.match(/^Eras: .*$/m) || [''])[0];
+      const count = (eras.match(/E\d+ /g) || []).length;
+      ok(count >= 7, 'seed ' + seed + ': ' + count + ' eras finished in 8 h (' + ((performance.now() - t0) / 1000).toFixed(1) + ' s to simulate)');
+      note('seed ' + seed + ' ' + eras);
+      note('seed ' + seed + ' ' + (text.match(/^Total meltdowns.*$/m) || [''])[0]);
+    }
+  });
+
+  /* ================= 10. Reboot the Internet ================= */
+  group('10 · Reboot the Internet', () => {
+    eq(Z.REBOOT_UPGRADES.length, 11, '11 Bandwidth upgrades');
+    eq(Z.PROTOCOLS.length, 5, '5 protocols');
+    ok(Z.REBOOT_UPGRADES.every(u => u.name && u.desc && u.cost > 0 && u.growth >= 1 && u.max >= 1), 'every upgrade is complete');
+
+    // When it is possible
+    const g6 = game(6);
+    g6.s.run.attention = Z.prestige.requirement(g6.s) * 2;
+    ok(!Z.reboot.canReboot(g6.s) && Z.reboot.visible(g6.s), 'Corporate Internet Era: shown as a preview, not possible yet');
+    eq(Z.reboot.reboot(g6, 'standard'), 0, 'reboot refused before the Post-Internet Era');
+    const g = game(7, 'retro'), s = g.s;
+    ok(!Z.reboot.canReboot(s), 'Post-Internet Era: not before the era goal');
+    s.cloutLifetime = s.clout = 300000; s.perks.brand = 5; s.perks.muscle = 2;
+    s.achievements.hello = 1; s.challenges.done['f-calm'] = 5; s.daily.streak = 3;
+    s.run.attention = Z.prestige.requirement(s);
+    s.run.time = 3000;
+    ok(Z.reboot.canReboot(s), 'possible once the goal is reached');
+    const expect = Math.floor(10 * Math.sqrt((s.cloutLifetime + Z.prestige.cloutGain(s)) / 2e6));
+    eq(Z.reboot.gain(s), expect, 'gain = 10 × √(lifetime Clout ÷ 2M) = ' + expect + ' Bandwidth');
+    ok(expect >= 8 && expect <= 14, 'one full internet is worth about 10 Bandwidth');
+
+    const got = Z.reboot.reboot(g, 'dialup');
+    eq(got, expect, 'reboot pays the shown Bandwidth');
+    eq(s.era, 1, 'back to the Forum Era');
+    eq(Z.reboot.version(s), 2, 'Internet v2');
+    ok(s.clout === 0 && s.cloutLifetime === 0 && !Object.keys(s.perks).length, 'Clout, lifetime Clout and perks reset');
+    ok(s.os.id === 'retro' && s.achievements.hello && s.challenges.done['f-calm'] && s.daily.streak === 3, 'OS, achievements, challenges and daily streak kept');
+    ok(s.history.length === 1 && s.history[0].era === 7 && s.history[0].v === 1, 'the Post-Internet Era is recorded as finished on v1');
+    ok(g.log.some(n => n.type === 'reboot'), 'reboot is announced');
+    eq(s.reboot.protocol, 'dialup', 'next internet runs on Dial-up Only');
+    g.refresh();
+    ok(near(g.m.attMult, 0.6, 1e-9), 'Dial-up Only: Attention ×0.6');
+    ok(g.m.autoClick === 0, 'ChaosOS 95 / Prism OS bonuses wait for their eras after a reboot');
+    s.era = 7; Z.prestige.resetRun(g);
+    ok(g.m.autoClick >= 10, 'and come back in their era');
+
+    // Protocol reward and hard mode
+    s.run.attention = Z.prestige.requirement(s);
+    const plain = Math.floor(10 * Math.sqrt((s.cloutLifetime + Z.prestige.cloutGain(s)) / 2e6));
+    eq(Z.reboot.gain(s), Math.floor(10 * Math.sqrt((s.cloutLifetime + Z.prestige.cloutGain(s)) / 2e6) * 1.4), 'rebooting from Dial-up Only pays ×1.4 (' + plain + ' → ' + Z.reboot.gain(s) + ')');
+    Z.reboot.reboot(g, 'standard');
+    eq(s.reboot.hard, 1, 'reboot from a protocol counted (Hard Mode)');
+    Z.ach.check(g);
+    ok(s.achievements.reboot && s.achievements.protocol, 'achievements Ctrl+Alt+Del and Hard Mode');
+
+    // Buying upgrades
+    s.reboot.bandwidth = 0;
+    ok(!Z.reboot.buy(g, 'backbone'), 'no Bandwidth, no upgrade');
+    s.reboot.bandwidth = 1000; s.reboot.lifetime += 1000;
+    const costs = [];
+    for (let i = 0; i < 3; i++) { costs.push(Z.reboot.upgradeCost(Z.REBOOT_UPGRADE.backbone, Z.reboot.level(s, 'backbone'))); Z.reboot.buy(g, 'backbone'); }
+    eq(costs.join(','), '2,4,6', 'Fiber Backbone costs 2, 4, 6');
+    ok(near(g.m.attMult, Math.pow(1.25, 3), 1e-9), 'Fiber Backbone 3 → Attention ×' + g.m.attMult.toFixed(3));
+    for (let i = 0; i < 5; i++) Z.reboot.buy(g, 'keyboard');
+    ok(!Z.reboot.buy(g, 'keyboard') && Z.reboot.level(s, 'keyboard') === 5, 'upgrades stop at their maximum');
+    s.run.time = 30;
+    const c0 = s.clout;
+    Z.reboot.buy(g, 'founder');
+    eq(s.clout - c0, 25, 'Veteran Founder bought at the start of an internet pays 25 Clout at once');
+    Z.reboot.buy(g, 'cron');
+    ok(g.m.autoHotfix && g.m.autobuy && !g.m.scheduler, 'Cron Jobs 1: auto-Hotfix and Auto-Buyer');
+    Z.reboot.buy(g, 'cron');
+    ok(g.m.riskManager && g.m.prAutopilot && g.m.scheduler, 'Cron Jobs 2: all automation');
+    const req = Z.prestige.requirement(s);
+    Z.reboot.buy(g, 'standards');
+    ok(near(Z.prestige.requirement(s), req * 0.75, 1e-9), 'Lower Standards: era goal ×0.75');
+    s.run.attention = Z.prestige.requirement(s) * 3;
+    const cg = Z.prestige.cloutGain(s);
+    Z.reboot.buy(g, 'cache');
+    ok(Z.prestige.cloutGain(s) >= Math.floor(cg * 1.25) - 1, 'Edge Cache: Clout ×1.25 (' + cg + ' → ' + Z.prestige.cloutGain(s) + ')');
+    s.challenges.run['f-clicks'] = true;
+    const cb = Z.meta.challengeBonus(s);
+    Z.reboot.buy(g, 'memory');
+    ok(near(Z.meta.challengeBonus(s), cb * 1.5, 1e-9), 'Challenge Memory: challenge bonus ×1.5');
+    s.era = 7; Z.prestige.resetRun(g); s.run.attention = Z.prestige.requirement(s);
+    const w0 = Z.reboot.gain(s);
+    Z.reboot.buy(g, 'wayback');
+    ok(Z.reboot.gain(s) >= Math.floor(w0 * 1.25) - 1, 'Wayback Machine: Bandwidth ×1.25 (' + w0 + ' → ' + Z.reboot.gain(s) + ')');
+
+    // Records
+    const h = game(1).s;
+    const add = (v, era, time) => h.history.push({ era, time, clout: 1, attention: 1, money: 1, meltdowns: 0, clicks: 0, upgrades: 0, os: 'aero', challenges: 0, at: 1, v });
+    for (let e = 1; e <= 7; e++) add(1, e, 1000);
+    for (let e = 1; e <= 7; e++) add(2, e, 600);
+    for (let e = 1; e <= 5; e++) add(3, e, 10);
+    eq(Z.reboot.internets(h).map(x => 'v' + x.v + ':' + x.time).join(' '), 'v1:7000 v2:4200', 'finished internets (v3 is not finished)');
+    eq(Z.reboot.fastestInternet(h).v, 2, 'fastest internet: v2');
+
+    // Saves
+    const back = Z.save.importString(Z.save.exportString(s));
+    const canon = x => JSON.stringify(x, Object.keys(x).concat(Object.keys(x.upgrades)).sort());
+    eq(canon(back.reboot), canon(s.reboot), 'reboot state survives saving');
+    eq(back.history.map(x => x.v).join(','), s.history.map(x => x.v).join(','), 'record versions survive saving');
+    const bad = JSON.parse(JSON.stringify(s));
+    bad.reboot = { count: 2, bandwidth: -5, lifetime: 'x', upgrades: { backbone: 999, nope: 3 }, protocol: '<b>', hard: 50 };
+    const fixed = Z.save.importString(JSON.stringify(bad));
+    ok(fixed.reboot.bandwidth === 0 && fixed.reboot.upgrades.backbone === 25 && !('nope' in fixed.reboot.upgrades) && fixed.reboot.protocol === 'standard' && fixed.reboot.hard <= 2,
+      'damaged reboot values are repaired');
+    const old = JSON.parse(JSON.stringify(s));
+    delete old.reboot;
+    const o = Z.save.importString(JSON.stringify(old));
+    ok(o.reboot && o.reboot.count === 0 && o.reboot.protocol === 'standard', 'older saves start on Internet v1');
+
+    // Pacing: a second internet is faster, but not trivial
+    const text = ICHAOS_SIM.run({ seed: 1, hours: 14, maxEras: 7, reboots: 1 });
+    const eras = ((text.match(/^Eras: .*$/m) || [''])[0]).replace('Eras: ', '').split(' | ');
+    const mins = x => { const m = x.match(/(?:(\d+)h )?(\d+)m(?: (\d+)s)?/); return m ? (+(m[1] || 0)) * 60 + (+m[2]) + (+(m[3] || 0)) / 60 : 0; };
+    const sum = v => eras.filter(x => (v === 1 ? !/^v\d/.test(x) : x.indexOf('v' + v + ' ') === 0)).reduce((t, x) => t + mins(x.replace(/^v\d+ /, '').replace(/^E\d+ /, '')), 0);
+    const v1 = sum(1), v2 = sum(2);
+    note('simulated: Internet v1 ' + Math.round(v1) + ' min, v2 ' + Math.round(v2) + ' min');
+    ok(v2 > 0 && v2 < v1 * 0.8 && v2 > v1 * 0.35, 'Internet v2 takes 35–80% of v1');
+  });
+
+  /* ================= Report ================= */
+  const out = document.getElementById('out');
+  let pass = 0, total = 0;
+  const esc = t => String(t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+  for (const r of results) {
+    const sec = document.createElement('section');
+    const bad = r.checks.filter(c => !c.pass).length + (r.error ? 1 : 0);
+    pass += r.checks.filter(c => c.pass).length; total += r.checks.length + (r.error ? 1 : 0);
+    sec.innerHTML = '<h2 class="' + (bad ? 'bad' : 'ok') + '">' + esc(r.name) + ' — ' + (bad ? bad + ' failed' : 'all ' + r.checks.length + ' passed') + '</h2><ul>'
+      + r.checks.map(c => '<li class="' + (c.pass ? 'ok' : 'bad') + '">' + (c.pass ? '✓ ' : '✗ ') + esc(c.text) + '</li>').join('')
+      + r.notes.map(n => '<li class="info">· ' + esc(n) + '</li>').join('') + '</ul>'
+      + (r.error ? '<pre class="bad">' + esc(r.error) + '</pre>' : '');
+    out.appendChild(sec);
+  }
+  const failed = total - pass;
+  document.getElementById('sum').textContent = failed ? failed + ' of ' + total + ' checks FAILED' : 'All ' + total + ' checks passed';
+  document.getElementById('sum').className = failed ? 'bad' : 'ok';
+  document.title = failed ? 'FAILED ' + failed + '/' + total : 'passed ' + total + '/' + total;
+  window.SELFTEST = results;
+})();
+</script>
+</body>
+</html>

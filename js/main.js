@@ -1,13 +1,17 @@
 /* Boot, game loop, autosave, and the wiring from game notifications to the feed,
-   toasts and sounds. */
+   toasts and sounds.
+
+   The rules tick 10 times a second. The interface draws after each tick, and in between
+   a light per-frame pass rolls the Attention and Money counters forward at the current
+   rate, so the numbers count smoothly at the screen's refresh rate. */
 (function (Z) {
   'use strict';
 
   const ui = Z.ui, BAL = Z.BAL;
   const TICK_MS = 100;
   const MAX_ONLINE_GAP = 120;     // longer gaps (sleep, frozen tab) are simulated as offline time
-  let g = null, lastTick = 0, autosave = 0;
-  let renderQueued = false, lastFrame = 0, slowTimer = 0, forceSlow = false;
+  let g = null, lastTick = 0, autosave = 0, tickedAt = 0;
+  let renderQueued = false, lastFrame = 0, slowTimer = 0, forceSlow = false, smoothQueued = false;
 
   /* ---------- Rendering ---------- */
 
@@ -27,8 +31,33 @@
       ui.panels.renderSlow(g);
       ui.os.render(g);
       ui.meta.render(g);
+      ui.reboot.render(g);
       ui.modal.refresh();
+      mood();
     }
+  }
+
+  /** Between ticks: counters roll on at the current rate (never more than one tick ahead). */
+  function smooth(now) {
+    smoothQueued = false;
+    if (document.hidden || !g) return;
+    const ahead = Math.min(TICK_MS * 1.5, Math.max(0, now - tickedAt)) / 1000;
+    ui.hud.renderCounters(g, ahead);
+    ui.site.renderCounter(g, ahead);
+    ui.site.renderCombo(now);
+    queueSmooth();
+  }
+
+  function queueSmooth() {
+    if (!smoothQueued) { smoothQueued = true; requestAnimationFrame(smooth); }
+  }
+
+  /** The music follows the game: Chaos is energy, a meltdown muffles it, boosts hype it. */
+  function mood() {
+    const s = g.s;
+    const hype = s.buffs.some(b => b.key === 'viral' || b.key === 'notifFrenzy' || b.key === 'welcomeBack' || b.key === 'clickStorm');
+    Z.music.setMood(s.flags.reveal.chaos ? s.res.chaos : 0, s.meltdown > 0, hype);
+    Z.music.setEra(s.era);
   }
 
   ui.requestRender = function (force) {
@@ -101,6 +130,7 @@
     autosave += dt;
     if (dt > MAX_ONLINE_GAP) {
       const sum = Z.offline.simulate(g, dt);
+      sum.boost = Z.idle.welcomeBack(g, dt);
       if (dt >= 300) ui.modals.showOffline(sum);
     } else {
       while (dt > 0) {
@@ -109,8 +139,10 @@
         dt -= d;
       }
     }
+    tickedAt = performance.now();
     if (autosave >= BAL.autosaveSeconds) { autosave = 0; Z.save.write(g.s); }
     ui.requestRender();
+    queueSmooth();
   }
 
   /* ---------- Notifications → feed, toasts, sounds ---------- */
@@ -168,6 +200,7 @@
     bus.on('unlock', ({ building }) => {
       feed(building.icon, 'New in the shop: ' + building.name + '. ' + building.flavor, 'info');
       ui.toast({ icon: building.icon, title: 'New: ' + building.name, text: Z.CAT[building.cat].name + ' · ' + building.flavor, kind: 'info' });
+      Z.audio.play('unlock');
     });
     bus.on('trend', ({ building, mult }) => {
       feed('#️⃣', building.plural + ' are trending! Their output is ×' + mult + ' for a while.', 'good');
@@ -214,7 +247,10 @@
     let summary = null;
     if (loaded.state) {
       const away = (Date.now() - state.lastSaved) / 1000;
-      if (away >= BAL.offline.minSeconds) summary = Z.offline.simulate(g, away);
+      if (away >= BAL.offline.minSeconds) {
+        summary = Z.offline.simulate(g, away);
+        summary.boost = Z.idle.welcomeBack(g, away);
+      }
     }
 
     ui.hud.init();
@@ -231,6 +267,7 @@
     ui.bonus.init(g);
     ui.backup.init(g);
     ui.meta.init(g);
+    ui.reboot.init(g);
     ui.mech.init(g);
     ui.share.init(g);
     ui.keys.init(g);

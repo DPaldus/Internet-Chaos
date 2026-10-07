@@ -43,6 +43,25 @@
     if (el._s[prop] !== value) { el._s[prop] = value; el.style.setProperty(prop, value); }
   }
 
+  /** Restarts a class-based CSS animation without forcing a layout: rewinds it if it is
+      still running, otherwise takes the class off and puts it back on the next frame. */
+  function replay(el, cls) {
+    if (!el) return;
+    if (el.classList.contains(cls) && el.getAnimations && typeof CSSAnimation !== 'undefined') {
+      const list = el.getAnimations().filter(a => a instanceof CSSAnimation);
+      if (list.length) { for (const a of list) { a.currentTime = 0; a.play(); } return; }
+    }
+    el.classList.remove(cls);
+    requestAnimationFrame(() => el.classList.add(cls));
+  }
+
+  /** A one-off animation through the Web Animations API (skipped with reduced motion). */
+  function animate(el, frames, opts) {
+    if (!el || !el.animate || document.body.classList.contains('reduce-motion') || reducedMotion.matches) return null;
+    try { return el.animate(frames, opts); } catch (err) { return null; }
+  }
+  const reducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+
   /* ---------- Icons ---------- */
 
   /* Hand-drawn icons for content whose emoji would not say the right thing. Trusted constants only. */
@@ -196,7 +215,7 @@
   }
 
   Object.assign(ui, {
-    $, h, setText, setHidden, setStyle, toast, holdToasts, icon, feedIcon,
+    $, h, setText, setHidden, setStyle, replay, animate, toast, holdToasts, icon, feedIcon,
     modal: { open: openModal, close: closeModal, isOpen: modalOpen, refresh: refreshModal },
     confirm: confirmBox,
     feed: { add: feedAdd, renderAll: feedRenderAll },

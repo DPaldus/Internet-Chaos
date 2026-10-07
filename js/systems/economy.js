@@ -1,8 +1,8 @@
 /* Production, the Chaos/Stability model, clicking, prices and purchases.
 
    The central loop:
-     Attention/s = Σ traffic output × global multipliers × Chaos bonus × Stability efficiency
-     Money/s     = Attention/s × Yield, Yield = $0.50 × (1 + monetization %) × upgrades × Chaos bonus
+     Attention/s = Σ traffic output × global multipliers × Chaos bonus × Stability efficiency × Uptime
+     Money/s    = Attention/s × Yield, Yield = $0.50 × (1 + monetization %) × upgrades × Chaos bonus
      Chaos target = 100 × Pressure / (Pressure + Control)      (Pressure from content, Control from moderation)
      Tolerance    = 10 + 80 × Capacity / (Capacity + Load)      (Capacity from servers, Load from content)
      Chaos above Tolerance drains Stability; below it, Stability repairs. 0% Stability = Meltdown. */
@@ -16,7 +16,7 @@
       bOut: Object.create(null), rawAps: 0, aps: 0, yield: 0, yieldBonus: 0, mps: 0, clickAtt: 0,
       pressure: 0, control: 0, modControl: 0, target: 0, load: 0, capacity: 0, tolerance: 0,
       regen: 0, drain: 0, stabRate: 0, stabEff: 1, chaosAttMult: 1, chaosYieldMult: 1,
-      modShare: 0, modMult: 1, globalAtt: 1, policy: Z.POLICY.normal, meltdown: false, trendId: null,
+      modShare: 0, modMult: 1, uptimeMult: 1, globalAtt: 1, policy: Z.POLICY.normal, meltdown: false, trendId: null,
       buff: { att: 1, yield: 1, control: 1, click: 1, chaosAdd: 0, noDrain: false, chaosLock: false, b: Object.create(null) },
     };
   }
@@ -106,7 +106,8 @@
     c.modMult = 1 - BAL.moderationPenalty * c.modShare * m.modPenalty;
 
     const down = c.meltdown ? BAL.meltdown.productionMult : 1;
-    c.globalAtt = m.globalAtt * policy.attMult * c.chaosAttMult * c.stabEff * c.modMult * c.buff.att * down;
+    c.uptimeMult = Z.idle ? Z.idle.uptimeMult(s) : 1;
+    c.globalAtt = m.globalAtt * policy.attMult * c.chaosAttMult * c.stabEff * c.modMult * c.uptimeMult * c.buff.att * down;
     c.rawAps = raw;
     c.aps = raw * c.globalAtt;
     c.yieldBonus = yieldAdd;
@@ -141,6 +142,7 @@
     s.stats.meltdowns++;
     s.run.meltdowns++;
     s.flags.serverWatch = 0;
+    s.run.uptime = 0;
     if (g.summary) g.summary.meltdowns++;
     g.notify('meltdown', { duration: s.meltdown });
   }
@@ -173,7 +175,8 @@
 
   /* ---------- Clicking ---------- */
 
-  function click(g) {
+  /** One click. `mult` comes from the combo and viral clicks (js/systems/idle.js). */
+  function click(g, mult) {
     const s = g.s;
     s.run.clicks++;
     s.stats.totalClicks++;
@@ -181,7 +184,7 @@
       s.meltdown = Math.max(0.05, s.meltdown - BAL.meltdown.rebootPerClick);
       return { reboot: true, att: 0, money: 0 };
     }
-    const att = g.c.clickAtt;
+    const att = g.c.clickAtt * (mult > 0 ? mult : 1);
     const money = att * g.c.yield;
     gain(g, att, money);
     return { reboot: false, att, money };

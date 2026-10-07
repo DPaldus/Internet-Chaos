@@ -377,8 +377,46 @@
     'Could not copy': 'Nepodařilo se zkopírovat', 'Your browser blocked it. Use Download instead.': 'Prohlížeč to zablokoval. Použij raději stažení.',
     'A snapshot of your website to show off. It updates every time you open this window.': 'Snímek tvého webu na pochlubení. Obnoví se pokaždé, když otevřeš toto okno.',
 
+    /* ---------- Reboot the Internet ---------- */
+    'Reboot the Internet': 'Restart internetu', '🔁 Reboot the Internet': '🔁 Restartovat internet', '🔁 Open Reboot': '🔁 Otevřít restart',
+    'Bandwidth Upgrades': 'Vylepšení šířky pásma', 'Bandwidth': 'Šířka pásma', 'Protocols': 'Protokoly', 'Internet': 'Internet',
+    'Permanent upgrades that survive every reboot, so every new internet goes faster than the last.': 'Trvalá vylepšení, která přežijí každý restart, takže každý nový internet jde rychleji než ten předchozí.',
+    '✅ You keep': '✅ Zůstane ti', '♻️ You lose': '♻️ Přijdeš o', 'Protocol for the next internet': 'Protokol pro další internet',
+    'Optional. A harder internet pays more Bandwidth when you reboot it.': 'Nepovinné. Těžší internet dá při restartu víc šířky pásma.',
+    'Bandwidth and its upgrades': 'Šířka pásma a její vylepšení',
+    'Your operating system and Style Shop themes (each system’s bonuses return in its era)': 'Tvůj operační systém a motivy z obchodu se styly (bonusy každého systému se vrátí v jeho éře)',
+    'Era records and completed challenges': 'Rekordy ér a splněné výzvy', 'Your daily streak, statistics and settings': 'Tvoje denní série, statistiky a nastavení',
+    'Your Internet Era (back to the Forum Era)': 'Svou internetovou éru (zpět do éry fór)', 'Clout and its permanent Attention bonus': 'Vliv a jeho trvalý bonus k pozornosti',
+    'Clout perks': 'Výhody za Vliv', 'Everything an era resets': 'Vše, co resetuje éra',
+    'Reboot the internet?': 'Restartovat internet?', '🔁 Reboot': '🔁 Restartovat', 'No changes': 'Beze změn',
+    'The first internet. Finish it to reboot into v2.': 'První internet. Dokonči ho a restartuj do v2.',
+    'Finish all seven eras of one internet to set a record for the fastest internet.': 'Dokonči všech sedm ér jednoho internetu a vytvoř rekord nejrychlejšího internetu.',
+    'Internet version': 'Verze internetu', 'Bandwidth earned': 'Získaná šířka pásma', 'Fastest full internet': 'Nejrychlejší celý internet',
+    'After the Post-Internet Era you can start the whole internet over in the Forum Era. You lose Clout and perks but earn Bandwidth. In the ☰ Menu.': 'Po postinternetové éře můžeš celý internet začít znovu v éře fór. Přijdeš o Vliv a výhody, ale získáš šířku pásma. V ☰ Menu.',
+    'Earned by rebooting the internet. Buys upgrades that survive every reboot. The further you get before rebooting, the more you earn.': 'Získáš ji restartem internetu. Kupuje vylepšení, která přežijí každý restart. Čím dál se před restartem dostaneš, tím víc jí získáš.',
+    'An optional handicap you can pick for the next internet. A harder internet pays more Bandwidth when you reboot it.': 'Nepovinné ztížení, které si můžeš vybrat pro další internet. Těžší internet dá při restartu víc šířky pásma.',
+    'Permanent, through every Internet Era. Every system you installed keeps its bonuses. After a reboot each one comes back when the new internet reaches its era.': 'Trvale, přes všechny internetové éry. Každý nainstalovaný systém si ponechá své bonusy. Po restartu se každý vrátí, až nový internet dosáhne jeho éry.',
+    'Fiber Backbone': 'Optická páteř', 'Attention ×1.25 per level.': 'Pozornost ×1.25 za úroveň.', 'Mechanical Keyboard': 'Mechanická klávesnice',
+    'Veteran Founder': 'Zkušený zakladatel', 'Start every new internet with 25 Clout, ×4 per extra level.': 'Začni každý nový internet s 25 Vlivu, ×4 za každou další úroveň.',
+    '99.999% Uptime': 'Dostupnost 99,999 %', 'Lucky Packets': 'Šťastné pakety',
+    'Good events 15% more likely and bonuses last 10% longer per level.': 'Dobré události o 15 % pravděpodobnější a bonusy trvají o 10 % déle za úroveň.',
+    'Always Online': 'Vždy online', 'Offline progress: +2 hours of cap and +5% efficiency per level.': 'Offline postup: limit +2 hodiny a účinnost +5 % za úroveň.',
+    'Cron Jobs': 'Cron úlohy',
+    'Level 1: auto-Hotfix and the Auto-Buyer from the start. Level 2: also Auto-Policy, PR Autopilot and Auto-Actions.': 'Úroveň 1: automatický hotfix a Auto-nákup od začátku. Úroveň 2: navíc Auto-politika, PR autopilot a Auto-akce.',
+    'Edge Cache': 'Edge cache', 'Clout from Internet Eras ×1.25 per level.': 'Vliv z internetových ér ×1.25 za úroveň.',
+    'Challenge Memory': 'Paměť výzev', 'Era challenge bonuses +50% per level.': 'Bonusy výzev ér +50 % za úroveň.',
+    'Lower Standards': 'Nižší nároky', 'Every era needs 25% less Attention per level.': 'Každá éra potřebuje o 25 % méně pozornosti za úroveň.',
+    'Wayback Machine': 'Wayback Machine', '+25% Bandwidth from every reboot per level.': '+25 % šířky pásma z každého restartu za úroveň.',
+    'Standard Internet': 'Běžný internet', 'The internet as you know it.': 'Internet, jak ho znáš.',
+    'Dial-up Only': 'Jen vytáčené připojení', 'Everything loads very slowly.': 'Všechno se načítá hrozně pomalu.',
+    'Ad-Free Internet': 'Internet bez reklam', 'Advertisers pay half. Users love it.': 'Inzerenti platí polovinu. Uživatelé to milují.',
+    'No Rules': 'Bez pravidel', 'Moderators barely show up. Everyone is louder.': 'Moderátoři skoro nechodí. Všichni jsou hlasitější.',
+    'Glass Servers': 'Skleněné servery', 'Servers break if you look at them.': 'Servery se rozbijí, když se na ně podíváš.',
+    'Checking memory… 640K should be enough for anybody': 'Kontrola paměti… 640K by mělo stačit každému', 'Deleting the old internet… OK': 'Mažu starý internet… OK',
+    'Keeping your Bandwidth upgrades… OK': 'Ponechávám vylepšení šířky pásma… OK', 'Starting the Forum Era…': 'Spouštím éru fór…',
+
     /* ---------- Effects (descriptions) ---------- */
-    'no Stability drain': 'Stabilita neklesá', 'Chaos pinned under Tolerance': 'Chaos držený pod Tolerancí', 'Moderation no longer reduces Attention': 'Moderace už nesnižuje pozornost',
+    'no Stability drain':'Stabilita neklesá', 'Chaos pinned under Tolerance': 'Chaos držený pod Tolerancí', 'Moderation no longer reduces Attention': 'Moderace už nesnižuje pozornost',
     'Automatic Hotfix below your threshold': 'Automatický hotfix pod tvým prahem', 'Stable': 'Stabilní',
     'New: ': 'Novinka: ',
 
@@ -391,13 +429,62 @@
     'You are in the': 'Právě jsi v:', 'Starting the': 'Přechod do:', 'now earns': 'teď přinese', 'Clout.': 'Vlivu.',
     'Attention per second and Chaos over the last two minutes': 'Pozornost za sekundu a Chaos za poslední dvě minuty',
     'Make': 'Uprav', 'look the way you want on': 'podle sebe na', 'Their logo is now on your website.': 'Jejich logo je teď na tvém webu.',
+
+    /* ---------- Streaks: combo, viral clicks, milestones, uptime, Welcome Back ---------- */
+    'COMBO': 'KOMBO', 'Uptime': 'Bez výpadku', 'Best click combo': 'Nejlepší kombo kliků', 'Viral clicks': 'Virální kliky',
+    'Longest uptime': 'Nejdelší chod bez výpadku',
+    'Somebody tell Mom.': 'Ať to někdo řekne mámě.', 'The servers felt that.': 'Servery to ucítily.', 'Screenshot this.': 'Tohle si vyfoť.',
+    'Not bad for a website.': 'Na web to není špatné.', 'The comment section is losing it.': 'Komentáře šílí.', 'Line goes up.': 'Čára jde nahoru.',
+    'Engagement intensifies.': 'Engagement sílí.', 'The internet noticed.': 'Internet si všiml.',
+    'Click combo': 'Kombo kliků', 'Click quickly and the combo grows: up to ×2 Attention per click at 100. It breaks after a second without a click.':
+      'Klikej rychle a kombo roste: při 100 dává až ×2 pozornosti za klik. Po vteřině bez kliku se přeruší.',
+    'Any click can go viral and count five times. A combo makes it a little likelier.':
+      'Každý klik se může stát virálním a počítá se pětkrát. Kombo to trochu zpravděpodobní.',
+    'Milestones': 'Milníky', 'Every 1K, 10K, 100K and so on of Attention in an era gets a little celebration.':
+      'Každých 1K, 10K, 100K a dál pozornosti v éře si zaslouží malou oslavu.',
+    'Every full minute without a meltdown adds +1% Attention, up to +25%, even while you are away. A meltdown starts it over.':
+      'Každá celá minuta bez zhroucení přidá +1 % pozornosti, až +25 %, i když jsi pryč. Zhroucení to vynuluje.',
+    'Welcome Back boost': 'Bonus za návrat', 'Come back after 10 minutes or more away and your site gets ×2 Attention for a minute or more.':
+      'Když se vrátíš po 10 minutách nebo déle, web dostane ×2 pozornosti na minutu i víc.',
   });
 
   /* Strings with numbers and names in them. Each regex matches a whole string. */
   const era = n => ERAS[n] || (/^Post-Internet Era (.+)$/.test(n) ? 'Postinternetová éra ' + n.slice(18) : n);
   const P = (re, fn) => [re, fn];
   const M = (re, fn) => [re, fn, true];   // the last group may hold more sentences
+  const reboots = n => n === 1 ? 'restart' : n >= 2 && n <= 4 ? 'restarty' : 'restartů';
   const patterns = [
+    /* Streaks: combo, milestones, uptime, Welcome Back, people typing in the comments */
+    P(/^Uptime \+(\d+)%( \(max\))?$/, (a, n, max) => 'Bez výpadku +' + n + ' %' + (max ? ' (max)' : '')),
+    M(/^Every minute without a meltdown adds \+1% Attention, up to \+(\d+)%\. A meltdown starts it over\.$/, (a, n) => 'Každá minuta bez zhroucení přidá +1 % pozornosti, až +' + n + ' %. Zhroucení to vynuluje.'),
+    P(/^(.+) \(\+(\d+)% Attention\)$/, (a, t, n) => t + ' (+' + n + ' % pozornosti)'),
+    P(/^([\d.]+[A-Za-z]*) Attention$/, (a, n) => n + ' pozornosti'),
+    M(/^([\d.]+[A-Za-z]*) Attention this era! (.+)$/, (a, n, q) => n + ' pozornosti v této éře! ' + T(q)),
+    M(/^🎁 Welcome back! ×(\d+) Attention for (.+)\. Make it count\.$/, (a, m, t) => '🎁 Vítej zpátky! ×' + m + ' pozornosti na ' + t + '. Využij to.'),
+    P(/^Welcome back! ×(\d+) Attention for (.+)\.$/, (a, m, t) => 'Vítej zpátky! ×' + m + ' pozornosti na ' + t + '.'),
+    P(/^(\S+) is typing…$/, (a, u) => u + ' píše…'),
+    P(/^(\S+) and (\S+) are typing…$/, (a, u, v) => u + ' a ' + v + ' píšou…'),
+    P(/^(\S+) and (\d+) others are typing…$/, (a, u, n) => u + ' a další (' + n + ') píšou…'),
+
+    /* Reboot the Internet (first, so the general "Reach the …" pattern below does not take these) */
+    P(/^(\d+) reboots? so far · 📡 (.+) Bandwidth earned in total$/, (a, n, x) => n + ' ' + reboots(+n) + ' · 📡 ' + x + ' šířky pásma celkem'),
+    P(/^Rebooting now earns 📡 (.+) Bandwidth and starts Internet v(\d+) in the Forum Era\.$/, (a, x, v) => 'Restart teď přinese 📡 ' + x + ' šířky pásma a spustí internet v' + v + ' v éře fór.'),
+    M(/^Reach the goal of the (.+) to reboot the internet\. You are in the (.+)\.$/, (a, x, y) => 'Restart internetu se odemkne po splnění cíle v éře: ' + era(x) + '. Teď jsi v: ' + era(y) + '.'),
+    P(/^Reach this era’s goal first: (.+) \/ (.+) Attention\.$/, (a, x, y) => 'Nejdřív splň cíl této éry: ' + x + ' / ' + y + ' pozornosti.'),
+    M(/^This internet runs on (.+) \((.+)\)\. Rebooting from it pays Bandwidth ×(.+)\.$/, (a, p, e, x) => 'Tento internet běží na protokolu ' + T(p) + ' (' + T(e) + '). Restart z něj dá šířku pásma ×' + x + '.'),
+    P(/^📡 (.+) Bandwidth to spend$/, (a, x) => '📡 ' + x + ' šířky pásma k utracení'),
+    P(/^You can reboot the internet now for 📡 (.+) Bandwidth, or keep going for more\.$/, (a, x) => 'Teď můžeš restartovat internet za 📡 ' + x + ' šířky pásma, nebo pokračovat pro víc.'),
+    P(/^After the (.+) you can reboot the whole internet for Bandwidth: permanent upgrades that survive everything\.$/, (a, x) => 'Až dokončíš éru: ' + era(x) + ', můžeš restartovat celý internet za šířku pásma: trvalá vylepšení, která přežijí všechno.'),
+    M(/^Reach this era’s goal to reboot the internet\. 📡 (.+) Bandwidth to spend\.$/, (a, x) => 'Splň cíl této éry a můžeš restartovat internet. 📡 ' + x + ' šířky pásma k utracení.'),
+    M(/^You go back to the Forum Era on Internet v(\d+)(?: \((.+?)\))? with 📡 (.+) Bandwidth\. (.*)$/, (a, v, p, x) => 'Vrátíš se do éry fór na internetu v' + v + (p ? ' (' + T(p) + ')' : '') + ' s 📡 ' + x + ' šířky pásma. Vliv, celkový Vliv a výhody za Vliv se resetují. Vylepšení šířky pásma, operační systém, úspěchy a rekordy ti zůstanou.'),
+    P(/^Internet v(\d+) is online$/, (a, v) => 'Internet v' + v + ' je online'),
+    M(/^Internet v(\d+) is online\. You brought 📡 (.+) Bandwidth with you\.$/, (a, v, x) => 'Internet v' + v + ' je online. Přinesl sis 📡 ' + x + ' šířky pásma.'),
+    M(/^\+(.+) Bandwidth\. Spend it on upgrades in 🔁 Reboot\.$/, (a, x) => '+' + x + ' šířky pásma. Utrať ji za vylepšení v 🔁 Restartu.'),
+    P(/^v(\d+) \((.+) reboots?\)$/, (a, v, n) => 'v' + v + ' (' + n + ' ' + reboots(+n) + ')'),
+    P(/^🏎️ Fastest full internet \(all seven eras\): (.+) on v(\d+)\.$/, (a, t, v) => '🏎️ Nejrychlejší celý internet (všech sedm ér): ' + t + ' na v' + v + '.'),
+    P(/^Protocol: (.+)$/, (a, x) => 'Protokol: ' + T(x)),
+    P(/^⏳ Back in the (.+)$/, (a, x) => '⏳ Vrátí se v éře: ' + era(x)),
+
     /* Top bar */
     P(/^MELTDOWN · back in (\d+)s$/, (a, n) => 'ZHROUCENÍ · zpět za ' + n + ' s'),
     P(/^Target (\d+)% · Tolerance (\d+)%$/, (a, x, y) => 'Cíl ' + x + ' % · Tolerance ' + y + ' %'),
@@ -466,7 +553,7 @@
     P(/^Unlocks the (.+) action$/, (a, x) => 'Odemkne akci: ' + T(x)),
     P(/^\+(.+) automatic clicks per second$/, (a, x) => '+' + x + ' automatických kliků za sekundu'),
     P(/^Trending multiplier \+(.+)$/, (a, x) => 'Násobič trendu +' + x),
-    P(/^Tolerance ([+−].+)$/, (a, x) => 'Tolerance ' + x),
+    P(/^Tolerance ([+−][\d.,]+)$/, (a, x) => 'Tolerance ' + x),
     P(/^Blue screens (\d+)% rarer and shorter$/, (a, x) => 'Modré obrazovky o ' + x + ' % vzácnější a kratší'),
     P(/^Stability \+(.+)% now, then \+(.+)% per minute$/, (a, x, y) => 'Stabilita +' + x + ' % hned, pak +' + y + ' % za minutu'),
     P(/^Offline progress \+(\d+)% efficiency$/, (a, x) => 'Offline postup +' + x + ' % efektivity'),
@@ -541,7 +628,7 @@
     P(/^Trend alert: (#\S+)$/, (a, x) => 'Upozornění na trend: ' + x),
     M(/^"(.+)" Trust it \(60% true\) or fact-check it\.$/, (a, x) => '„' + T(x) + '“ Věř tomu (v 60 % pravda), nebo to ověř.'),
     P(/^"(.+)"$/, (a, x) => '„' + T(x) + '“'),
-    P(/^Shareholders want (.+)\/s by the end of the quarter\.$/, (a, x) => 'Akcionáři chtějí do konce čtvrtletí ' + x + '/s.'),
+    P(/^Shareholders want an average of (.+)\/s this quarter\.$/, (a, x) => 'Akcionáři chtějí v tomto čtvrtletí průměrně ' + x + '/s.'),
     P(/^(.+) is already cringe\.$/, (a, x) => x + ' už je trapný.'),
     P(/^Twenty connections: Attention \+(\d+)%\.$/, (a, x) => 'Dvacet spojení: pozornost +' + x + ' %.'),
     P(/^You rode (.+)$/, (a, x) => 'Svezl ses na ' + x),
@@ -551,7 +638,7 @@
     P(/^Trending now: (.+)$/, (a, x) => 'Teď v trendu: ' + x),
     P(/^(\d+)s left$/, (a, x) => 'zbývá ' + x + ' s'),
     P(/^(\d+)s to decide$/, (a, x) => x + ' s na rozhodnutí'),
-    P(/^Reach (.+)\/s \(now (.+)\/s\)\.$/, (a, x, y) => 'Dosáhni ' + x + '/s (teď ' + y + '/s).'),
+    P(/^Average (.+)\/s this quarter \(so far (.+)\/s\)\.$/, (a, x, y) => 'Průměr ' + x + '/s za čtvrtletí (zatím ' + y + '/s).'),
     P(/^(\d+)s left in the quarter$/, (a, x) => 'zbývá ' + x + ' s čtvrtletí'),
     P(/^Scan: (\d+)% chance they are friendly\.$/, (a, x) => 'Sken: ' + x + ' % šance, že jsou přátelští.'),
 
@@ -610,6 +697,8 @@
 
     /* Welcome back */
     P(/^You were away for (.+)\. Here is what happened\.$/, (a, x) => 'Byl jsi pryč ' + x + '. Tady je, co se stalo.'),
+    // The same sentence on the offline window, where the time is set in bold between two text pieces.
+    P(/^You were away for$/, () => 'Byl jsi pryč'), P(/^\. Here is what happened\.$/, () => '. Tady je, co se stalo.'),
     P(/^Your site melted down (\d+) times? while you were gone\. The servers would like to talk\.$/, (a, n) => 'Zatímco jsi byl pryč, web se zhroutil ' + n + '×. Servery by si s tebou rády promluvily.'),
     M(/^Offline progress runs at (\d+)% efficiency for up to (.+) hours( \(you hit the cap; the Night Shift perk raises it\))?\. (.*)$/, (a, e, h2, cap) => 'Offline postup běží s efektivitou ' + e + ' % až ' + h2 + ' hodin' + (cap ? ' (dosáhl jsi limitu; výhoda Noční směna ho zvyšuje)' : '') + '. Chaos, Stabilita i události běží dál, i když jsi pryč.'),
     P(/^🏆 Unlocked: (.+)$/, (a, x) => '🏆 Odemčeno: ' + x),

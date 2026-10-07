@@ -69,7 +69,9 @@
       if (text.indexOf(sep) < 0) continue;
       const parts = text.split(sep), out = parts.map(tr);
       const changed = out.filter((p, i) => p !== parts[i]).length;
-      if (sep === ', ' ? changed === parts.length : changed > 0) return out.join(sep);
+      // A piece the dictionary knows counts even when it reads the same ("Tolerance −12").
+      const known = sep === ', ' ? parts.filter((p, i) => out[i] !== p || whole(p.trim()) !== null).length : 0;
+      if (sep === ', ' ? changed > 0 && known === parts.length : changed > 0) return out.join(sep);
     }
     return text;
   }

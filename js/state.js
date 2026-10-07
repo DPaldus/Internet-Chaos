@@ -13,6 +13,7 @@
       minStab: 100,     // lowest Stability this era
       connections: 0,   // Social Media Era friend network
       feedMode: 1,      // Algorithm Era feed mode: 0 calm, 1 balanced, 2 max engagement
+      uptime: 0,        // seconds since the last meltdown (js/systems/idle.js)
     };
   }
 
@@ -23,6 +24,7 @@
       events: 0, choices: 0, eras: 0, largestViral: 0, meltdowns: 0, buildingsBought: 0,
       upgradesBought: 0, offlineTime: 0, longestAway: 0, hotfixes: 0, stirs: 0, actions: 0,
       cloutEarned: 0, unhingedTime: 0, fastestEra: 0, bonuses: 0,
+      longestUptime: 0, bestCombo: 0, crits: 0,
     };
   }
 
@@ -89,6 +91,9 @@
         runBase: { stats: {}, ev: {} },                // statistics when this era started
         daily: { date: '', mod: '', goal: '', base: 0, done: false, streak: 0, last: '' },
         mech: {},                                      // this era's signature mechanic (js/systems/eramech.js)
+        // Reboot the Internet (js/systems/reboot.js): reboots done, Bandwidth to spend and
+        // ever earned, upgrade levels, this internet's protocol, reboots from a hard protocol.
+        reboot: { count: 0, bandwidth: 0, lifetime: 0, upgrades: {}, protocol: 'standard', hard: 0 },
       };
     },
   };

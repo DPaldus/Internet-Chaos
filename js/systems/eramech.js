@@ -4,11 +4,12 @@
      3 Viral          Trend alerts: jump on a trend before its countdown runs out.
      4 Algorithm      Feed mode: trade Attention against Stability with one switch.
      5 AI             Hallucinations: your AI makes a claim; trust it or fact-check it.
-     6 Corporate      Quarterly targets: shareholders want Money/s to grow every quarter.
+     6 Corporate      Quarterly targets: shareholders want average Money/s to grow every quarter.
      7 Post-Internet  Bot swarms: let them in (friend or foe?) or keep them out.
    Eras past 7 keep the bot swarms. Missing a prompt never costs much, so idle play is
-   safe; paying attention pays off. State lives in s.mech (fresh every era) and in a few
-   s.run counters (connections, feedMode). DOM-free; js/ui/eramech.js draws it. */
+   safe; paying attention pays off. State lives in s.mech (fresh every era, kept in saves
+   through fromSave) and in a few s.run counters (connections, feedMode). DOM-free;
+   js/ui/eramech.js draws it. */
 (function (Z) {
   'use strict';
 
@@ -57,10 +58,19 @@
     return !!s.flags.reveal.chaos && s.run.time > 40;
   }
 
+  /** A quarter measures the average Money/s from its start (s.run.money is money earned this era). */
+  function newQuarter(g, target) { return { time: QUARTER, target, from: g.s.run.money }; }
+  function quarterAverage(s) {
+    const q = s.mech.q, spent = QUARTER - q.time;
+    return spent > 0 ? Math.max(0, s.run.money - q.from) / spent : 0;
+  }
+
   function tick(g, dt) {
     const s = g.s, m = s.mech, k = kind(s);
     if (m.cd > 0) m.cd = Math.max(0, m.cd - dt);
     if (!started(g)) return;
+    // Nobody can answer a prompt while away: alerts wait, and the quarter starts over on return.
+    if (g.offline) { m.q = null; return; }
     const a = m.active;
 
     if (k === 'flame') {
@@ -104,13 +114,15 @@
 
     if (k === 'quarter') {
       if (!m.q) {
-        m.q = { time: QUARTER, target: Math.max(1, g.c.mps) * QUARTER_GROWTH };
-        announce(g, 'quarter', '📈', 'A new quarter started', 'Shareholders want ' + Z.fmt.money(m.q.target) + '/s by the end of the quarter.', 'info');
+        m.q = newQuarter(g, Math.max(1, g.c.mps) * QUARTER_GROWTH);
+        announce(g, 'quarter', '📈', 'A new quarter started', 'Shareholders want an average of ' + Z.fmt.money(m.q.target) + '/s this quarter.', 'info');
         return;
       }
       m.q.time -= dt;
       if (m.q.time > 0) return;
-      const won = g.c.mps >= m.q.target;
+      // Judged on the quarter's average, so one lucky or unlucky moment does not decide it.
+      const average = quarterAverage(s);
+      const won = average >= m.q.target;
       if (won) {
         count(s, 'mech:quarterWin');
         Z.effects.addBuff(g, 'stockSurge');
@@ -119,7 +131,7 @@
         Z.effects.apply(g, [{ stability: -10 }, { chaos: 10 }]);
         announce(g, 'quarterEnd', '📉', 'Quarterly target missed', 'Shareholders panicked. Stability −10, Chaos +10.', 'bad');
       }
-      m.q = { time: QUARTER, target: Math.max(1, g.c.mps) * QUARTER_GROWTH };
+      m.q = newQuarter(g, Math.max(1, average) * QUARTER_GROWTH);
     }
   }
 
@@ -253,8 +265,8 @@
     }
     if (k === 'quarter') {
       if (!m.q) return { kind: k, icon: '📈', title: 'Quarterly Targets', text: 'The first quarter starts soon.' };
-      const p = Math.min(1, g.c.mps / m.q.target);
-      return { kind: k, icon: '📈', title: 'Quarterly Target', text: 'Reach ' + f.money(m.q.target) + '/s (now ' + f.money(g.c.mps) + '/s).',
+      const average = quarterAverage(s), p = Math.min(1, average / m.q.target);
+      return { kind: k, icon: '📈', title: 'Quarterly Target', text: 'Average ' + f.money(m.q.target) + '/s this quarter (so far ' + f.money(average) + '/s).',
         bar: { value: p, label: Math.ceil(m.q.time) + 's left in the quarter', tone: p >= 1 ? 'good' : 'warn' } };
     }
     if (!a) return { kind: k, icon: '🤖', title: 'Bot Swarms', text: 'Bots wander the dead internet. Some of them want to help.' };
@@ -263,5 +275,27 @@
       buttons: [{ id: 'letin', label: '🚪 Let them in', primary: true }, { id: 'keepout', label: '🧱 Keep them out' }] };
   }
 
-  Z.mech = { tick, act, view, modEffects, kind, MAX_FRIENDS };
+  /* ---------- Saves ---------- */
+
+  /** s.mech from a save (untrusted), checked like every saved value. `s` is the loaded
+      state with its era already set. A flame war, trend, claim, swarm or quarter that was
+      running carries on after loading, so reloading the page neither clears it nor keeps
+      its bonus without the risk. */
+  function fromSave(raw, s) {
+    const n = U.num, src = U.obj(raw), a = U.obj(src.active), q = U.obj(src.q), k = kind(s), m = {};
+    if (src.t !== undefined) m.t = n(src.t, 60, 0, 600);
+    if (src.cd !== undefined) m.cd = n(src.cd, 0, 0, FRIEND_COOLDOWN);
+    if (a.kind === k) {
+      if (k === 'flame') m.active = { kind: k, fire: n(a.fire, 30, 0, 99) };
+      if (k === 'trend' && TAGS.indexOf(a.tag) >= 0) m.active = { kind: k, tag: a.tag, time: n(a.time, 0, 0, 20), total: 20 };
+      if (k === 'claim' && CLAIMS.indexOf(a.text) >= 0) m.active = { kind: k, text: a.text, real: a.real === true, time: n(a.time, 0, 0, 15), total: 15 };
+      if (k === 'bots') m.active = { kind: k, friendly: a.friendly === true, scan: Math.round(n(a.scan, 50, 5, 95)), time: n(a.time, 0, 0, 20), total: 20 };
+    }
+    if (k === 'quarter' && src.q) {
+      m.q = { time: n(q.time, QUARTER, 0, QUARTER), target: n(q.target, 1, 0, 1e300), from: Math.min(n(q.from, s.run.money, 0, 1e300), s.run.money) };
+    }
+    return m;
+  }
+
+  Z.mech = { tick, act, view, modEffects, kind, fromSave, MAX_FRIENDS };
 })(window.ICHAOS = window.ICHAOS || {});

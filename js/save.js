@@ -175,9 +175,22 @@
           clicks: i(hx.clicks, 0, 0, 1e12), upgrades: i(hx.upgrades, 0, 0, 1e6),
           os: typeof hx.os === 'string' && Z.OS[hx.os] ? hx.os : Z.OSES[0].id,
           challenges: i(hx.challenges, 0, 0, 3), at: n(hx.at, 0, 0, Number.MAX_SAFE_INTEGER),
+          v: i(hx.v, 1, 1, 1e6),
         });
       }
     }
+
+    // Reboot the Internet.
+    const rbt = o(raw.reboot), rbtUp = o(rbt.upgrades);
+    d.reboot.count = i(rbt.count, 0, 0, 1e6);
+    d.reboot.bandwidth = n(rbt.bandwidth, 0, 0, BIG);
+    d.reboot.lifetime = Math.max(n(rbt.lifetime, 0, 0, BIG), d.reboot.bandwidth);
+    for (const u of Z.REBOOT_UPGRADES) {
+      const lvl = i(rbtUp[u.id], 0, 0, u.max);
+      if (lvl > 0) d.reboot.upgrades[u.id] = lvl;
+    }
+    d.reboot.protocol = typeof rbt.protocol === 'string' && Z.PROTOCOL[rbt.protocol] ? rbt.protocol : 'standard';
+    d.reboot.hard = i(rbt.hard, 0, 0, d.reboot.count);
 
     // Era challenges.
     const ch = o(raw.challenges), chDone = o(ch.done), chRun = o(ch.run);
@@ -209,7 +222,9 @@
     d.daily.streak = i(dl.streak, 0, 0, 100000);
     d.daily.last = dayOk(dl.last) ? dl.last : '';
 
-    // The era mechanic's moment-to-moment state is not kept: it simply starts again.
+    // The era mechanic carries on where it was. The flame war's bonus only lasts while it burns.
+    d.mech = Z.mech.fromSave(raw.mech, d);
+    if (!(d.mech.active && d.mech.active.kind === 'flame')) d.buffs = d.buffs.filter(x => x.key !== 'flameWar');
 
     if (Array.isArray(raw.feed)) {
       const kinds = ['good', 'bad', 'info', 'achieve', 'era'];

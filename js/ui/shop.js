@@ -84,11 +84,11 @@
     g.refresh();
     const res = Z.econ.buyBuilding(g, id, g.s.settings.buyQty);
     if (res) {
-      Z.audio.play('buy');
-      node.classList.remove('bought'); void node.offsetWidth; node.classList.add('bought');
+      Z.audio.play('buy', res.qty);
+      ui.replay(node, 'bought');
     } else {
       Z.audio.play('deny');
-      node.classList.remove('denied'); void node.offsetWidth; node.classList.add('denied');
+      ui.replay(node, 'denied');
     }
     ui.requestRender(true);
   }
@@ -102,7 +102,7 @@
       upgradeKey = '';
     } else {
       Z.audio.play('deny');
-      node.classList.remove('denied'); void node.offsetWidth; node.classList.add('denied');
+      ui.replay(node, 'denied');
     }
     ui.requestRender(true);
   }

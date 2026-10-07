@@ -1,15 +1,23 @@
-/* The player's website: the main button, click feedback, the site's look as it grows
-   (construction banner → marquee → ad slots), the meltdown screen and contextual tips. */
+/* The player's website: the main button, click feedback (combos, viral clicks, floating
+   numbers), Attention milestones, the site's look as it grows (construction banner →
+   marquee → ad slots), the meltdown screen and contextual tips. */
 (function (Z) {
   'use strict';
 
   const ui = Z.ui;
-  const { $, h, setText, setHidden } = ui;
+  const { $, h, setText, setHidden, setStyle } = ui;
   let el = null, game = null;
   const clickTimes = [];
   let adIndex = 0, adTimer = 0, tipIndex = 0, tipTimer = 0, lastLevel = -1, lastEra = -1, lastName = null;
+  const combo = Z.idle.newCombo();
+  let comboShown = false, lastMilestone = -1, milestoneAt = 0, zoneRect = null;
 
   const PARTICLES = ['👀', '💬', '🔥', '❤️', '👍', '😂', '📈', '⭐', '💯', '🙃'];
+  const CRIT_WORDS = ['VIRAL!', 'IT BLEW UP!', 'FRONT PAGE!', 'RATIO!', 'TRENDING!', 'BASED!', 'W POST!'];
+  const MILESTONE_QUIPS = [
+    'Somebody tell Mom.', 'The servers felt that.', 'Screenshot this.', 'Not bad for a website.',
+    'The comment section is losing it.', 'Line goes up.', 'Engagement intensifies.', 'The internet noticed.',
+  ];
 
   const ADS = [
     'HOT SINGLES IN YOUR AREA WANT TO READ YOUR BLOG',
@@ -42,55 +50,119 @@
       level: $('site-level'), name: $('site-name'), tagline: $('site-tagline'), construction: $('site-construction'),
       marquee: $('site-marquee'), track: $('marquee-track'), adTop: $('ad-top'), adBottom: $('ad-bottom'),
       melt: $('meltdown-screen'), meltTime: $('melt-time'), tip: $('site-tip'), site: $('site'),
-      logoSite: $('logo-site'),
+      logoSite: $('logo-site'), combo: $('combo'), comboN: $('combo-n'), comboX: $('combo-x'),
+      comboTime: $('combo-time'), milestone: $('site-milestone'),
     };
     el.btn.addEventListener('click', onClick);
     el.name.title = 'Rename your website';
     el.name.classList.add('is-renamable');
     el.name.addEventListener('click', () => ui.modals.openSiteName());
     Z.bus.on('feedChanged', () => updateMarquee());
+    // The click zone only moves when the page does: measure it then, not on every click.
+    const forget = () => { zoneRect = null; };
+    window.addEventListener('resize', forget);
+    window.addEventListener('scroll', forget, { capture: true, passive: true });
+    lastMilestone = Z.idle.milestone(g.s.run.attention);
     updateMarquee();
   }
 
   function onClick(e) {
-    const g = game;
+    const g = game, s = g.s;
     const now = performance.now();
     while (clickTimes.length && now - clickTimes[0] > 1000) clickTimes.shift();
     if (clickTimes.length >= Z.BAL.click.maxPerSecond) return;
     clickTimes.push(now);
-    if (clickTimes.length > g.s.flags.cpsPeak) g.s.flags.cpsPeak = clickTimes.length;
+    if (clickTimes.length > s.flags.cpsPeak) s.flags.cpsPeak = clickTimes.length;
 
     Z.audio.unlock();
     g.refresh();
-    const res = Z.econ.click(g);
-    Z.audio.play('click');
+    const n = Z.idle.comboClick(combo, now / 1000);
+    const melting = s.meltdown > 0;
+    const crit = !melting && Math.random() < Z.idle.critChance(n);
+    const res = Z.econ.click(g, Z.idle.comboMult(n) * (crit ? Z.BAL.idle.critMult : 1));
+    if (n > s.stats.bestCombo) s.stats.bestCombo = n;
+    if (crit) s.stats.crits++;
+    Z.audio.play('click', n, crit);
+    if (n % 25 === 0) Z.audio.play('combo', n / 25);
 
-    const rect = el.zone.getBoundingClientRect();
-    let x = e.clientX - rect.left, y = e.clientY - rect.top;
-    if (!e.clientX && !e.clientY) { x = rect.width / 2; y = rect.height / 2; }
-    spawnFloater(x, y, res.reboot ? 'REBOOT −' + Z.BAL.meltdown.rebootPerClick + 's' : '+' + Z.fmt.num(res.att, { dec: 1 }));
-    el.btn.classList.remove('pressed');
-    void el.btn.offsetWidth;
-    el.btn.classList.add('pressed');
+    if (!zoneRect || now - zoneRect.at > 2000) {
+      const r = el.zone.getBoundingClientRect();
+      zoneRect = { left: r.left, top: r.top, width: r.width, height: r.height, at: now };
+    }
+    let x = e.clientX - zoneRect.left, y = e.clientY - zoneRect.top;
+    if (!e.clientX && !e.clientY) { x = zoneRect.width / 2; y = zoneRect.height / 2; }
+    const text = res.reboot ? Z.i18n.tr('REBOOT −' + Z.BAL.meltdown.rebootPerClick + 's')
+      : (crit ? CRIT_WORDS[Math.floor(Math.random() * CRIT_WORDS.length)] + ' ' : '') + '+' + Z.fmt.num(res.att, { dec: 1 });
+    spawnFloater(x, y, text, crit, n);
+    ui.animate(el.btn, [{ transform: 'translateY(5px) scale(.98)' }, { transform: 'none' }], { duration: 140, easing: 'ease-out' });
+    renderCombo(now);
     ui.requestRender();
   }
 
-  function spawnFloater(x, y, text) {
+  function spawnFloater(x, y, text, crit, n) {
     if (game.s.settings.reduceMotion) return;
     const box = el.floaters;
     while (box.children.length > 24) box.firstChild.remove();
-    const f = h('span', { class: 'floater', text });
+    const heat = Math.min(1, (n || 0) / Z.BAL.idle.comboMax);
+    const f = h('span', { class: 'floater' + (crit ? ' is-crit' : heat >= 0.5 ? ' is-hot' : ''), text });
     f.style.left = x + 'px';
     f.style.top = y + 'px';
-    const p = h('span', { class: 'particle', text: PARTICLES[Math.floor(Math.random() * PARTICLES.length)] });
-    p.style.left = x + 'px';
-    p.style.top = y + 'px';
-    p.style.setProperty('--dx', (Math.random() * 120 - 60).toFixed(0) + 'px');
-    p.style.setProperty('--rot', (Math.random() * 80 - 40).toFixed(0) + 'deg');
+    if (heat > 0.1 && !crit) f.style.fontSize = (16 + heat * 8).toFixed(1) + 'px';
     f.addEventListener('animationend', () => f.remove());
-    p.addEventListener('animationend', () => p.remove());
     box.appendChild(f);
-    box.appendChild(p);
+    for (let i = crit ? 4 : 1; i > 0; i--) {
+      const p = h('span', { class: 'particle', text: crit ? (i % 2 ? '🔥' : '⭐') : PARTICLES[Math.floor(Math.random() * PARTICLES.length)] });
+      p.style.left = x + 'px';
+      p.style.top = y + 'px';
+      p.style.setProperty('--dx', (Math.random() * (crit ? 220 : 120) - (crit ? 110 : 60)).toFixed(0) + 'px');
+      p.style.setProperty('--rot', (Math.random() * 80 - 40).toFixed(0) + 'deg');
+      p.addEventListener('animationend', () => p.remove());
+      box.appendChild(p);
+    }
+    if (crit) ui.animate(el.site, [{ transform: 'translate(0, 0)' }, { transform: 'translate(-3px, 2px)' }, { transform: 'translate(3px, -2px)' }, { transform: 'none' }], { duration: 220 });
+  }
+
+  /* ---------- Combo ---------- */
+
+  /** The combo badge: count, multiplier and a bar that empties until the combo breaks. */
+  function renderCombo(now) {
+    const alive = Z.idle.comboAlive(combo, now / 1000) && combo.n >= 5;
+    if (alive !== comboShown) {
+      comboShown = alive;
+      setHidden(el.combo, !alive);
+      if (!alive) { el.combo.className = 'combo'; combo.n = Z.idle.comboAlive(combo, now / 1000) ? combo.n : 0; }
+    }
+    if (!alive) return;
+    const n = combo.n, heat = Math.min(1, n / Z.BAL.idle.comboMax);
+    setText(el.comboN, String(n));
+    setText(el.comboX, '×' + Z.idle.comboMult(n).toFixed(2));
+    setStyle(el.combo, '--heat', heat.toFixed(2));
+    el.combo.classList.toggle('is-max', n >= Z.BAL.idle.comboMax);
+    const left = 1 - (now / 1000 - combo.last) / Z.BAL.idle.comboGap;
+    setStyle(el.comboTime, 'transform', 'scaleX(' + Math.max(0, left).toFixed(3) + ')');
+  }
+
+  /* ---------- Milestones ---------- */
+
+  function checkMilestone(g) {
+    const ms = Z.idle.milestone(g.s.run.attention);
+    if (ms < lastMilestone) { lastMilestone = ms; return; }        // a new era started over
+    if (ms <= lastMilestone) return;
+    lastMilestone = ms;
+    const now = performance.now();
+    if (now - milestoneAt < 2500 || g.offline) return;
+    milestoneAt = now;
+    const label = Z.fmt.num(Math.pow(10, ms)).replace(/\.0+(?=[A-Za-z]|$)/, '') + ' Attention';
+    const quip = MILESTONE_QUIPS[ms % MILESTONE_QUIPS.length];
+    ui.feed.add(g, '🎉', label + ' this era! ' + quip, 'good');
+    Z.audio.play('milestone');
+    const box = el.milestone;
+    box.textContent = '';
+    box.append(h('span', { class: 'ms-burst', text: '🎉' }), h('b', { class: 'ms-num', text: label }), h('span', { class: 'ms-quip', text: quip }));
+    box.hidden = false;
+    ui.replay(box, 'is-on');
+    clearTimeout(box._timer);
+    box._timer = setTimeout(() => { box.hidden = true; box.classList.remove('is-on'); }, 2600);
   }
 
   function updateMarquee() {
@@ -189,9 +261,16 @@
       setText(el.label, Z.era(s.era).button);
       setText(el.sub, '+' + f.num(c.clickAtt, { dec: 1 }) + ' Attention · ' + f.money(c.clickAtt * c.yield));
     }
-    const visitors = Math.floor(s.run.attention);
-    setText(el.counter, visitors < 1e7 ? String(visitors).padStart(7, '0') : f.int(visitors));
+    renderCounter(g, 0);
+    renderCombo(performance.now());
+    checkMilestone(g);
   }
 
-  ui.site = { init, render, refreshLook() { lastLevel = -1; } };
+  /** The hit counter. `ahead` (seconds since the last tick) lets it roll smoothly every frame. */
+  function renderCounter(g, ahead) {
+    const visitors = Math.floor(g.s.run.attention + g.c.aps * ahead);
+    setText(el.counter, visitors < 1e7 ? String(visitors).padStart(7, '0') : Z.fmt.int(visitors));
+  }
+
+  ui.site = { init, render, renderCounter, renderCombo, refreshLook() { lastLevel = -1; } };
 })(window.ICHAOS = window.ICHAOS || {});

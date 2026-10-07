@@ -667,12 +667,7 @@
     player: [['reg', 2], ['troll', 2], ['serious', 1], ['defensive', 1], ['drama', 1], ['confused', 1]],
   };
 
-  /* Replies to the player's own comments (posted as the site admin). */
-  const ADMIN_REPLIES = {
-    low: ['reg|oh hi admin 👋', 'serious|Thank you for engaging with the community. Rare these days.', 'confused|wait, the owner of {site} reads these??', 'smart|Good point, honestly.', 'lurker|the admin speaks'],
-    mid: ['troll|ok admin', 'defensive|With respect, you don\'t even read the comments. (You\'re reading them right now, I realize.)', 'pedant|An admin should know "alot" is two words.', 'drama|THE ADMIN REPLIED. SCREENSHOTTING.', 'troll|fix the site first lol'],
-    high: ['troll|who asked', 'drama|THE ADMIN IS HERE. EVERYONE ACT NORMAL. ACT NORMAL!!!', 'wrong|that\'s not the real admin. the real admin is a duck', 'defensive|I\'m not leaving. You can\'t ban a feeling.', 'confused|the admin is here?? is the admin also arguing about soup', 'serious|Admin, with all due respect, have you considered less Chaos'],
-  };
+  /* Replies to the player's own comments live in js/content/replies.js. */
 
   const SPAM = [
     '🔥🔥 CHECK MY PROFILE FOR FREE {site} PREMIUM 🔥🔥',
@@ -777,7 +772,7 @@
   };
 
   Z.CHAT = {
-    USERS, AFFINITY, MODS, SPAMMERS, REPLIES, REACTS, ADMIN_REPLIES, SPAM, EDITS, MOD_LINES, SITUATIONS, REACTIONS,
+    USERS, AFFINITY, MODS, SPAMMERS, REPLIES, REACTS, SPAM, EDITS, MOD_LINES, SITUATIONS, REACTIONS,
     PAGES: [blog, meme, comments],
   };
   Z.CHAT.PAGE = Z.util.byId(Z.CHAT.PAGES);
